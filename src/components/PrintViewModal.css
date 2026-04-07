@@ -1,0 +1,268 @@
+/* Print View Modal Styling */
+.pvm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.pvm-container {
+  width: 90vw;
+  height: 95vh;
+  background: #f1f5f9;
+  /* Gray background behind document */
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Top Header */
+.pvm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pvm-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.pvm-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pvm-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: white;
+}
+
+.pvm-btn-cyan {
+  background: #06b6d4;
+}
+
+.pvm-btn-blue {
+  background: #3b82f6;
+}
+
+.pvm-btn-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+/* Modal Body */
+.pvm-body {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pvm-print-render-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* Space between multiple copies */
+}
+
+.pvm-page-wrapper {
+  background: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Bottom Footer */
+.pvm-footer {
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pvm-checkbox-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.pvm-checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.pvm-checkbox-row input {
+  accent-color: #10b981;
+  /* Green checkbox */
+  width: 16px;
+  height: 16px;
+}
+
+.pvm-actions-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px;
+}
+
+.pvm-right-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.pvm-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  font-weight: 600;
+  border-radius: 6px;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+}
+
+.pvm-btn-gray {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.pvm-btn-whatsapp {
+  background: #22c55e;
+}
+
+/* Green */
+.pvm-btn-email {
+  background: #f97316;
+}
+
+/* Orange */
+.pvm-btn-sms {
+  background: #0ea5e9;
+}
+
+/* Sky Blue */
+.pvm-btn-download {
+  background: #eab308;
+}
+
+/* Yellow */
+.pvm-btn-print {
+  background: #14b8a6;
+}
+
+/* Teal */
+
+/* Critical Logic: Print Media completely overrides the interface to ONLY show the rendered page wrappers */
+@media print {
+
+  /* Hide the entire application UI */
+  #root>*:not(.pvm-overlay),
+  .sidebar,
+  .topbar,
+  .pvm-header,
+  .pvm-footer,
+  .btn,
+  .print-hide {
+    display: none !important;
+  }
+
+  /* Reset layout for print */
+  body,
+  html {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .pvm-overlay {
+    position: static !important;
+    display: block !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    z-index: auto !important;
+    height: auto !important;
+  }
+
+  .pvm-container {
+    width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    display: block !important;
+    border: none !important;
+  }
+
+  .pvm-body {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    height: auto !important;
+  }
+
+  .pvm-print-render-area {
+    display: block !important;
+    margin: 0 auto !important;
+    width: 210mm !important;
+    /* A4 Width */
+    gap: 0 !important;
+  }
+
+  .pvm-page-wrapper {
+    box-shadow: none !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-after: always;
+    display: block !important;
+  }
+
+  .pvm-page-wrapper:last-child {
+    page-break-after: avoid;
+  }
+}

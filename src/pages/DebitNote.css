@@ -1,0 +1,232 @@
+/* ===== DEBIT NOTE – OVERRIDE & THEME ===== */
+
+/* Page background – warm amber tint */
+.dn-page {
+  background: linear-gradient(135deg, #fffbf0 0%, #fef9ec 50%, #fff8e1 100%) !important;
+}
+
+/* ------ Badge ------ */
+.dn-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  box-shadow: 0 4px 12px rgba(245,158,11,0.35) !important;
+}
+
+/* ------ Add (+) customer button ------ */
+.dn-add-btn {
+  border-color: #f59e0b !important;
+  background: #fffbeb !important;
+  color: #d97706 !important;
+}
+.dn-add-btn:hover {
+  background: #f59e0b !important;
+  color: white !important;
+}
+
+/* ------ Discount toggle chips (active) ------ */
+.dn-active-chip {
+  background: #f59e0b !important;
+  color: white !important;
+  box-shadow: 0 2px 6px rgba(245,158,11,0.35) !important;
+}
+
+/* ------ Add Row button ------ */
+.dn-add-item-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  box-shadow: 0 3px 10px rgba(245,158,11,0.3) !important;
+}
+.dn-add-item-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(245,158,11,0.4) !important;
+}
+
+/* ------ Product table total cell ------ */
+.dn-total-value {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+}
+
+/* ------ Add Additional Charge link ------ */
+.dn-add-charge-link {
+  color: #f59e0b !important;
+}
+.dn-add-charge-link:hover {
+  color: #d97706 !important;
+}
+
+/* ------ Grand Total block ------ */
+.dn-grand-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 1.5px solid #fde68a;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+}
+.dn-grand-label {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #92400e;
+}
+.dn-grand-value {
+  font-weight: 900;
+  font-size: 1.45rem;
+  color: #d97706;
+}
+
+/* ------ Smart Suggestion box ------ */
+.dn-smart-box {
+  margin-top: 1rem;
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+/* ------ Action bar buttons ------ */
+.dn-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 4px 14px rgba(245,158,11,0.35);
+}
+.dn-btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(245,158,11,0.45);
+}
+.dn-btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dn-btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  background: white;
+  color: #f59e0b;
+  border: 2px solid #f59e0b;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.dn-btn-print:hover {
+  background: #fffbeb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+}
+.dn-btn-print:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dn-btn-discard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #ef4444;
+  border: 2px solid #fecaca;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.dn-btn-discard:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+/* ------ Focus accents: amber instead of purple ------ */
+.dn-page .pi-input:focus,
+.dn-page .pi-select:focus,
+.dn-page .pi-textarea:focus,
+.dn-page .pi-date-input:focus,
+.dn-page .pi-no-input:focus,
+.dn-page .pi-cell-input:focus,
+.dn-page .pi-cell-select:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15) !important;
+}
+
+/* ------ Section title accent bar: amber ------ */
+.dn-page .pi-section-title::before {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+/* ------ Card header gradient tweak ------ */
+.dn-page .pi-card-header {
+  background: linear-gradient(135deg, #fffdf5 0%, #fefcf0 100%) !important;
+}
+
+/* ------ Table header ------ */
+.dn-page .pi-table-header {
+  background: linear-gradient(135deg, #fffbf0 0%, #fef9ec 100%) !important;
+}
+
+/* ------ Add notes button hover ------ */
+.dn-page .pi-add-notes-btn:hover {
+  border-color: #f59e0b !important;
+  color: #d97706 !important;
+  background: #fffbeb !important;
+}
+
+/* ------ Words row ------ */
+.pi-words-row {
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #f1f5f9;
+  margin-bottom: 0.5rem;
+}
+.pi-words-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+/* ------ Tax group layout ------ */
+.pi-tax-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ------ Smart suggestion label ------ */
+.pi-smart-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+/* ------ Modal overlay backdrop ------ */
+.pi-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}

@@ -1,0 +1,287 @@
+.cop-wrapper {
+  padding: 2rem 1.5rem;
+  max-width: 960px;
+  margin: 0 auto;
+  animation: copFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes copFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cop-inner {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem 4rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.07);
+  border: 1px solid #e2e8f0;
+}
+
+/* ── Header ── */
+.cop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cop-back-btn {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.cop-back-btn:hover { background: #f8fafc; color: #1e293b; }
+
+.cop-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.cop-actions { display: flex; gap: 0.75rem; }
+
+/* ── Form Grid ── */
+.cop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cop-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  align-items: center;
+  gap: 2rem;
+}
+
+.cop-row--top {
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+.cop-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.req { color: #ef4444; }
+
+/* ── Inputs ── */
+.cop-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: white;
+  color: #1e293b;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.cop-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+
+.cop-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.cop-triplet {
+  display: flex;
+  gap: 10px;
+}
+
+.cop-triplet input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: white;
+  color: #1e293b;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.cop-triplet input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+
+/* ── Outstanding Breakdown Card ── */
+.cop-outstanding-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cop-outstanding-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+}
+
+.cop-outstanding-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cop-collect .cop-outstanding-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.cop-pay .cop-outstanding-icon {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.cop-outstanding-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.cop-os-amount {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.cop-os-sublabel {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.cop-os-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.cop-os-badge--collect {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.cop-os-badge--pay {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.cop-outstanding-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0 -0.25rem;
+}
+
+.cop-outstanding-total {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0 0.25rem;
+  color: #6366f1;
+}
+
+.cop-outstanding-total span:first-of-type {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e293b;
+  flex: 1;
+}
+
+.cop-total-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.cop-loading {
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* ── Checkbox ── */
+.cop-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.cop-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #6366f1;
+}
+
+/* ── Upload Zone ── */
+.cop-upload {
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: #fcfcfc;
+}
+.cop-upload:hover {
+  border-color: #6366f1;
+  background: #f5f3ff;
+  color: #6366f1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99,102,241,0.1);
+}
+.cop-upload-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .cop-inner { padding: 2rem 1.5rem; }
+  .cop-row   { grid-template-columns: 1fr; gap: 0.5rem; }
+  .cop-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+}
