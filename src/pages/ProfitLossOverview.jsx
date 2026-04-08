@@ -44,25 +44,6 @@ const ProfitLossOverview = () => {
     end: dayjs().toDate()
   });
 
-  // Original state
-  const [data, setData] = useState({
-    inward: [],
-    outward: [],
-    revenue: 0,
-    expenses: 0,
-    grossProfit: 0,
-    operatingProfit: 0,
-    netProfit: 0,
-    metrics: {
-      gpMargin: 0,
-      opMargin: 0,
-      netMargin: 0,
-      operatingRatio: 0,
-      roe: 18.5,
-      roa: 12.2
-    }
-  });
-
   const calculateMetrics = useCallback((inward, outward) => {
     const totalInward = inward.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
     const totalOutward = outward.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
@@ -97,6 +78,23 @@ const ProfitLossOverview = () => {
     };
   }, []);
 
+  // Computed period metrics based on date range
+  const periodMetrics = useMemo(() => {
+    const start = dayjs(dateRange.start).startOf('day');
+    const end = dayjs(dateRange.end).endOf('day');
+
+    const filteredInward = rawInward.filter(p => {
+      const d = dayjs(p.date);
+      return d.isBetween(start, end, 'day', '[]');
+    });
+    const filteredOutward = rawOutward.filter(p => {
+      const d = dayjs(p.date);
+      return d.isBetween(start, end, 'day', '[]');
+    });
+
+    return calculateMetrics(filteredInward, filteredOutward);
+  }, [rawInward, rawOutward, dateRange, calculateMetrics]);
+
   const loadData = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
@@ -112,24 +110,12 @@ const ProfitLossOverview = () => {
       setRawInward(inward);
       setRawOutward(outward);
 
-      // Original metrics calculation using inward/outward payments
-      const calculated = calculateMetrics(inward, outward);
-      setData({
-        inward,
-        outward,
-        revenue: calculated.totalInward,
-        expenses: calculated.totalOutward,
-        grossProfit: calculated.grossProfit,
-        operatingProfit: calculated.operatingProfit,
-        netProfit: calculated.netProfit,
-        metrics: calculated.metrics
-      });
     } catch (err) {
       console.error('Failed to load P&L data:', err);
     } finally {
       setLoading(false);
     }
-  }, [user?.id, calculateMetrics]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadData();
@@ -291,31 +277,31 @@ const ProfitLossOverview = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <MetricCard
           title="Gross Profit"
-          value={data.grossProfit}
-          subtitle={`${data.metrics.gpMargin.toFixed(1)}% Margin`}
+          value={periodMetrics.grossProfit}
+          subtitle={`${periodMetrics.metrics.gpMargin.toFixed(1)}% Margin`}
           icon={DollarSign}
           color="#6366f1"
           percentage={5.2}
         />
         <MetricCard
           title="Operating Profit"
-          value={data.operatingProfit}
-          subtitle={`${data.metrics.opMargin.toFixed(1)}% Operating Margin`}
+          value={periodMetrics.operatingProfit}
+          subtitle={`${periodMetrics.metrics.opMargin.toFixed(1)}% Operating Margin`}
           icon={Activity}
           color="#f59e0b"
           percentage={2.1}
         />
         <MetricCard
           title="Net Profit"
-          value={data.netProfit}
-          subtitle={`${data.metrics.netMargin.toFixed(1)}% Net Margin`}
+          value={periodMetrics.netProfit}
+          subtitle={`${periodMetrics.metrics.netMargin.toFixed(1)}% Net Margin`}
           icon={Target}
           color="#10b981"
           percentage={8.4}
         />
         <MetricCard
           title="Operating Ratio"
-          value={data.metrics.operatingRatio.toFixed(1)}
+          value={periodMetrics.metrics.operatingRatio.toFixed(1)}
           subtitle="Revenue vs Expense Efficiency"
           icon={PieChart}
           color="#ec4899"
@@ -410,20 +396,20 @@ const ProfitLossOverview = () => {
             <tbody>
               <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '1rem', fontWeight: 600 }}>Total Revenue</td>
-                <td style={{ padding: '1rem' }}>₹{data.revenue.toLocaleString()}</td>
-                <td style={{ padding: '1rem' }}>₹{(data.revenue * 0.92).toLocaleString()}</td>
+                <td style={{ padding: '1rem' }}>₹{periodMetrics.totalInward.toLocaleString()}</td>
+                <td style={{ padding: '1rem' }}>₹{(periodMetrics.totalInward * 0.92).toLocaleString()}</td>
                 <td style={{ padding: '1rem', color: '#10b981' }}><ArrowUpRight size={16} /> 8.0%</td>
               </tr>
               <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <td style={{ padding: '1rem', fontWeight: 600 }}>Operating Expenses</td>
-                <td style={{ padding: '1rem' }}>₹{data.expenses.toLocaleString()}</td>
-                <td style={{ padding: '1rem' }}>₹{(data.expenses * 1.05).toLocaleString()}</td>
+                <td style={{ padding: '1rem' }}>₹{periodMetrics.totalOutward.toLocaleString()}</td>
+                <td style={{ padding: '1rem' }}>₹{(periodMetrics.totalOutward * 1.05).toLocaleString()}</td>
                 <td style={{ padding: '1rem', color: '#10b981' }}><ArrowDownRight size={16} /> 5.0%</td>
               </tr>
               <tr>
                 <td style={{ padding: '1rem', fontWeight: 600 }}>Net Profit Index</td>
-                <td style={{ padding: '1rem' }}>₹{data.netProfit.toLocaleString()}</td>
-                <td style={{ padding: '1rem' }}>₹{(data.netProfit * 0.85).toLocaleString()}</td>
+                <td style={{ padding: '1rem' }}>₹{periodMetrics.netProfit.toLocaleString()}</td>
+                <td style={{ padding: '1rem' }}>₹{(periodMetrics.netProfit * 0.85).toLocaleString()}</td>
                 <td style={{ padding: '1rem', color: '#10b981' }}><ArrowUpRight size={16} /> 15.0%</td>
               </tr>
             </tbody>
@@ -445,7 +431,7 @@ const ProfitLossOverview = () => {
                 <div style={{ width: '72%', height: '100%', background: 'white', borderRadius: '3px' }}></div>
               </div>
             </div>
-            <p style={{ fontSize: '0.875rem', margin: 0, opacity: 0.9 }}>Based on current P&amp;L trends, your projected revenue for next month is ₹{(data.revenue * 1.1).toLocaleString()}.</p>
+            <p style={{ fontSize: '0.875rem', margin: 0, opacity: 0.9 }}>Based on current P&amp;L trends, your projected revenue for next month is ₹{(periodMetrics.totalInward * 1.1).toLocaleString()}.</p>
           </div>
 
           <div className="glass" style={{ padding: '1.5rem', background: '#f8fafc' }}>
@@ -472,11 +458,11 @@ const ProfitLossOverview = () => {
           <h4 style={{ margin: '0 0 1rem 0' }}>Efficiency Ratios</h4>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--border-color)' }}>
             <span style={{ color: 'var(--text-secondary)' }}>Return on Equity (ROE)</span>
-            <span style={{ fontWeight: 600 }}>{data.metrics.roe}%</span>
+            <span style={{ fontWeight: 600 }}>{periodMetrics.metrics.roe}%</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0' }}>
             <span style={{ color: 'var(--text-secondary)' }}>Return on Assets (ROA)</span>
-            <span style={{ fontWeight: 600 }}>{data.metrics.roa}%</span>
+            <span style={{ fontWeight: 600 }}>{periodMetrics.metrics.roa}%</span>
           </div>
         </div>
 

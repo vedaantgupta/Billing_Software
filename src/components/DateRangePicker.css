@@ -80,6 +80,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 0 4px;
 }
 
 .month-selector {
@@ -97,11 +98,20 @@
   cursor: pointer;
   color: #64748b;
   transition: all 0.2s;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-btn:hover {
   background: #f1f5f9;
   color: #1e293b;
+}
+
+.nav-btn-placeholder {
+  width: 28px; /* Width of nav-btn (20px icon + 8px padding) */
 }
 
 .calendar-grid {

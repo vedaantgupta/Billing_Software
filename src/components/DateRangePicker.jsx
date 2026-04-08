@@ -65,6 +65,10 @@ const DateRangePicker = ({ onChange, initialRange }) => {
         setEndDate(null);
       } else {
         setEndDate(clickedDay);
+        // Automatically trigger onChange when range is completed
+        if (onChange) {
+          onChange({ start: startDate.toDate(), end: clickedDay.toDate() });
+        }
       }
     }
   };
@@ -99,7 +103,7 @@ const DateRangePicker = ({ onChange, initialRange }) => {
     setViewYear(newYear);
   };
 
-  const renderCalendar = (year, month) => {
+  const renderCalendar = (year, month, navButton, isRight) => {
     const firstDay = dayjs(`${year}-${String(month + 1).padStart(2, '0')}-01`);
     const daysInMonth = firstDay.daysInMonth();
 
@@ -151,6 +155,7 @@ const DateRangePicker = ({ onChange, initialRange }) => {
     return (
       <div className="calendar-pane">
         <div className="calendar-header">
+          {!isRight ? navButton : <div className="nav-btn-placeholder" />}
           <div className="month-selector">
             <select
               className="calendar-nav-select"
@@ -167,6 +172,7 @@ const DateRangePicker = ({ onChange, initialRange }) => {
               {yearOptions}
             </select>
           </div>
+          {isRight ? navButton : <div className="nav-btn-placeholder" />}
         </div>
         <div className="calendar-grid">
           {['Mo','Tu','We','Th','Fr','Sa','Su'].map(d => (
@@ -226,31 +232,31 @@ const DateRangePicker = ({ onChange, initialRange }) => {
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
             <div className="date-range-calendars">
               {/* Left Calendar */}
-              <div style={{ position: 'relative', flex: 1 }}>
-                <button
-                  type="button"
-                  className="nav-btn"
-                  style={{ position: 'absolute', left: 0, top: 4, zIndex: 1 }}
-                  onClick={() => navigateMonth(-1)}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                {renderCalendar(viewYear, viewMonth)}
+              <div style={{ flex: 1 }}>
+                {renderCalendar(viewYear, viewMonth, (
+                  <button
+                    type="button"
+                    className="nav-btn"
+                    onClick={() => navigateMonth(-1)}
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                ), false)}
               </div>
 
               <div style={{ width: '1px', background: '#f1f5f9', margin: '0 8px' }} />
 
               {/* Right Calendar */}
-              <div style={{ position: 'relative', flex: 1 }}>
-                <button
-                  type="button"
-                  className="nav-btn"
-                  style={{ position: 'absolute', right: 0, top: 4, zIndex: 1 }}
-                  onClick={() => navigateMonth(1)}
-                >
-                  <ChevronRight size={20} />
-                </button>
-                {renderCalendar(secondYear, secondMonth)}
+              <div style={{ flex: 1 }}>
+                {renderCalendar(secondYear, secondMonth, (
+                  <button
+                    type="button"
+                    className="nav-btn"
+                    onClick={() => navigateMonth(1)}
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                ), true)}
               </div>
             </div>
 
