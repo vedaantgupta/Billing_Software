@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { getItems, addItem, updateItem } from '../utils/db';
+import { QRCodeCanvas } from 'qrcode.react';
+import { getItems, addItem, updateItem, getDB } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
 import { postToLedger } from '../utils/ledger';
 import ProductModal from '../components/ProductModal';
@@ -98,6 +99,7 @@ const SaleInvoice = () => {
   const [additionalChargeModal, setAdditionalChargeModal] = useState(false);
   const [additionalChargeName, setAdditionalChargeName] = useState('Freight');
   const [additionalChargeValue, setAdditionalChargeValue] = useState('');
+  const [companySettings, setCompanySettings] = useState(null);
 
   // ── document state ──
   const [doc, setDoc] = useState({
@@ -152,6 +154,11 @@ const SaleInvoice = () => {
       ]);
       setCustomers(contactList.filter(c => c.type === 'customer' || !c.type));
       setProducts(productList);
+      
+      const db = getDB();
+      if (db.company) {
+        setCompanySettings(db.company);
+      }
 
       if (id) {
         const docs = await getItems('documents', user.id);
@@ -237,6 +244,7 @@ const SaleInvoice = () => {
         item.name = p.name;
         item.hsn = p.hsn || '';
         item.unit = p.unit || 'PCS';
+        item.image = p.image || '';
         item.rate = Number(p.sellingPrice) || 0;
         item.taxRate = Number(p.taxRate) || 0;
       }
@@ -663,7 +671,8 @@ const SaleInvoice = () => {
               <div className="si-card-subtitle">{doc.items.length} item{doc.items.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
-          <div className="si-table-actions">
+
+          <div className="si-summary-actions">
             <div className="si-discount-toggle">
               <span className="si-toggle-label" style={{ fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', marginRight: '0.5rem' }}>Discount :</span>
               <span
@@ -1031,6 +1040,33 @@ const SaleInvoice = () => {
             <div className="si-words-label">Total in words</div>
             <div className="si-words-value">{numberToWords(doc.grandTotal)}</div>
           </div>
+
+          {/* UPI QR Code Preview */}
+          {companySettings?.upiId && (
+            <div className="si-summary-qr" style={{
+              margin: '1rem 0',
+              padding: '0.75rem',
+              background: '#f1f5f9',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              border: '1px solid #e2e8f0'
+            }}>
+              <div style={{ background: '#fff', padding: '4px', borderRadius: '6px' }}>
+                <QRCodeCanvas
+                  value={`upi://pay?pa=${companySettings.upiId}&pn=${encodeURIComponent(companySettings.name || 'Business')}&am=${doc.grandTotal}&cu=INR&tn=${encodeURIComponent('Inv ' + (doc.invoiceDetail.invoiceNo || ''))}`}
+                  size={64}
+                  level="H"
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b' }}>Payment QR Preview</div>
+                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>Scannable QR with amount</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#6366f1', marginTop: '2px' }}>{companySettings.upiId}</div>
+              </div>
+            </div>
+          )}
 
           {/* Payment Type */}
           <div className="si-payment-section">

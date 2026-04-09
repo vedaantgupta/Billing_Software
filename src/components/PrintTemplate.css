@@ -3,14 +3,17 @@
 
 .print-container {
   width: 210mm;
-  height: 297mm;
+  height: 297mm; /* Exact A4 Height */
   padding: 10mm;
+  overflow: hidden;
   margin: 0 auto;
   background: rgb(255, 255, 255);
   color: black;
   font-family: 'Roboto', sans-serif;
   font-size: 10px;
   box-sizing: border-box;
+  page-break-after: always;
+  position: relative;
 }
 
 .print-container * {
@@ -19,11 +22,11 @@
 
 .print-page-border {
   border: 1.5px solid #00adef;
-  /* A light distinct blue */
   width: 100%;
-  height: 100%;
+  height: calc(297mm - 20mm); /* Match inner height */
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* 1. Header Area */
@@ -149,8 +152,7 @@
 .pt-main-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
-  height: 100%;
+  table-layout: auto;
 }
 
 .pt-main-table th,
@@ -176,41 +178,42 @@
 
 /* Column Widths */
 .th-sr {
-  width: 30px;
+  min-width: 30px;
 }
 
 .th-product {
+  min-width: 150px;
   width: auto;
 }
 
 .th-hsn {
-  width: 50px;
+  min-width: 60px;
 }
 
 .th-qty {
-  width: 50px;
+  min-width: 50px;
 }
 
 .th-rate {
-  width: 50px;
+  min-width: 80px;
 }
 
 .th-taxable {
-  width: 65px;
+  min-width: 90px;
 }
 
 .th-tax {
-  width: 70px;
+  min-width: 110px;
 }
 
 /* Covers 2 sub-cols */
 .th-tax-sub {
-  width: 35px;
+  min-width: 55px;
   border-top: 1.5px solid #00adef;
 }
 
 .th-total {
-  width: 70px;
+  min-width: 100px;
 }
 
 /* Main rows formatting */
@@ -223,6 +226,7 @@
 
 .td-center {
   text-align: center;
+  white-space: nowrap;
 }
 
 .td-left {
@@ -231,6 +235,8 @@
 
 .td-right {
   text-align: right;
+  white-space: nowrap;
+  padding-right: 8px !important;
 }
 
 .pt-product-name {
@@ -270,9 +276,10 @@
 /* 5. Footer Container */
 .pt-footer-container {
   display: flex;
-  height: 140px;
-  /* Fixed rough height to match proportions */
+  min-height: 140px;
+  height: auto;
   background-color: white;
+  border-top: 1.5px solid #00adef;
 }
 
 .pt-footer-left {
@@ -398,10 +405,9 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 6px;
+  padding: 8px;
   text-align: center;
-  border-top: 1.5px solid #00adef;
-  /* Ensure separation */
+  min-height: 100px;
 }
 
 .pt-certify-text {
@@ -441,9 +447,9 @@
     width: 210mm !important;
     height: 297mm !important;
     padding: 10mm !important;
-    /* 10mm margin from edge */
+    overflow: hidden !important;
     margin: 0 !important;
-    page-break-after: avoid;
+    page-break-after: always !important;
     box-shadow: none;
   }
 

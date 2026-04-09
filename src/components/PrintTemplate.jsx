@@ -1,4 +1,5 @@
 import React from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import './PrintTemplate.css';
 
 // Helper for Number to Words (Indian Currency)
@@ -46,7 +47,7 @@ const toWords = (num) => {
   return result.trim() + " RUPEES ONLY";
 };
 
-const PrintTemplate = ({ doc: rawDoc, company, type: rawType, copyType = 'ORIGINAL FOR RECIPIENT' }) => {
+const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, copyType = 'ORIGINAL FOR RECIPIENT' }) => {
   if (!rawDoc) return null;
 
   // ── Data Normalization for different doc types ──
@@ -94,6 +95,10 @@ const PrintTemplate = ({ doc: rawDoc, company, type: rawType, copyType = 'ORIGIN
     
     const total = taxableValue + cgstAmount + sgstAmount + igstAmount;
     
+    // Look up image from products master list if not present on item
+    const productMaster = products.find(p => p.id === item.productId || p._dbId === item.productId);
+    const itemImage = item.image || productMaster?.image;
+
     return { 
       ...item, 
       quantity, 
@@ -106,6 +111,7 @@ const PrintTemplate = ({ doc: rawDoc, company, type: rawType, copyType = 'ORIGIN
       sgstAmount, 
       igstAmount,
       total, 
+      image: itemImage,
       srNo: index + 1 
     };
   });
@@ -119,246 +125,282 @@ const PrintTemplate = ({ doc: rawDoc, company, type: rawType, copyType = 'ORIGIN
     total: acc.total + it.total
   }), { qty: 0, taxable: 0, cgst: 0, sgst: 0, igst: 0, total: 0 });
 
+  // ── Pagination Logic ──
+  // Based on reference image: Header + Footer repeat on every page.
+  // Capacity set to 15 items per page.
+  const PAGE_CAPACITY = 15;
+
+  const pages = [];
+  let remainingItems = [...items];
+  
+  // Chunking into equal sized pages
+  let pageIdx = 0;
+  while (remainingItems.length > 0 || pageIdx === 0) {
+    const chunk = remainingItems.splice(0, PAGE_CAPACITY);
+    pages.push(chunk);
+    pageIdx++;
+    if (remainingItems.length === 0) break;
+  }
+
   const displayType = isQuotation ? 'OFFER' : isJobWork ? 'JOB WORK ORDER' : (rawType || 'TAX INVOICE');
 
   return (
-    <div className="print-container">
-      <div className="print-page-border">
-        {/* Header Block */}
-        <div className="pt-header">
-          <div className="pt-header-left">
-            <h1>{company?.name || 'VEDAANT POOLS TECHNOLOGY'}</h1>
-            <p>{company?.address || 'HOUSE NO L-1, VANDANA VIHAR COLONY, BHANGAD ROAD\nBEHIND PAGARE GAS GODOWN\nIndore, Madhya Pradesh - 452011'}</p>
-          </div>
-          <div className="pt-header-right">
-            <table>
-              <tbody>
-                <tr><td>Name</td><td>: {company?.ownerName || 'yogendra gupta'}</td></tr>
-                <tr><td>Phone</td><td>: {company?.phone || '09479940047'}</td></tr>
-                <tr><td>Email</td><td>: {company?.email || 'vedaantpools@gmail.com'}</td></tr>
-                <tr><td>PAN</td><td>: {company?.pan || 'AGZPG1057G'}</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <div className="pt-multi-page-container">
+      {pages.map((pageItems, pIdx) => {
+        const isFirstPage = pIdx === 0;
+        const isLastPage = pIdx === pages.length - 1;
 
-        {/* GSTIN & Title Bar */}
-        <div className="pt-title-bar">
-          <div className="pt-title-gstin"><strong>GSTIN :</strong> {company?.gstin || '23AGZPG1057G1ZD'}</div>
-          <div className="pt-title-text">{displayType}</div>
-          <div className="pt-title-original">{copyType}</div>
-        </div>
-
-        {/* Customer & Document Details */}
-        <div className="pt-details-container">
-          <div className="pt-customer-details">
-             <div className="pt-section-title">Customer Detail</div>
-             <table className="pt-details-table">
-               <tbody>
-                 <tr><th>M/S</th><td>: {doc.customerName || '-'}</td></tr>
-                 <tr><th style={{verticalAlign: 'top'}}>Address</th><td style={{whiteSpace: 'pre-wrap'}}>: {doc.customerAddress || '-'}</td></tr>
-                 <tr><th>Phone</th><td>: {doc.customerPhone || '-'}</td></tr>
-                 <tr><th>GSTIN</th><td>: {doc.customerGstin || '-'}</td></tr>
-                 <tr><th>PAN</th><td>: {doc.customerPan || '-'}</td></tr>
-                 <tr><th>Place of Supply</th><td>: {doc.placeOfSupply || '-'}</td></tr>
-               </tbody>
-             </table>
-          </div>
-          <div className="pt-invoice-details">
-             <table className="pt-details-table" style={{marginTop: '10px'}}>
-               <tbody>
-                 <tr>
-                  <th style={{width: '100px'}}>{isQuotation ? 'OFFER No.' : isJobWork ? 'Order No.' : 'Invoice No.'}</th>
-                  <td style={{fontSize: '13px'}}>: <strong>{doc.invoiceNumber || '-'}</strong></td>
-                 </tr>
-                 <tr>
-                  <th>{isQuotation ? 'OFFER Date' : isJobWork ? 'Order Date' : 'Invoice Date'}</th>
-                  <td>: {doc.date || '-'}</td>
-                 </tr>
-                 {doc.challanNo && <tr><th>Challan No.</th><td>: {doc.challanNo}</td></tr>}
-                 {doc.offerDetail?.lrNo && <tr><th>L.R. No.</th><td>: {doc.offerDetail.lrNo}</td></tr>}
-               </tbody>
-             </table>
-          </div>
-        </div>
-
-        {/* Main Items Table */}
-        <div className="pt-table-container">
-          <table className="pt-main-table">
-            <thead>
-              <tr>
-                <th className="th-sr" rowSpan="2">Sr.<br/>No.</th>
-                <th className="th-product" rowSpan="2">Name of Product / Service</th>
-                <th className="th-hsn" rowSpan="2">HSN / SAC</th>
-                <th className="th-qty" rowSpan="2">Qty</th>
-                <th className="th-rate" rowSpan="2">Rate</th>
-                <th className="th-taxable" rowSpan="2">Taxable Value</th>
-                {isIntraState ? (
-                  <>
-                    <th className="th-tax" colSpan="2">CGST</th>
-                    <th className="th-tax" colSpan="2">SGST</th>
-                  </>
-                ) : (
-                  <th className="th-tax" colSpan="2">IGST</th>
-                )}
-                <th className="th-total" rowSpan="2">Total</th>
-              </tr>
-              <tr>
-                {isIntraState ? (
-                  <>
-                    <th className="th-tax-sub">%</th>
-                    <th className="th-tax-sub">Amount</th>
-                    <th className="th-tax-sub">%</th>
-                    <th className="th-tax-sub">Amount</th>
-                  </>
-                ) : (
-                  <>
-                    <th className="th-tax-sub">%</th>
-                    <th className="th-tax-sub">Amount</th>
-                  </>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, idx) => (
-                <tr key={idx} className="pt-item-row">
-                  <td className="td-center">{item.srNo}</td>
-                  <td className="td-left">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div className="pt-product-name">{item.name}</div>
-                        {item.note && <div className="pt-product-desc">{item.note}</div>}
-                      </div>
-                      {item.image && (
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          className="pt-product-image" 
-                        />
-                      )}
-                    </div>
-                  </td>
-                  <td className="td-center">{item.hsn || '-'}</td>
-                  <td className="td-right">{(item.quantity).toFixed(2)} {item.unit?.split(' ')[0] || ''}</td>
-                  <td className="td-right">{(item.rate).toFixed(2)}</td>
-                  <td className="td-right">{(item.taxableValue).toFixed(2)}</td>
-                  {isIntraState ? (
-                    <>
-                      <td className="td-center">{(item.cgstRate).toFixed(2)}</td>
-                      <td className="td-right">{(item.cgstAmount).toFixed(2)}</td>
-                      <td className="td-center">{(item.sgstRate).toFixed(2)}</td>
-                      <td className="td-right">{(item.sgstAmount).toFixed(2)}</td>
-                    </>
+        return (
+          <div className="print-container" key={pIdx}>
+            <div className="print-page-border">
+              {/* Header Block - Repeats on Every Page */}
+              <div className="pt-header">
+                <div className="pt-header-left">
+                  {company?.logo ? (
+                    <img src={company.logo} alt={company.name} style={{ maxHeight: '80px', maxWidth: '280px', objectFit: 'contain', marginBottom: '8px' }} />
                   ) : (
-                    <>
-                      <td className="td-center">{(item.taxRate).toFixed(2)}</td>
-                      <td className="td-right">{(item.igstAmount).toFixed(2)}</td>
-                    </>
+                    <h1>{company?.name || ''}</h1>
                   )}
-                  <td className="td-right">{(item.total).toFixed(2)}</td>
-                </tr>
-              ))}
-              {/* Individual empty cells to maintain vertical lines */}
-              <tr className="pt-empty-row">
-                <td></td><td></td><td></td><td></td><td></td><td></td>
-                {isIntraState ? (
-                  <><td></td><td></td><td></td><td></td></>
-                ) : (
-                  <><td></td><td></td></>
-                )}
-                <td></td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr className="pt-totals-row">
-                <td colSpan="3" className="td-right"><strong>Total</strong></td>
-                <td className="td-right"><strong>{totals.qty.toFixed(2)}</strong></td>
-                <td></td>
-                <td className="td-right"><strong>{totals.taxable.toFixed(2)}</strong></td>
-                {isIntraState ? (
-                  <>
-                    <td></td><td className="td-right"><strong>{totals.cgst.toFixed(2)}</strong></td>
-                    <td></td><td className="td-right"><strong>{totals.sgst.toFixed(2)}</strong></td>
-                  </>
-                ) : (
-                  <>
-                    <td></td><td className="td-right"><strong>{totals.igst.toFixed(2)}</strong></td>
-                  </>
-                )}
-                <td className="td-right"><strong>{(totals.taxable + totals.cgst + totals.sgst + totals.igst).toFixed(2)}</strong></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+                  <p>{company?.address || ''}</p>
+                </div>
+                <div className="pt-header-right">
+                  <table>
+                    <tbody>
+                      <tr><td>Name</td><td>: {company?.ownerName || '-'}</td></tr>
+                      <tr><td>Phone</td><td>: {company?.phone || '-'}</td></tr>
+                      <tr><td>Email</td><td>: {company?.email || '-'}</td></tr>
+                      <tr><td>PAN</td><td>: {company?.pan || '-'}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-        {/* Footer Area */}
-        <div className="pt-footer-container">
-          <div className="pt-footer-left">
-            <div className="pt-footer-box" style={{height: '40px'}}>
-               <div className="pt-section-title-small">Total in words</div>
-               <div className="pt-words-text">{toWords(Math.round(totals.total))}</div>
-            </div>
-            <div className="pt-footer-box pt-bank-box">
-               <div className="pt-section-title-small">Bank Details</div>
-               <table className="pt-bank-table">
-                 <tbody>
-                   <tr><th>Name</th><td>{rawDoc.bank || company?.bankName || 'CANARA BANK'}</td></tr>
-                   <tr><th>Branch</th><td>{company?.bankBranch || 'MR-10 ROAD VIJAY NAGAR INDORE'}</td></tr>
-                   <tr><th>Acc. Number</th><td>{company?.bankAccNumber || '5566201000132'}</td></tr>
-                   <tr><th>IFSC</th><td>{company?.bankIfsc || 'CNRB0005566'}</td></tr>
-                 </tbody>
-               </table>
-            </div>
-            <div className="pt-footer-box pt-terms-box" style={{borderBottom: '1.5px solid #00adef'}}>
-               <div className="pt-section-title-small">Terms and Conditions</div>
-               <div className="pt-terms-text">
-                 {rawDoc.terms?.length ? (
-                   rawDoc.terms.map((t, i) => <div key={i}><strong>{t.title}:</strong> {t.detail}</div>)
-                 ) : (
-                   <>
-                     Subject to our home Jurisdiction.<br/>
-                     Our Responsibility Ceases as soon as goods leaves our Premises.<br/>
-                     Goods once sold will not taken back.
-                   </>
-                 )}
-               </div>
-            </div>
-            <div className="pt-footer-box">
-               <div className="pt-section-title-small">Payment condition</div>
-               <div className="pt-terms-text">100% advance against finalization of offer</div>
+              <div className="pt-title-bar">
+                <div className="pt-title-gstin"><strong>GSTIN :</strong> {company?.gstin || '-'}</div>
+                <div className="pt-title-text">{displayType}</div>
+                <div className="pt-title-original">{copyType}</div>
+              </div>
+
+              <div className="pt-details-container">
+                <div className="pt-customer-details">
+                   <div className="pt-section-title">Customer Detail</div>
+                   <table className="pt-details-table">
+                     <tbody>
+                       <tr><th>M/S</th><td>: {doc.customerName || '-'}</td></tr>
+                       <tr><th style={{verticalAlign: 'top'}}>Address</th><td style={{whiteSpace: 'pre-wrap'}}>: {doc.customerAddress || '-'}</td></tr>
+                       <tr><th>Phone</th><td>: {doc.customerPhone || '-'}</td></tr>
+                       <tr><th>GSTIN</th><td>: {doc.customerGstin || '-'}</td></tr>
+                       <tr><th>PAN</th><td>: {doc.customerPan || '-'}</td></tr>
+                       <tr><th>Place of Supply</th><td>: {doc.placeOfSupply || '-'}</td></tr>
+                     </tbody>
+                   </table>
+                </div>
+                <div className="pt-invoice-details">
+                   <table className="pt-details-table" style={{marginTop: '10px'}}>
+                     <tbody>
+                       <tr>
+                        <th style={{width: '100px'}}>{isQuotation ? 'OFFER No.' : isJobWork ? 'Order No.' : 'Invoice No.'}</th>
+                        <td style={{fontSize: '13px'}}>: <strong>{doc.invoiceNumber || '-'}</strong></td>
+                       </tr>
+                       <tr>
+                        <th>{isQuotation ? 'OFFER Date' : isJobWork ? 'Order Date' : 'Invoice Date'}</th>
+                        <td>: {doc.date || '-'}</td>
+                       </tr>
+                       {doc.challanNo && <tr><th>Challan No.</th><td>: {doc.challanNo}</td></tr>}
+                       {doc.offerDetail?.lrNo && <tr><th>L.R. No.</th><td>: {doc.offerDetail.lrNo}</td></tr>}
+                     </tbody>
+                   </table>
+                </div>
+              </div>
+
+              {/* Main Items Table - Repeats on every page */}
+              <div className="pt-table-container">
+                <table className="pt-main-table">
+                  <thead>
+                    <tr>
+                      <th className="th-sr" rowSpan="2">Sr.<br/>No.</th>
+                      <th className="th-product" rowSpan="2">Name of Product / Service</th>
+                      <th className="th-hsn" rowSpan="2">HSN / SAC</th>
+                      <th className="th-qty" rowSpan="2">Qty</th>
+                      <th className="th-rate" rowSpan="2">Rate</th>
+                      <th className="th-taxable" rowSpan="2">Taxable Value</th>
+                      {isIntraState ? (
+                        <>
+                          <th className="th-tax" colSpan="2">CGST</th>
+                          <th className="th-tax" colSpan="2">SGST</th>
+                        </>
+                      ) : (
+                        <th className="th-tax" colSpan="2">IGST</th>
+                      )}
+                      <th className="th-total" rowSpan="2">Total</th>
+                    </tr>
+                    <tr>
+                      {isIntraState ? (
+                        <>
+                          <th className="th-tax-sub">%</th>
+                          <th className="th-tax-sub">Amount</th>
+                          <th className="th-tax-sub">%</th>
+                          <th className="th-tax-sub">Amount</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="th-tax-sub">%</th>
+                          <th className="th-tax-sub">Amount</th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageItems.map((item, idx) => (
+                      <tr key={idx} className="pt-item-row">
+                        <td className="td-center">{item.srNo}</td>
+                        <td className="td-left">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <div className="pt-product-name">{item.name}</div>
+                              {item.note && <div className="pt-product-desc">{item.note}</div>}
+                            </div>
+                            {item.image && (
+                              <img src={item.image} alt={item.name} className="pt-product-image" />
+                            )}
+                          </div>
+                        </td>
+                        <td className="td-center">{item.hsn || '-'}</td>
+                        <td className="td-right">{(item.quantity).toFixed(2)} {item.unit?.split(' ')[0] || ''}</td>
+                        <td className="td-right">{(item.rate).toFixed(2)}</td>
+                        <td className="td-right">{(item.taxableValue).toFixed(2)}</td>
+                        {isIntraState ? (
+                          <>
+                            <td className="td-center">{(item.cgstRate).toFixed(2)}</td>
+                            <td className="td-right">{(item.cgstAmount).toFixed(2)}</td>
+                            <td className="td-center">{(item.sgstRate).toFixed(2)}</td>
+                            <td className="td-right">{(item.sgstAmount).toFixed(2)}</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="td-center">{(item.taxRate).toFixed(2)}</td>
+                            <td className="td-right">{(item.igstAmount).toFixed(2)}</td>
+                          </>
+                        )}
+                        <td className="td-right">{(item.total).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    
+                    {/* Empty spacer row to push footer down */}
+                    <tr className="pt-empty-row">
+                      <td colSpan={isIntraState ? 11 : 9} style={{ height: '100%' }}></td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr className="pt-totals-row">
+                      <td colSpan="3" className="td-right"><strong>Total</strong></td>
+                      <td className="td-right"><strong>{totals.qty.toFixed(2)}</strong></td>
+                      <td></td>
+                      <td className="td-right"><strong>{totals.taxable.toFixed(2)}</strong></td>
+                      {isIntraState ? (
+                        <>
+                          <td></td><td className="td-right"><strong>{totals.cgst.toFixed(2)}</strong></td>
+                          <td></td><td className="td-right"><strong>{totals.sgst.toFixed(2)}</strong></td>
+                        </>
+                      ) : (
+                        <>
+                          <td></td><td className="td-right"><strong>{totals.igst.toFixed(2)}</strong></td>
+                        </>
+                      )}
+                      <td className="td-right"><strong>{(totals.taxable + totals.cgst + totals.sgst + totals.igst).toFixed(2)}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Footer Area - Repeats on Every Page */}
+              <div className="pt-footer-container">
+                <div className="pt-footer-left">
+                  <div className="pt-footer-box" style={{minHeight: '40px'}}>
+                     <div className="pt-section-title-small">Total in words</div>
+                     <div className="pt-words-text">{toWords(Math.round(totals.total))}</div>
+                  </div>
+                  <div className="pt-footer-box pt-bank-box">
+                     <div className="pt-section-title-small">Bank Details</div>
+                     <table className="pt-bank-table">
+                       <tbody>
+                         <tr><th>Name</th><td>{company?.bankName || '-'}</td></tr>
+                         <tr><th>Branch</th><td>{company?.bankBranch || '-'}</td></tr>
+                         <tr><th>Acc. Number</th><td>{company?.bankAccNumber || '-'}</td></tr>
+                         <tr><th>IFSC</th><td>{company?.bankIfsc || '-'}</td></tr>
+                       </tbody>
+                     </table>
+                  </div>
+                  <div className="pt-footer-box pt-terms-box" style={{borderBottom: '1.5px solid #00adef'}}>
+                     <div className="pt-section-title-small">Terms and Conditions</div>
+                       <div className="pt-terms-text">
+                         {rawDoc.terms?.length ? (
+                           rawDoc.terms.map((t, i) => <div key={i}><strong>{t.title}:</strong> {t.detail}</div>)
+                         ) : (
+                           <div style={{ whiteSpace: 'pre-wrap' }}>{company?.terms || '-'}</div>
+                         )}
+                       </div>
+                  </div>
+                   <div className="pt-footer-box">
+                      <div className="pt-section-title-small">Payment condition</div>
+                      <div className="pt-terms-text">{company?.paymentTerms || '-'}</div>
+                   </div>
+
+                  {company?.upiId && (
+                    <div className="pt-footer-box pt-qr-box" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '10px', background: '#f8fafc', padding: '10px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                      <QRCodeCanvas 
+                        value={`upi://pay?pa=${company.upiId}&pn=${encodeURIComponent(company.name || '')}&am=${Math.round(totals.total)}&cu=INR&tn=${encodeURIComponent('Inv ' + (doc.invoiceNumber || ''))}`}
+                        size={80}
+                        level="H"
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#00adef', marginBottom: '4px' }}>SCAN & PAY VIA UPI</div>
+                        <div style={{ fontSize: '10px', color: '#64748b', lineHeight: '1.2' }}>
+                          Quick payment using any UPI App (GPay, PhonePe, Paytm, etc.)
+                        </div>
+                        <div style={{ fontSize: '10px', fontWeight: '600', color: '#1e293b', marginTop: '4px' }}>UPI ID: {company.upiId}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="pt-footer-right">
+                   <table className="pt-summary-table">
+                     <tbody>
+                       <tr><th>Taxable Amount</th><td>{totals.taxable.toFixed(2)}</td></tr>
+                       {isIntraState ? (
+                         <>
+                          <tr><th>Add : CGST</th><td>{totals.cgst.toFixed(2)}</td></tr>
+                          <tr><th>Add : SGST</th><td>{totals.sgst.toFixed(2)}</td></tr>
+                         </>
+                       ) : (
+                          <tr><th>Add : IGST</th><td>{totals.igst.toFixed(2)}</td></tr>
+                       )}
+                       <tr><th>Total Tax</th><td>{(totals.cgst + totals.sgst + totals.igst).toFixed(2)}</td></tr>
+                       <tr className="pt-grand-total">
+                        <th>Total Amount After Tax</th>
+                        <td>₹{(totals.taxable + totals.cgst + totals.sgst + totals.igst).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                       </tr>
+                       <tr><td colSpan="2" className="pt-eoe">(E & O.E.)</td></tr>
+                     </tbody>
+                   </table>
+                   
+                    <div className="pt-signature-box">
+                      <div className="pt-certify-text">Certified that the particulars given above are true and correct.</div>
+                      <div className="pt-sig-company">For {company?.name || ''}</div>
+                      <div className="pt-sig-label">Authorised Signatory</div>
+                    </div>
+                </div>
+              </div>
+              
+              {/* Page indicator at very bottom */}
+              <div style={{ textAlign: 'center', padding: '5px', fontSize: '9px', fontWeight: 600, borderTop: '1px dashed #eee' }}>
+                 Page {pIdx + 1} of {pages.length}
+              </div>
             </div>
           </div>
-          
-          <div className="pt-footer-right">
-             <table className="pt-summary-table">
-               <tbody>
-                 <tr><th>Taxable Amount</th><td>{totals.taxable.toFixed(2)}</td></tr>
-                 {isIntraState ? (
-                   <>
-                    <tr><th>Add : CGST</th><td>{totals.cgst.toFixed(2)}</td></tr>
-                    <tr><th>Add : SGST</th><td>{totals.sgst.toFixed(2)}</td></tr>
-                   </>
-                 ) : (
-                    <tr><th>Add : IGST</th><td>{totals.igst.toFixed(2)}</td></tr>
-                 )}
-                 <tr><th>Total Tax</th><td>{(totals.cgst + totals.sgst + totals.igst).toFixed(2)}</td></tr>
-                 <tr className="pt-grand-total">
-                  <th>Total Amount After Tax</th>
-                  <td>₹{(totals.taxable + totals.cgst + totals.sgst + totals.igst).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                 </tr>
-                 <tr><td colSpan="2" className="pt-eoe">(E & O.E.)</td></tr>
-               </tbody>
-             </table>
-             
-             <div className="pt-signature-box">
-               <div className="pt-certify-text">Certified that the particulars given above are true and correct.</div>
-               <div className="pt-sig-company">For {company?.name || 'VEDAANT POOLS TECHNOLOGY'}</div>
-               <div className="pt-sig-label">Authorised Signatory</div>
-             </div>
-          </div>
-        </div>
-
-      </div>
+        );
+      })}
     </div>
   );
 };

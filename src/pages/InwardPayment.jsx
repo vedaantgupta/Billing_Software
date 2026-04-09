@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getItems, addItem, deleteItem, logActivity } from '../utils/db';
 import { postToLedger } from '../utils/ledger';
 import { useAuth } from '../hooks/useAuth';
@@ -12,6 +13,7 @@ const InwardPayment = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [newPayment, setNewPayment] = useState({
     receiptPrefix: '11',

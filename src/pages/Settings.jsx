@@ -22,7 +22,16 @@ const Settings = () => {
      stateCode: '',
      email: '',
      phone: '',
-     bankDetails: ''
+     ownerName: '',
+     pan: '',
+     bankName: '',
+     bankBranch: '',
+     bankAccNumber: '',
+     bankIfsc: '',
+     upiId: '',
+     paymentTerms: '100% advance against finalization of offer',
+     terms: 'Subject to our home Jurisdiction.\nOur Responsibility Ceases as soon as goods leave our Premises.\nGoods once sold will not be taken back.',
+     logo: null
   });
 
   const [activityLogs, setActivityLogs] = useState([]);
@@ -44,17 +53,33 @@ const Settings = () => {
     fetchLogs();
   }, [user, activeTab]);
 
-  const handleSaveProfile = async (e) => {
+  const handleCompanyProfileSave = async (e) => {
      e.preventDefault();
-     const db = getDB();
-     db.company = companyProfile;
-     saveDB(db);
-     
-     if (user?.id) {
-       await logActivity('Updated Company Profile Setup', user.id, user.username || user.firstName || 'You');
+     try {
+       const db = getDB();
+       db.company = companyProfile;
+       saveDB(db);
+       
+       if (user?.id) {
+         await logActivity('Updated Company Profile Setup', user.id, user.username || user.firstName || 'You');
+       }
+       
+       alert('Settings updated successfully!');
+     } catch (err) {
+       console.error('Failed to update settings:', err);
+       alert('Failed to update settings');
      }
-     
-     alert('Company Profile Updated Successfully!');
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompanyProfile({ ...companyProfile, logo: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -85,28 +110,61 @@ const Settings = () => {
             <h3 className="mb-4">Business / Company Setup</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Update your company details. These changes will automatically reflect universally on all your printed Invoices, Quotations, and E-Way bills.</p>
             
-            <form onSubmit={handleSaveProfile}>
-               <div className="flex gap-4">
-                  <div className="form-group w-full" style={{ flex: 2 }}>
-                     <label className="form-label">Company / Legal Name *</label>
-                     <input required className="form-input" value={companyProfile.name} onChange={e => setCompanyProfile({...companyProfile, name: e.target.value})} />
+            <form onSubmit={handleCompanyProfileSave} className="flex flex-col gap-6">
+               <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                  <div style={{ position: 'relative', width: '120px', height: '120px', background: '#f8fafc', border: '2px dashed #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                     {companyProfile.logo ? (
+                        <>
+                           <img src={companyProfile.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                           <button 
+                             type="button" 
+                             onClick={() => setCompanyProfile({...companyProfile, logo: null})}
+                             style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '14px', color: '#ef4444' }}
+                           >
+                             &times;
+                           </button>
+                        </>
+                     ) : (
+                        <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                           <div style={{ fontSize: '24px', marginBottom: '4px' }}>🖼️</div>
+                           <div style={{ fontSize: '10px', fontWeight: 600 }}>Logo</div>
+                        </div>
+                     )}
+                     <input type="file" accept="image/*" onChange={handleLogoChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
                   </div>
-                  <div className="form-group w-full" style={{ flex: 1 }}>
-                     <label className="form-label">GSTIN</label>
-                     <input className="form-input" value={companyProfile.gstin} onChange={e => setCompanyProfile({...companyProfile, gstin: e.target.value})} placeholder="22AAAAA0000A1Z5" />
+                  <div style={{ flex: 1 }}>
+                     <div className="form-group w-full mb-4">
+                        <label className="form-label">Company / Business Name *</label>
+                        <input required className="form-input" value={companyProfile.name} onChange={e => setCompanyProfile({...companyProfile, name: e.target.value})} />
+                     </div>
+                     <div className="form-group w-full mb-0">
+                        <label className="form-label">GSTIN (Optional)</label>
+                        <input className="form-input" value={companyProfile.gstin} onChange={e => setCompanyProfile({...companyProfile, gstin: e.target.value})} placeholder="27AABCU9603R1ZM" />
+                     </div>
                   </div>
                </div>
 
-               <div className="flex gap-4">
-                  <div className="form-group w-full" style={{ flex: 1 }}>
-                     <label className="form-label">Email Address</label>
-                     <input type="email" className="form-input" value={companyProfile.email} onChange={e => setCompanyProfile({...companyProfile, email: e.target.value})} />
-                  </div>
-                  <div className="form-group w-full" style={{ flex: 1 }}>
-                     <label className="form-label">Phone / Mobile</label>
-                     <input className="form-input" value={companyProfile.phone} onChange={e => setCompanyProfile({...companyProfile, phone: e.target.value})} />
-                  </div>
-               </div>
+                <div className="flex gap-4">
+                   <div className="form-group w-full" style={{ flex: 1 }}>
+                      <label className="form-label">Email Address</label>
+                      <input type="email" className="form-input" value={companyProfile.email} onChange={e => setCompanyProfile({...companyProfile, email: e.target.value})} />
+                   </div>
+                   <div className="form-group w-full" style={{ flex: 1 }}>
+                      <label className="form-label">Phone / Mobile</label>
+                      <input className="form-input" value={companyProfile.phone} onChange={e => setCompanyProfile({...companyProfile, phone: e.target.value})} />
+                   </div>
+                </div>
+
+                <div className="flex gap-4">
+                   <div className="form-group w-full" style={{ flex: 1 }}>
+                      <label className="form-label">Owner / Authorised Name</label>
+                      <input className="form-input" value={companyProfile.ownerName} onChange={e => setCompanyProfile({...companyProfile, ownerName: e.target.value})} placeholder="e.g. John Doe" />
+                   </div>
+                   <div className="form-group w-full" style={{ flex: 1 }}>
+                      <label className="form-label">PAN Number</label>
+                      <input className="form-input" value={companyProfile.pan} onChange={e => setCompanyProfile({...companyProfile, pan: e.target.value.toUpperCase()})} placeholder="ABCDE1234F" />
+                   </div>
+                </div>
 
                <div className="form-group w-full">
                   <label className="form-label">Registered Address</label>
@@ -124,10 +182,44 @@ const Settings = () => {
                   </div>
                </div>
                
-               <div className="form-group w-full">
-                  <label className="form-label">Default Bank Details (For Invoice Printing)</label>
-                  <textarea className="form-input" rows="2" placeholder="Bank Name: HDFC\nA/C No: 123456789\nIFSC: HDFC000123" value={companyProfile.bankDetails} onChange={e => setCompanyProfile({...companyProfile, bankDetails: e.target.value})}></textarea>
-               </div>
+                <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1.5px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                  <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>🏦 Bank & Payment Details (For Invoices)</h4>
+                  <div className="flex gap-4">
+                     <div className="form-group w-full" style={{ flex: 1 }}>
+                        <label className="form-label">Bank Name</label>
+                        <input className="form-input" value={companyProfile.bankName} onChange={e => setCompanyProfile({...companyProfile, bankName: e.target.value})} placeholder="e.g. HDFC Bank" />
+                     </div>
+                     <div className="form-group w-full" style={{ flex: 1 }}>
+                        <label className="form-label">Branch Name</label>
+                        <input className="form-input" value={companyProfile.bankBranch} onChange={e => setCompanyProfile({...companyProfile, bankBranch: e.target.value})} placeholder="e.g. Khelgaon, Delhi" />
+                     </div>
+                  </div>
+                  <div className="flex gap-4">
+                     <div className="form-group w-full" style={{ flex: 1 }}>
+                        <label className="form-label">Account Number</label>
+                        <input className="form-input" value={companyProfile.bankAccNumber} onChange={e => setCompanyProfile({...companyProfile, bankAccNumber: e.target.value})} placeholder="0000123456789" />
+                     </div>
+                     <div className="form-group w-full" style={{ flex: 1 }}>
+                        <label className="form-label">IFSC Code</label>
+                        <input className="form-input" value={companyProfile.bankIfsc} onChange={e => setCompanyProfile({...companyProfile, bankIfsc: e.target.value.toUpperCase()})} placeholder="HDFC0001234" />
+                     </div>
+                  </div>
+                  <div className="form-group w-full" style={{ marginTop: '0.5rem' }}>
+                     <label className="form-label">UPI ID / VPA (For QR Payment) *</label>
+                     <input className="form-input" placeholder="e.g. business@okaxis" value={companyProfile.upiId} onChange={e => setCompanyProfile({...companyProfile, upiId: e.target.value})} />
+                     <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>This ID generates the payment QR code on your invoices.</p>
+                  </div>
+                </div>
+
+                <div className="form-group w-full">
+                   <label className="form-label">Default Payment Conditions</label>
+                   <input className="form-input" value={companyProfile.paymentTerms} onChange={e => setCompanyProfile({...companyProfile, paymentTerms: e.target.value})} placeholder="e.g. 100% advance" />
+                </div>
+
+                <div className="form-group w-full">
+                   <label className="form-label">Default Terms & Conditions</label>
+                   <textarea className="form-input" rows="3" value={companyProfile.terms} onChange={e => setCompanyProfile({...companyProfile, terms: e.target.value})}></textarea>
+                </div>
 
                <div className="mt-4 pt-4 flex gap-4" style={{ borderTop: '2px solid var(--border-color)' }}>
                   <button type="submit" className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}>

@@ -184,7 +184,7 @@ const JobWork = () => {
     const item = { ...items[idx] };
     if (f === 'productId') {
       const p = products.find(x => x.id === v);
-      if (p) { item.productId = p.id; item.name = p.name; item.hsn = p.hsn || ''; item.unit = p.unit || 'PCS'; item.rate = Number(p.sellingPrice) || 0; item.taxRate = Number(p.taxRate) || 0; }
+      if (p) { item.productId = p.id; item.name = p.name; item.hsn = p.hsn || ''; item.unit = p.unit || 'PCS'; item.image = p.image || ''; item.rate = Number(p.sellingPrice) || 0; item.taxRate = Number(p.taxRate) || 0; }
     } else { item[f] = v; }
     item.amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
     item.taxAmount = item.amount * ((Number(item.taxRate) || 0) / 100);

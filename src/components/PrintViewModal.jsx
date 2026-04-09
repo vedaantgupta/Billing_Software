@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import PrintTemplate from './PrintTemplate';
 import { Printer, Copy, X, Send, Download } from 'lucide-react';
-import { getDB } from '../utils/db';
+import { getDB, getItems } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
+import { useEffect } from 'react';
 import './PrintViewModal.css';
 
 const PrintViewModal = ({ doc, onClose }) => {
   const { user } = useAuth();
+  const [products, setProducts] = useState([]);
   const [copies, setCopies] = useState({
     original: true,
     duplicate: false,
     transport: false,
     office: false
   });
+
+  useEffect(() => {
+    if (user?.id) {
+      getItems('products', user.id).then(setProducts);
+    }
+  }, [user?.id]);
 
   if (!doc) return null;
 
@@ -104,7 +112,13 @@ const PrintViewModal = ({ doc, onClose }) => {
            <div className="pvm-print-render-area">
              {activeCopies.map(key => (
                <div key={key} className="pvm-page-wrapper">
-                 <PrintTemplate doc={doc} company={getDB()?.company} type={doc.docType} copyType={getCopyText(key)} />
+                 <PrintTemplate 
+                    doc={doc} 
+                    company={getDB()?.company} 
+                    products={products}
+                    type={doc.docType} 
+                    copyType={getCopyText(key)} 
+                  />
                </div>
              ))}
            </div>

@@ -29,7 +29,8 @@ const CreateOutwardPayment = () => {
     paymentType: 'Cash',
     shareEmail: false,
     remarks: '',
-    status: 'Paid'
+    status: 'Paid',
+    category: 'Purchase'
   });
 
   useEffect(() => {
@@ -234,6 +235,18 @@ const CreateOutwardPayment = () => {
               <option>UPI / PhonePe</option>
               <option>Cheque</option>
               <option>Credit Card</option>
+            </select>
+          </div>
+
+          {/* Category */}
+          <div className="cop-row">
+            <label className="cop-label">Category <span className="req">*</span></label>
+            <select className="cop-input" required value={formData.category}
+              onChange={e => setFormData({ ...formData, category: e.target.value })}>
+              <option value="Purchase">Purchase</option>
+              <option value="Salary">Salary</option>
+              <option value="Rent">Rent</option>
+              <option value="Other Expenses">Other Expenses</option>
             </select>
           </div>
 
