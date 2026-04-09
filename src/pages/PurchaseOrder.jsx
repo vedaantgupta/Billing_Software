@@ -276,7 +276,7 @@ const PurchaseOrder = () => {
         date: doc.invoiceDetail.date,
         total: doc.grandTotal,
         vendorName: doc.vendorInfo.ms,
-        status: 'Generated',
+        status: 'Outstanding',
       };
 
       if (id) {

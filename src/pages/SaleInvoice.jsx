@@ -282,7 +282,7 @@ const SaleInvoice = () => {
         date: doc.invoiceDetail.date,
         total: doc.grandTotal,
         customerName: doc.customerInfo.ms,
-        status: 'Generated',
+        status: 'Outstanding',
       };
 
       if (id) {

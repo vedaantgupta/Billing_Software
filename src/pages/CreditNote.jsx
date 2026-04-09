@@ -273,7 +273,7 @@ const CreditNote = () => {
             date: doc.cnDetail.date,
             total: doc.grandTotal,
             customerName: doc.customerInfo.ms,
-            status: 'Generated',
+            status: 'Outstanding',
             docType: doc.docType
          };
 

@@ -281,7 +281,7 @@ const SaleOrder = () => {
             date: doc.soDetail.date,
             total: doc.grandTotal,
             customerName: doc.customerInfo.ms,
-            status: 'Generated',
+            status: 'Outstanding',
             docType: 'Sale Order'
          };
 

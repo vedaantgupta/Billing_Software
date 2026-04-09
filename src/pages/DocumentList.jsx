@@ -3,16 +3,18 @@ import { getItems, addItem, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
 import { Plus, Printer, Copy, RefreshCw, Send, X, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react'; 
+import { QRCodeSVG } from 'qrcode.react';
 import PrintTemplate from '../components/PrintTemplate';
 import PrintViewModal from '../components/PrintViewModal';
 import { getDB } from '../utils/db';
+import { getAllContactBalances } from '../utils/ledger';
 
-const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note'];
+const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note', 'Job Work'];
 
 const DocumentList = () => {
   const [documents, setDocuments] = useState([]);
   const [activeTab, setActiveTab] = useState('Sale Invoice');
+  const [contactBalances, setContactBalances] = useState({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -25,11 +27,12 @@ const DocumentList = () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const [docs, invoices] = await Promise.all([
+      const [docs, invoices, balances] = await Promise.all([
         getItems('documents', user.id),
-        getItems('invoices', user.id)
+        getItems('invoices', user.id),
+        getAllContactBalances(user.id)
       ]);
-      
+
       const allDocs = [...docs];
       invoices.forEach(inv => {
         if (!allDocs.find(d => d.id === inv.id)) {
@@ -38,6 +41,7 @@ const DocumentList = () => {
       });
 
       setDocuments(allDocs.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      setContactBalances(balances);
     } catch (err) {
       console.error('Failed to load documents:', err);
     } finally {
@@ -62,7 +66,7 @@ const DocumentList = () => {
     let series = 'INV';
     let numStr = Date.now().toString().slice(-6);
     if (doc.invoiceNumber && doc.invoiceNumber.includes('-')) {
-        series = doc.invoiceNumber.split('-')[0];
+      series = doc.invoiceNumber.split('-')[0];
     }
     const newDoc = { ...doc, id: undefined, invoiceNumber: `${series}-${numStr}`, date: new Date().toISOString().split('T')[0] };
     await addItem('documents', newDoc, user.id);
@@ -110,12 +114,12 @@ const DocumentList = () => {
     // Clean phone number (keep only digits)
     const cleanPhone = phone.replace(/\D/g, '');
     const message = encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nSharing your ${doc.docType || 'Invoice'} #${doc.invoiceNumber} for ₹${Number(doc.total).toFixed(2)}.\n\nThank you!`);
-    
+
     // If phone exists, open directly to that number, else just open WA with text
-    const url = cleanPhone 
+    const url = cleanPhone
       ? `https://wa.me/${cleanPhone}?text=${message}`
       : `https://wa.me/?text=${message}`;
-    
+
     window.open(url, '_blank');
   };
 
@@ -123,7 +127,7 @@ const DocumentList = () => {
     const email = doc.customerEmail || "";
     const subject = encodeURIComponent(`${doc.docType || 'Invoice'} #${doc.invoiceNumber} from ${user?.firstName || 'Our Company'}`);
     const body = encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nPlease find the details for your ${doc.docType} below.\n\nTotal Amount: ₹${Number(doc.total).toFixed(2)}\n\nThank you!`);
-    
+
     // Open Gmail Compose specifically
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
     window.open(gmailUrl, '_blank');
@@ -131,23 +135,41 @@ const DocumentList = () => {
 
   const generateUPI = (amount, name) => `upi://pay?pa=merchant@upi&pn=${encodeURIComponent(name || 'GoGSTBill')}&am=${amount}&cu=INR`;
 
+  const tabToRoute = {
+    'Sale Invoice': '/documents/sale/new',
+    'Purchase Invoice': '/documents/purchase/new',
+    'Quotation': '/documents/quotation/new',
+    'Proforma Invoice': '/documents/proforma/new',
+    'Delivery Challan': '/documents/delivery-challan/new',
+    'Purchase Order': '/documents/purchase-order/new',
+    'Sale Order': '/documents/sale-order/new',
+    'Credit Note': '/documents/credit-note/new',
+    'Debit Note': '/documents/debit-note/new',
+    'Job Work': '/documents/job-work/new'
+  };
+
   if (loading && user) {
-     return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading Documents...</div>;
+    return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading Documents...</div>;
   }
 
   return (
     <div>
       <div className="print-hide page-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <h1 className="page-title">Document Management</h1>
-        <button className="btn btn-primary" onClick={() => navigate('/documents/select')}>
-          <Plus size={18} /> Create New Document
-        </button>
+        <div className="flex gap-2">
+          <button className="btn" style={{ backgroundColor: '#2563eb', color: 'white' }} onClick={() => navigate(tabToRoute[activeTab] || '/documents/select')}>
+            <Plus size={18} /> Create {activeTab}
+          </button>
+          <button className="btn" style={{ backgroundColor: '#7c3aed', color: 'white' }} onClick={() => navigate('/documents/select')}>
+            More Options
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4 print-hide" style={{ overflowX: 'auto', paddingBottom: '0.5rem' }}>
         {docTypes.map(type => (
-          <button 
-            key={type} 
+          <button
+            key={type}
             className={`btn ${activeTab === type ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveTab(type)}
             style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
@@ -165,7 +187,7 @@ const DocumentList = () => {
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Number</th>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Party</th>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Amount</th>
-              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Status</th>
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Outstanding</th>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
@@ -177,7 +199,25 @@ const DocumentList = () => {
                 <td style={{ padding: '1rem' }}>{doc.customerName || doc.name}</td>
                 <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--primary-color)' }}>{doc.currency === 'INR' ? '₹' : doc.currency} {Number(doc.total).toFixed(2)}</td>
                 <td style={{ padding: '1rem' }}>
-                    <span style={{ background: '#d1fae5', color: '#065f46', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>Generated</span>
+                  {(() => {
+                    const contactId = doc.customerId || doc.vendorId || doc.contactId;
+                    const balInfo = contactBalances[contactId];
+                    const balance = balInfo ? balInfo.balance : 0;
+                    const position = balInfo ? balInfo.position : 'Dr';
+
+                    if (balance > 0) {
+                      return (
+                        <span style={{ background: '#ffedd5', color: '#9a3412', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          ₹{balance.toFixed(2)} {position}
+                        </span>
+                      );
+                    }
+                    return (
+                      <span style={{ background: '#d1fae5', color: '#065f46', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                        ₹0.00
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
                   <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Print / Print with QR" onClick={() => setPrintDoc(doc)}>
@@ -229,18 +269,18 @@ const DocumentList = () => {
           <div className="glass" style={{ background: 'white', width: '500px', padding: '2rem' }}>
             <h2 className="mb-4">Instant Sharing</h2>
             <p style={{ color: 'var(--text-secondary)' }}>Send {sendDoc.docType} <strong>{sendDoc.invoiceNumber}</strong> directly to {sendDoc.customerName}.</p>
-            
+
             <div className="flex gap-4 mt-6 mb-6">
-              <button 
-                className="btn w-full flex items-center justify-center gap-2" 
-                style={{ background: '#25D366', color: 'white', fontWeight: 600, padding: '1rem' }} 
+              <button
+                className="btn w-full flex items-center justify-center gap-2"
+                style={{ background: '#25D366', color: 'white', fontWeight: 600, padding: '1rem' }}
                 onClick={() => handleWhatsApp(sendDoc)}
               >
                 WhatsApp
               </button>
-              <button 
-                className="btn btn-secondary w-full" 
-                style={{ padding: '1rem' }} 
+              <button
+                className="btn btn-secondary w-full"
+                style={{ padding: '1rem' }}
                 onClick={() => handleEmail(sendDoc)}
               >
                 Gmail

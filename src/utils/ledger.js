@@ -63,3 +63,34 @@ export const generateReminderLink = (contact, balanceInfo) => {
   
   return `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(message)}`;
 };
+
+/**
+ * Calculate balances for all contacts in one go.
+ * @param {string} userId 
+ * @returns {Promise<Object>} contactId -> { debit, credit, balance, position }
+ */
+export const getAllContactBalances = async (userId) => {
+  if (!userId) return {};
+
+  const transactions = await getItems('ledger_transactions', userId);
+  const balances = {};
+
+  transactions.forEach(t => {
+    if (!t.contactId) return;
+    if (!balances[t.contactId]) {
+      balances[t.contactId] = { debit: 0, credit: 0 };
+    }
+    const amt = Math.round((Number(t.amount) || 0) * 100);
+    if (t.type === 'dr' || t.type === 'debit') balances[t.contactId].debit += amt;
+    if (t.type === 'cr' || t.type === 'credit') balances[t.contactId].credit += amt;
+  });
+
+  const result = {};
+  Object.entries(balances).forEach(([id, { debit, credit }]) => {
+    const balance = Math.abs(debit - credit) / 100;
+    const position = debit >= credit ? 'Dr' : 'Cr';
+    result[id] = { balance, position };
+  });
+
+  return result;
+};

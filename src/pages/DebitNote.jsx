@@ -252,7 +252,7 @@ const DebitNote = () => {
         date: doc.dnDetail.date,
         total: doc.grandTotal,
         customerName: doc.customerInfo.ms,
-        status: 'Generated',
+        status: 'Outstanding',
         docType: 'Debit Note',
       };
       let result;
