@@ -45,7 +45,7 @@ const StaffModal = ({ isOpen, onClose, onSave, editingData }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!form.name.trim()) return alert('Name is required.');
     setSaving(true);
     try {
@@ -320,12 +320,26 @@ const StaffModal = ({ isOpen, onClose, onSave, editingData }) => {
               </div>
               <div className="staff-footer-btns">
                 {activeTab !== 'personal' && (
-                  <button type="button" className="btn btn-secondary" onClick={() => setActiveTab(activeTab === 'work' ? 'personal' : 'work')}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={(e) => {
+                      e.preventDefault(); // ✅ prevent submit
+                      setActiveTab(prev => (prev === 'work' ? 'personal' : 'work'));
+                    }}
+                  >
                     Previous
                   </button>
                 )}
                 {activeTab !== 'bank' ? (
-                  <button type="button" className="btn btn-primary" onClick={() => setActiveTab(activeTab === 'personal' ? 'work' : 'bank')}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={(e) => {
+                      e.preventDefault(); // ✅ prevent accidental form submit
+                      setActiveTab(prev => (prev === 'personal' ? 'work' : 'bank'));
+                    }}
+                  >
                     Next Section
                   </button>
                 ) : (
