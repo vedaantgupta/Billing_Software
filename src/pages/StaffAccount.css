@@ -1,0 +1,202 @@
+/* Custom Staff Account UI details overriding/complementing ContactLedger.css */
+
+.sa-profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.sa-month-selector {
+  background: white;
+  border-radius: 12px;
+  padding: 0.3rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+
+.sa-month-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  padding: 0 1rem;
+  font-size: 0.95rem;
+  min-width: 140px;
+  justify-content: center;
+}
+
+/* Attendance Legend */
+.sa-attendance-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  padding-right: 0.5rem;
+}
+
+.sa-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sa-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.sa-legend-dot.present {
+  background: #dcfce7;
+  border: 2px solid #22c55e;
+}
+
+.sa-legend-dot.absent {
+  background: #fee2e2;
+  border: 2px solid #ef4444;
+}
+
+/* Calendar Grid */
+.sa-calendar-container {
+  padding: 1.5rem;
+  background: white;
+}
+
+.sa-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
+}
+
+.sa-calendar-day-header {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 0.75rem;
+}
+
+.sa-day-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  user-select: none;
+}
+
+.sa-day-cell:hover:not(.empty):not(.future) {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  z-index: 10;
+}
+
+.sa-day-cell.empty {
+  visibility: hidden;
+}
+
+.sa-day-cell.future {
+  background: #f8fafc;
+  border-color: #f1f5f9;
+  cursor: not-allowed;
+}
+
+.sa-day-number {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+  transition: all 0.2s;
+}
+
+.sa-day-cell.future .sa-day-number {
+  color: #cbd5e1;
+}
+
+.sa-day-status {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+
+/* Present State */
+.sa-day-cell.present {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.sa-day-cell.present .sa-day-number {
+  color: #166534;
+}
+
+.sa-day-cell.present .sa-day-status {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+/* Absent State */
+.sa-day-cell.absent {
+  background: #fef2f2;
+  border-color: #fecaca;
+  animation: absentPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sa-day-cell.absent .sa-day-number {
+  color: #991b1b;
+}
+
+.sa-day-cell.absent .sa-day-status {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.sa-day-cell.future .sa-day-status {
+  color: #94a3b8;
+  background: #e2e8f0;
+}
+
+@keyframes absentPop {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+  .sa-calendar-grid {
+    gap: 0.5rem;
+  }
+  .sa-day-number {
+    font-size: 1rem;
+  }
+  .sa-day-status {
+    display: none;
+  }
+  .sa-month-selector {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .sa-month-display {
+    min-width: auto;
+  }
+}

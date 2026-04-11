@@ -32,6 +32,8 @@ import ContactLedger from './pages/ContactLedger';
 import JobWork from './pages/JobWork';
 import CreditNote from './pages/CreditNote';
 import DebitNote from './pages/DebitNote';
+import Staff from './pages/Staff';
+import StaffAccount from './pages/StaffAccount';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 
@@ -290,6 +292,22 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <ContactLedger />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
+
+          <Route path="/staff" element={
+            <ProtectedRoute>
+              <Layout>
+                <Staff />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/account/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <StaffAccount />
               </Layout>
             </ProtectedRoute>
           } />

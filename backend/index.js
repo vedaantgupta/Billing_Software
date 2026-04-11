@@ -253,8 +253,15 @@ app.patch('/api/work/:userId/:id', async (req, res) => {
     
     const dataWithId = { ...updates, id };
     
+    const query = { userId };
+    if (ObjectId.isValid(id) && (String(id).length === 12 || String(id).length === 24)) {
+      query.$or = [{ 'data.id': id }, { _id: new ObjectId(id) }];
+    } else {
+      query['data.id'] = id;
+    }
+    
     const result = await workCollection.updateOne(
-      { userId, 'data.id': id },
+      query,
       { $set: { 'data': dataWithId, timestamp: new Date() } }
     );
     
@@ -273,7 +280,15 @@ app.delete('/api/work/:userId/:id', async (req, res) => {
   if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
   try {
     const { userId, id } = req.params;
-    const result = await workCollection.deleteOne({ userId, 'data.id': id });
+    
+    const query = { userId };
+    if (ObjectId.isValid(id) && (String(id).length === 12 || String(id).length === 24)) {
+      query.$or = [{ 'data.id': id }, { _id: new ObjectId(id) }];
+    } else {
+      query['data.id'] = id;
+    }
+    
+    const result = await workCollection.deleteOne(query);
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: 'Item not found' });
