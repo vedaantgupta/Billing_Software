@@ -458,3 +458,252 @@
     print-color-adjust: exact;
   }
 }
+
+/* =========================================
+   SALARY SLIP SPECIFIC STYLES (Hi-Tech)
+   ========================================= */
+
+.pt-salary-slip {
+  font-family: 'Inter', 'Roboto', sans-serif;
+  color: #1e293b;
+}
+
+.pt-ss-header {
+  border-bottom: 2px solid #6366f1;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.pt-ss-title-group h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #6366f1;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.pt-ss-title-group p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+  font-weight: 600;
+}
+
+.pt-ss-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.pt-ss-info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pt-ss-info-item {
+  display: flex;
+  font-size: 11px;
+}
+
+.pt-ss-info-label {
+  width: 100px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.pt-ss-info-value {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pt-ss-attendance-bar {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 12px;
+  background: linear-gradient(90deg, #f1f5f9 0%, #ffffff 100%);
+  border-radius: 6px;
+  border-left: 4px solid #6366f1;
+}
+
+.pt-ss-att-item {
+  flex: 1;
+  text-align: center;
+}
+
+.pt-ss-att-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.pt-ss-att-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.pt-ss-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.pt-ss-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.pt-ss-col.earnings {
+  border-right: 1.5px solid #e2e8f0;
+}
+
+.pt-ss-col-header {
+  background: #f8fafc;
+  padding: 10px 15px;
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #1e293b;
+  border-bottom: 1.5px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pt-ss-row {
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pt-ss-row:last-child {
+  border-bottom: none;
+}
+
+.pt-ss-row-label {
+  font-weight: 500;
+  color: #475569;
+}
+
+.pt-ss-row-value {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pt-ss-col-footer {
+  margin-top: auto;
+  padding: 10px 15px;
+  background: #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 12px;
+  border-top: 1.5px solid #e2e8f0;
+}
+
+.pt-ss-summary-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 20px;
+  background: #6366f1;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+.pt-ss-net-label {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.pt-ss-net-value {
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.pt-ss-words {
+  margin-top: 15px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.pt-ss-qr-container {
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.pt-ss-verification {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+}
+
+.pt-ss-v-text h4 {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  color: #6366f1;
+  text-transform: uppercase;
+}
+
+.pt-ss-v-text p {
+  margin: 4px 0 0 0;
+  font-size: 9px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.pt-ss-signature {
+  text-align: center;
+  width: 200px;
+}
+
+.pt-ss-sig-line {
+  border-bottom: 1.5px solid #1e293b;
+  margin-bottom: 8px;
+  height: 60px;
+}
+
+.pt-ss-sig-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+@media print {
+  .pt-ss-summary-section {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: #6366f1 !important;
+    color: white !important;
+  }
+}

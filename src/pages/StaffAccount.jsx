@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Calendar as CalendarIcon, User, Wallet } from 'lucide-react';
 import { getItems, addItem, updateItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
+import PrintViewModal from '../components/PrintViewModal';
 import './ContactLedger.css';
 import './StaffAccount.css';
 
@@ -24,6 +25,8 @@ const StaffAccount = () => {
   
   // Attendance DB record for current month
   const [attendanceRecord, setAttendanceRecord] = useState(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printDoc, setPrintDoc] = useState(null);
   
   const loadData = useCallback(async () => {
     if (!user?.id) return;
@@ -169,6 +172,26 @@ const StaffAccount = () => {
 
   const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
+  const handlePrintSlip = () => {
+    const docData = {
+      docType: 'Salary Slip',
+      staffId: staffMember._dbId || staffMember.id,
+      staffName: staffMember.name,
+      designation: staffMember.designation || 'Staff',
+      department: staffMember.department || 'General',
+      salary: baseSalary,
+      calculatedSalary: calculatedSalary,
+      absences: absences,
+      attendanceDays: daysInMonth,
+      month: currentDate.toLocaleString('default', { month: 'long' }),
+      year: currentDate.getFullYear(),
+      customerPhone: staffMember.phoneNo || '', // for whatsapp
+      customerEmail: staffMember.email || '', // for email
+    };
+    setPrintDoc(docData);
+    setShowPrintModal(true);
+  };
+
   return (
     <div className="cl-page">
       {/* Header */}
@@ -209,6 +232,25 @@ const StaffAccount = () => {
             style={{ padding: '0.5rem' }}
           >
             <ChevronRight size={18} />
+          </button>
+          
+          <button 
+            className="cl-btn cl-btn-primary" 
+            onClick={handlePrintSlip}
+            style={{ 
+              marginLeft: '1rem', 
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
+              color: 'white',
+              border: 'none',
+              padding: '0.6rem 1.2rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontWeight: '600',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+            }}
+          >
+            <Wallet size={16} /> Generate Payslip
           </button>
         </div>
       </div>
@@ -292,6 +334,13 @@ const StaffAccount = () => {
           </div>
         </div>
       </div>
+
+      {showPrintModal && (
+        <PrintViewModal 
+          doc={printDoc} 
+          onClose={() => setShowPrintModal(false)} 
+        />
+      )}
     </div>
   );
 };

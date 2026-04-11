@@ -50,6 +50,159 @@ const toWords = (num) => {
 const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, copyType = 'ORIGINAL FOR RECIPIENT' }) => {
   if (!rawDoc) return null;
 
+  // ── Salary Slip Template ──
+  if (rawDoc.docType === 'Salary Slip' || rawType === 'Salary Slip') {
+    const s = rawDoc;
+    // Calculate values if not provided
+    const totalDays = s.attendanceDays || 30;
+    const absentDays = s.absences || 0;
+    const presentDays = totalDays - absentDays;
+    const baseSalary = Number(s.salary) || 0;
+    const dailyWage = baseSalary / totalDays;
+    const deduction = dailyWage * absentDays;
+    const netSalary = s.calculatedSalary || (baseSalary - deduction);
+
+    return (
+      <div className="print-container pt-salary-slip">
+        <div className="print-page-border" style={{ padding: '40px', border: '1px solid #e2e8f0' }}>
+          
+          {/* Header */}
+          <div className="pt-ss-header">
+            <div className="pt-header-left">
+              {company?.logo ? (
+                <img src={company.logo} alt={company.name} style={{ maxHeight: '60px', marginBottom: '10px' }} />
+              ) : (
+                <h1 style={{ color: '#6366f1', fontSize: '28px', margin: 0 }}>{company?.name}</h1>
+              )}
+              <p style={{ fontSize: '11px', color: '#64748b', maxWidth: '300px' }}>{company?.address}</p>
+            </div>
+            <div className="pt-ss-title-group" style={{ textAlign: 'right' }}>
+              <h2>PAYSLIP</h2>
+              <p>{s.month} {s.year}</p>
+            </div>
+          </div>
+
+          {/* Employee Info Grid */}
+          <div className="pt-ss-info-grid">
+            <div className="pt-ss-info-column">
+              <div className="pt-ss-info-item">
+                <span className="pt-ss-info-label">Employee Name</span>
+                <span className="pt-ss-info-value">{s.staffName}</span>
+              </div>
+              <div className="pt-ss-info-item">
+                <span className="pt-ss-info-label">Designation</span>
+                <span className="pt-ss-info-value">{s.designation}</span>
+              </div>
+            </div>
+            <div className="pt-ss-info-column">
+              <div className="pt-ss-info-item">
+                <span className="pt-ss-info-label">Department</span>
+                <span className="pt-ss-info-value">{s.department}</span>
+              </div>
+              <div className="pt-ss-info-item">
+                <span className="pt-ss-info-label">Employee ID</span>
+                <span className="pt-ss-info-value">EMP-{s.staffId?.slice(-4).toUpperCase() || 'NA'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Attendance Summary */}
+          <div className="pt-ss-attendance-bar">
+            <div className="pt-ss-att-item">
+              <div className="pt-ss-att-label">Total Days</div>
+              <div className="pt-ss-att-value">{totalDays}</div>
+            </div>
+            <div className="pt-ss-att-item">
+              <div className="pt-ss-att-label">Worked Days</div>
+              <div className="pt-ss-att-value">{presentDays}</div>
+            </div>
+            <div className="pt-ss-att-item">
+              <div className="pt-ss-att-label">Unpaid Leaves</div>
+              <div className="pt-ss-att-value">{absentDays}</div>
+            </div>
+          </div>
+
+          {/* Main Earnings/Deductions Grid */}
+          <div className="pt-ss-main-grid">
+            <div className="pt-ss-col earnings">
+              <div className="pt-ss-col-header">
+                <span>Earnings</span>
+                <span>Amount (₹)</span>
+              </div>
+              <div className="pt-ss-row">
+                <span className="pt-ss-row-label">Basic Salary</span>
+                <span className="pt-ss-row-value">{baseSalary.toFixed(2)}</span>
+              </div>
+              <div className="pt-ss-row">
+                <span className="pt-ss-row-label">Fixed Allowances</span>
+                <span className="pt-ss-row-value">0.00</span>
+              </div>
+              <div className="pt-ss-col-footer">
+                <span>Total Earnings</span>
+                <span>₹{baseSalary.toFixed(2)}</span>
+              </div>
+            </div>
+            <div className="pt-ss-col deductions">
+              <div className="pt-ss-col-header">
+                <span>Deductions</span>
+                <span>Amount (₹)</span>
+              </div>
+              <div className="pt-ss-row">
+                <span className="pt-ss-row-label">Unpaid Leave</span>
+                <span className="pt-ss-row-value">{deduction.toFixed(2)}</span>
+              </div>
+              <div className="pt-ss-row">
+                <span className="pt-ss-row-label">Professional Tax</span>
+                <span className="pt-ss-row-value">0.00</span>
+              </div>
+              <div className="pt-ss-col-footer">
+                <span>Total Deductions</span>
+                <span>₹{deduction.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Section */}
+          <div className="pt-ss-summary-section">
+            <div className="pt-ss-net-label">NET PAYABLE SALARY</div>
+            <div className="pt-ss-net-value">₹{netSalary.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+          </div>
+
+          <div className="pt-ss-words">
+            Amount in words: {toWords(Math.round(netSalary))}
+          </div>
+
+          {/* QR and Signature */}
+          <div className="pt-ss-qr-container">
+            <div className="pt-ss-verification">
+              <QRCodeCanvas 
+                value={`PAYSLIP: ${s.staffName} | Month: ${s.month} ${s.year} | Net Pay: ₹${netSalary.toFixed(2)}`}
+                size={70}
+                level="M"
+                includeMargin={false}
+              />
+              <div className="pt-ss-v-text">
+                <h4>Verified Secure</h4>
+                <p>Scan this QR to verify authenticity<br/>of this computer-generated payslip.</p>
+              </div>
+            </div>
+
+            <div className="pt-ss-signature">
+              <div className="pt-ss-sig-line"></div>
+              <div className="pt-ss-sig-label">Authorized Signatory</div>
+              <div style={{ fontSize: '9px', color: '#64748b', marginTop: '4px' }}>Date: {new Date().toLocaleDateString()}</div>
+            </div>
+          </div>
+
+          {/* Bottom Note */}
+          <div style={{ position: 'absolute', bottom: '40px', left: '40px', right: '40px', textAlign: 'center', fontSize: '9px', color: '#94a3b8', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+            This is a computer generated document and does not require a physical signature. Confidential.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Data Normalization for different doc types ──
   const isQuotation = rawDoc.docType === 'Quotation' || rawType === 'Quotation';
   const isProforma = rawDoc.docType === 'Proforma Invoice' || rawType === 'Proforma Invoice';

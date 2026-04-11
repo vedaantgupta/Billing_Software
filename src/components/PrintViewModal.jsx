@@ -17,6 +17,8 @@ const PrintViewModal = ({ doc, onClose }) => {
     office: false
   });
 
+  const isSalarySlip = doc?.docType === 'Salary Slip';
+
   useEffect(() => {
     if (user?.id) {
       getItems('products', user.id).then(setProducts);
@@ -45,7 +47,9 @@ const PrintViewModal = ({ doc, onClose }) => {
   const handleWhatsApp = () => {
     const phone = doc.customerPhone || "";
     const cleanPhone = phone.replace(/\D/g, '');
-    const message = encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nSharing your ${doc.docType || 'Invoice'} #${doc.invoiceNumber} for ₹${Number(doc.total).toFixed(2)}.\n\nThank you!`);
+    const message = isSalarySlip 
+      ? encodeURIComponent(`Hello ${doc.staffName || 'Employee'},\n\nSharing your Payslip for ${doc.month} ${doc.year}.\n\nTotal Salary: ₹${Number(doc.calculatedSalary).toFixed(2)}\n\nThank you!`)
+      : encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nSharing your ${doc.docType || 'Invoice'} #${doc.invoiceNumber} for ₹${Number(doc.total).toFixed(2)}.\n\nThank you!`);
     const url = cleanPhone 
       ? `https://wa.me/${cleanPhone}?text=${message}`
       : `https://wa.me/?text=${message}`;
@@ -54,8 +58,12 @@ const PrintViewModal = ({ doc, onClose }) => {
 
   const handleEmail = () => {
     const email = doc.customerEmail || "";
-    const subject = encodeURIComponent(`${doc.docType || 'Invoice'} #${doc.invoiceNumber} from ${user?.firstName || 'Our Company'}`);
-    const body = encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nPlease find the details for your ${doc.docType} below.\n\nTotal Amount: ₹${Number(doc.total).toFixed(2)}\n\nThank you!`);
+    const subject = isSalarySlip 
+      ? encodeURIComponent(`Payslip for ${doc.month} ${doc.year} - ${doc.staffName}`)
+      : encodeURIComponent(`${doc.docType || 'Invoice'} #${doc.invoiceNumber} from ${user?.firstName || 'Our Company'}`);
+    const body = isSalarySlip
+      ? encodeURIComponent(`Hello ${doc.staffName || 'Employee'},\n\nPlease find your Payslip for ${doc.month} ${doc.year} attached below.\n\nNet Salary: ₹${Number(doc.calculatedSalary).toFixed(2)}\n\nThank you!`)
+      : encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nPlease find the details for your ${doc.docType} below.\n\nTotal Amount: ₹${Number(doc.total).toFixed(2)}\n\nThank you!`);
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
     window.open(gmailUrl, '_blank');
   };
@@ -126,12 +134,14 @@ const PrintViewModal = ({ doc, onClose }) => {
 
         {/* Bottom Footer */}
         <div className="pvm-footer print-hide">
-           <div className="pvm-checkbox-row">
-             <label><input type="checkbox" checked={copies.original} onChange={() => handleCopyChange('original')} /> Original</label>
-             <label><input type="checkbox" checked={copies.duplicate} onChange={() => handleCopyChange('duplicate')} /> Duplicate</label>
-             <label><input type="checkbox" checked={copies.transport} onChange={() => handleCopyChange('transport')} /> Transport</label>
-             <label><input type="checkbox" checked={copies.office} onChange={() => handleCopyChange('office')} /> Office</label>
-           </div>
+           {!isSalarySlip && (
+             <div className="pvm-checkbox-row">
+               <label><input type="checkbox" checked={copies.original} onChange={() => handleCopyChange('original')} /> Original</label>
+               <label><input type="checkbox" checked={copies.duplicate} onChange={() => handleCopyChange('duplicate')} /> Duplicate</label>
+               <label><input type="checkbox" checked={copies.transport} onChange={() => handleCopyChange('transport')} /> Transport</label>
+               <label><input type="checkbox" checked={copies.office} onChange={() => handleCopyChange('office')} /> Office</label>
+             </div>
+           )}
            
            <div className="pvm-actions-row">
              <button className="pvm-action-btn pvm-btn-gray" onClick={onClose}><X size={14} /> Close</button>
