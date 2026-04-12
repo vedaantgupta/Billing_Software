@@ -37,7 +37,21 @@ const ContactLedger = () => {
     setLoading(true);
     try {
       const contacts = await getItems('contacts', user.id);
-      const foundContact = contacts.find(c => c.id === id);
+      const staffMembers = await getItems('staff', user.id);
+      
+      let foundContact = contacts.find(c => c.id === id);
+      
+      if (!foundContact) {
+        const foundStaff = staffMembers.find(s => (s._dbId === id || s.id === id));
+        if (foundStaff) {
+          foundContact = {
+            ...foundStaff,
+            id: foundStaff._dbId || foundStaff.id,
+            type: 'staff'
+          };
+        }
+      }
+      
       setContact(foundContact);
 
       const info = await getContactBalance(id, user.id);
@@ -105,8 +119,8 @@ const ContactLedger = () => {
           <div>
             <h1 className="cl-title">{contact.companyName || contact.customerName || contact.name}</h1>
             <div className="flex items-center gap-2 mt-1">
-               <span className={`cl-badge ${contact.type === 'vendor' ? 'vendor' : 'customer'}`}>
-                  {contact.type}
+               <span className={`cl-badge ${contact.type}`}>
+                  {contact.type === 'staff' ? (contact.designation || 'Staff Member') : contact.type}
                </span>
                <span className="text-sm text-slate-500 font-semibold uppercase tracking-wide">
                   Ledger Detail

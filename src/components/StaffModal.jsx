@@ -23,6 +23,9 @@ const EMPTY_FORM = {
   ifscCode: '',
   accountHolder: '',
   branchAddress: '',
+  panNumber: '',
+  uanNumber: '',
+  esiNumber: '',
 };
 
 const StaffModal = ({ isOpen, onClose, onSave, editingData }) => {
@@ -41,7 +44,21 @@ const StaffModal = ({ isOpen, onClose, onSave, editingData }) => {
   if (!isOpen) return null;
 
   const handleChange = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm(prev => {
+      const next = { ...prev, [field]: value };
+      // Auto-calculate age from DOB
+      if (field === 'dob' && value) {
+        const birthDate = new Date(value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        next.age = age > 0 ? age.toString() : '';
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -181,6 +198,41 @@ const StaffModal = ({ isOpen, onClose, onSave, editingData }) => {
                         value={form.address}
                         onChange={e => handleChange('address', e.target.value)}
                         rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Identity Details Section */}
+                  <div className="staff-content-header" style={{ marginTop: '20px' }}>
+                    <p className="staff-section-title"><User size={14} /> Identity Details</p>
+                    <p className="staff-section-subtitle">PAN, UAN, and statutory identification</p>
+                  </div>
+                  <div className="staff-form-grid" style={{ marginBottom: '10px' }}>
+                    <div className="staff-field">
+                      <label>PAN Number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. ABCDE1234F"
+                        value={form.panNumber}
+                        onChange={e => handleChange('panNumber', e.target.value.toUpperCase())}
+                      />
+                    </div>
+                    <div className="staff-field">
+                      <label>UAN Number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 100200300400"
+                        value={form.uanNumber}
+                        onChange={e => handleChange('uanNumber', e.target.value)}
+                      />
+                    </div>
+                    <div className="staff-field">
+                      <label>ESI Number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 5678901234"
+                        value={form.esiNumber}
+                        onChange={e => handleChange('esiNumber', e.target.value)}
                       />
                     </div>
                   </div>

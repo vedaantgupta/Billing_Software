@@ -31,6 +31,7 @@ const Settings = () => {
      upiId: '',
      paymentTerms: '100% advance against finalization of offer',
      terms: 'Subject to our home Jurisdiction.\nOur Responsibility Ceases as soon as goods leave our Premises.\nGoods once sold will not be taken back.',
+     salaryCycleStart: '1',
      logo: null
   });
 
@@ -211,9 +212,15 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <div className="form-group w-full">
-                   <label className="form-label">Default Payment Conditions</label>
-                   <input className="form-input" value={companyProfile.paymentTerms} onChange={e => setCompanyProfile({...companyProfile, paymentTerms: e.target.value})} placeholder="e.g. 100% advance" />
+                <div className="flex gap-4">
+                   <div className="form-group w-full" style={{ flex: 1 }}>
+                      <label className="form-label">Default Payment Conditions</label>
+                      <input className="form-input" value={companyProfile.paymentTerms} onChange={e => setCompanyProfile({...companyProfile, paymentTerms: e.target.value})} placeholder="e.g. 100% advance" />
+                   </div>
+                   <div className="form-group w-full" style={{ flex: 1 }}>
+                      <label className="form-label">Global Salary Date (Cycle Start)</label>
+                      <input className="form-input" type="number" min="1" max="31" value={companyProfile.salaryCycleStart} onChange={e => setCompanyProfile({...companyProfile, salaryCycleStart: e.target.value})} placeholder="e.g. 1" />
+                   </div>
                 </div>
 
                 <div className="form-group w-full">

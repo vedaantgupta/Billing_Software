@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { getItems, addItem, logActivity } from '../utils/db';
 import { postToLedger, getContactBalance } from '../utils/ledger';
 import { useAuth } from '../hooks/useAuth';
-import { ArrowLeft, Save, X, Mail, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { ArrowLeft, Save, X, Mail, Image as ImageIcon, UploadCloud, Printer } from 'lucide-react';
 import './CreateInwardPayment.css';
+import PrintViewModal from '../components/PrintViewModal';
 
 const CreateInwardPayment = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [printDoc, setPrintDoc] = useState(null);
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -61,8 +63,8 @@ const CreateInwardPayment = () => {
     }
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (e, shouldPrint = false) => {
+    if (e) e.preventDefault();
     if (!user?.id) return;
 
     if (!formData.customerName || !formData.amount || !formData.date) {
@@ -94,7 +96,12 @@ const CreateInwardPayment = () => {
       }
 
       logActivity(`Created Inward Payment Receipt #${fullReceiptNo} for ${formData.customerName}`, user.id, user.username);
-      navigate('/payments/inward');
+      
+      if (shouldPrint) {
+        setPrintDoc({ ...paymentToSave, docType: 'Payment In' });
+      } else {
+        navigate('/payments/inward');
+      }
     }
   };
 
@@ -267,6 +274,9 @@ const CreateInwardPayment = () => {
             <div></div>
             <div className="action-btns">
               <button type="button" className="btn btn-secondary" onClick={() => navigate('/payments/inward')}>Cancel</button>
+              <button type="button" className="btn btn-success" onClick={(e) => handleSave(e, true)}>
+                <Printer size={18} /> Save & Print
+              </button>
               <button type="submit" className="btn btn-primary">
                 <Save size={18} /> Save Payment
               </button>
@@ -275,6 +285,13 @@ const CreateInwardPayment = () => {
 
         </form>
       </div>
+
+      {printDoc && (
+        <PrintViewModal 
+          doc={printDoc} 
+          onClose={() => navigate('/payments/inward')} 
+        />
+      )}
     </div>
   );
 };

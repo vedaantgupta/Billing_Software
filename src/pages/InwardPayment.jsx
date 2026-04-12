@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { getItems, addItem, deleteItem, logActivity } from '../utils/db';
 import { postToLedger } from '../utils/ledger';
 import { useAuth } from '../hooks/useAuth';
+import PrintViewModal from '../components/PrintViewModal';
 
-import { Plus, Search, Filter, Trash2, Edit, X, ArrowDownLeft, Paperclip, Mail } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, Edit, X, ArrowDownLeft, Paperclip, Mail, Printer } from 'lucide-react';
 
 const InwardPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -14,6 +15,7 @@ const InwardPayment = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [printDoc, setPrintDoc] = useState(null);
 
   const [newPayment, setNewPayment] = useState({
     receiptPrefix: '11',
@@ -215,6 +217,7 @@ const InwardPayment = () => {
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setPrintDoc({...p, docType: 'Payment In'})} title="Print Receipt"><Printer size={16} /></button>
                       <button className="btn btn-secondary" style={{ padding: '0.5rem' }}><Edit size={16} /></button>
                       <button className="btn btn-danger" style={{ padding: '0.5rem', background: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDelete(p.id)}><Trash2 size={16} /></button>
                     </div>
@@ -342,6 +345,14 @@ const InwardPayment = () => {
           </div>
         </div>
       )}
+
+      {printDoc && (
+        <PrintViewModal 
+          doc={printDoc} 
+          onClose={() => setPrintDoc(null)} 
+        />
+      )}
+
       <style>{`
         .hover-bg-light:hover {
             background-color: #f8fafc;

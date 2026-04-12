@@ -70,17 +70,24 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
     };
   }, [isOpen]);
 
+  // Default sub-objects to avoid stale-closure issues
+  const defaultBilling = { address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' };
+  const defaultShipping = { name: '', contactPerson: '', phone: '', email: '', address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' };
+  const defaultCustomFields = { licenseNo: '', field1: '', field2: '' };
+  const defaultAdditional = { fax: '', website: '', creditLimit: '', dueDays: '', note: '', isEnabled: true };
+
   // Load initial data for editing or reset for new
   useEffect(() => {
     if (initialData && isOpen) {
       setFormData({
         ...initialData,
-        billing: initialData.billing || formData.billing,
-        shipping: initialData.shipping || formData.shipping,
-        customFields: initialData.customFields || formData.customFields,
-        additionalDetails: initialData.additionalDetails || formData.additionalDetails
+        billing: initialData.billing || defaultBilling,
+        shipping: initialData.shipping || defaultShipping,
+        customFields: initialData.customFields || defaultCustomFields,
+        additionalDetails: initialData.additionalDetails || defaultAdditional
       });
       if (initialData.shipping?.address) setShowShipping(true);
+      else setShowShipping(false);
     } else if (isOpen) {
       // Reset form for new contact
       setFormData({
@@ -92,16 +99,16 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
         email: '',
         registrationType: 'Regular',
         pan: '',
-        billing: { address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' },
-        shipping: { name: '', contactPerson: '', phone: '', email: '', address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' },
+        billing: defaultBilling,
+        shipping: defaultShipping,
         openingBalance: '0',
         balanceType: 'Credit',
-        customFields: { licenseNo: '', field1: '', field2: '' },
-        additionalDetails: { fax: '', website: '', creditLimit: '', dueDays: '', note: '', isEnabled: true }
+        customFields: defaultCustomFields,
+        additionalDetails: defaultAdditional
       });
       setShowShipping(false);
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e, section = null, subSection = null) => {
     const { name, value, type, checked } = e.target;
@@ -139,9 +146,12 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
 
     setIsSubmitting(true);
     try {
+      // Preserve the original id so the backend's data.id is not corrupted
       const contactToSave = {
         ...formData,
-        name: formData.companyName || formData.contactName
+        name: formData.companyName || formData.contactName,
+        // Keep original id (timestamp-based) so backend stores it correctly
+        ...(initialData?.id ? { id: initialData.id } : {})
       };
 
       let result;
@@ -154,10 +164,12 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
       if (result) {
         onSave(result);
         onClose();
+      } else {
+        alert('Failed to save contact. Please check your connection and try again.');
       }
     } catch (err) {
       console.error('Failed to save contact:', err);
-      alert('Error saving contact. Please try again.');
+      alert('Error saving contact: ' + (err.message || 'Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -333,7 +345,7 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
                     </select>
                   </div>
                   <div className="balance-info-text">
-                    <p className={`balance-note ${formData.balanceType.toLowerCase()}`}>
+                    <p className={`balance-note ${(formData.balanceType || 'Credit').toLowerCase()}`}>
                       ₹ {formData.openingBalance || 0} {formData.balanceType === 'Credit' ? 'You pay the customer' : 'Customer pays you'}
                     </p>
                   </div>

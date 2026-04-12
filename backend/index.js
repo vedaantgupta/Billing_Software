@@ -251,7 +251,8 @@ app.patch('/api/work/:userId/:id', async (req, res) => {
     const { userId, id } = req.params;
     const updates = req.body;
     
-    const dataWithId = { ...updates, id };
+    // Preserve original data.id — only fall back to the URL id if no id in updates
+    const dataWithId = { ...updates, id: updates.id || id };
     
     const query = { userId };
     if (ObjectId.isValid(id) && (String(id).length === 12 || String(id).length === 24)) {

@@ -34,6 +34,10 @@ import CreditNote from './pages/CreditNote';
 import DebitNote from './pages/DebitNote';
 import Staff from './pages/Staff';
 import StaffAccount from './pages/StaffAccount';
+import ContactProfile from './pages/ContactProfile';
+import StaffProfile from './pages/StaffProfile';
+import StaffSalaryHistory from './pages/StaffSalaryHistory';
+import RecordStaffPayment from './pages/RecordStaffPayment';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 
@@ -61,6 +65,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Contacts />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <ContactProfile />
               </Layout>
             </ProtectedRoute>
           } />
@@ -311,7 +322,27 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
-
+          <Route path="/staff/profile/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <StaffProfile />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/salary-history/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <StaffSalaryHistory />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/record-payment/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <RecordStaffPayment />
+              </Layout>
+            </ProtectedRoute>
+          } />
 
           {/* Catch all - Redirect to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />

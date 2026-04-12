@@ -3,7 +3,7 @@ import { getItems } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
 import { TrendingUp, Users, Package, FileText, ArrowRight, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import IndiaSalesMap from '../components/IndiaSalesMap';
+import IndiaMap from './IndiaMap';
 
 const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
   const tot = aging.total > 0 ? aging.total : 1;
@@ -299,15 +299,16 @@ const Dashboard = () => {
       {/* India Sales Map Section */}
       <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', alignItems: 'flex-start' }}>
         {/* Map Panel */}
-        <div className="glass" style={{ width: '580px', flex: '0 0 580px', padding: '1.5rem', minWidth: 0, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div className="glass" style={{ width: '600px', flex: '0 0 600px', height: '700px', padding: '1.5rem', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexShrink: 0 }}>
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <TrendingUp size={20} color="var(--primary-color)" />
               Sales Distribution (India)
             </h3>
           </div>
-          <div style={{ width: '100%', maxHeight: '480px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-            <IndiaSalesMap salesData={stateWiseSales} />
+          
+          <div style={{ width: '100%', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <IndiaMap salesData={stateWiseSales} />
           </div>
         </div>
 

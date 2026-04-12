@@ -260,6 +260,7 @@
 
 .l-avatar.customer { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #4f46e5; }
 .l-avatar.vendor { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #db2777; }
+.l-avatar.staff { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #059669; }
 
 .l-account-info {
   display: flex;
@@ -291,6 +292,7 @@
 
 .l-account-type.customer { background: #e0e7ff; color: #4338ca; }
 .l-account-type.vendor { background: #fce7f3; color: #be185d; }
+.l-account-type.staff { background: #d1fae5; color: #065f46; }
 
 .l-account-phone {
   font-size: 0.8rem;

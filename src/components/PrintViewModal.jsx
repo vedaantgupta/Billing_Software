@@ -18,6 +18,7 @@ const PrintViewModal = ({ doc, onClose }) => {
   });
 
   const isSalarySlip = doc?.docType === 'Salary Slip';
+  const isPaymentReceipt = doc?.docType === 'Payment In';
 
   useEffect(() => {
     if (user?.id) {
@@ -49,6 +50,8 @@ const PrintViewModal = ({ doc, onClose }) => {
     const cleanPhone = phone.replace(/\D/g, '');
     const message = isSalarySlip 
       ? encodeURIComponent(`Hello ${doc.staffName || 'Employee'},\n\nSharing your Payslip for ${doc.month} ${doc.year}.\n\nTotal Salary: ₹${Number(doc.calculatedSalary).toFixed(2)}\n\nThank you!`)
+      : isPaymentReceipt
+      ? encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nSharing your Payment Receipt #${doc.fullReceiptNo} for ₹${Number(doc.amount).toFixed(2)}.\n\nThank you!`)
       : encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nSharing your ${doc.docType || 'Invoice'} #${doc.invoiceNumber} for ₹${Number(doc.total).toFixed(2)}.\n\nThank you!`);
     const url = cleanPhone 
       ? `https://wa.me/${cleanPhone}?text=${message}`
@@ -60,9 +63,13 @@ const PrintViewModal = ({ doc, onClose }) => {
     const email = doc.customerEmail || "";
     const subject = isSalarySlip 
       ? encodeURIComponent(`Payslip for ${doc.month} ${doc.year} - ${doc.staffName}`)
+      : isPaymentReceipt
+      ? encodeURIComponent(`Payment Receipt #${doc.fullReceiptNo} from ${user?.firstName || 'Our Company'}`)
       : encodeURIComponent(`${doc.docType || 'Invoice'} #${doc.invoiceNumber} from ${user?.firstName || 'Our Company'}`);
     const body = isSalarySlip
       ? encodeURIComponent(`Hello ${doc.staffName || 'Employee'},\n\nPlease find your Payslip for ${doc.month} ${doc.year} attached below.\n\nNet Salary: ₹${Number(doc.calculatedSalary).toFixed(2)}\n\nThank you!`)
+      : isPaymentReceipt
+      ? encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nPlease find your Payment Receipt #${doc.fullReceiptNo} attached below.\n\nAmount Received: ₹${Number(doc.amount).toFixed(2)}\n\nThank you!`)
       : encodeURIComponent(`Hello ${doc.customerName || 'Customer'},\n\nPlease find the details for your ${doc.docType} below.\n\nTotal Amount: ₹${Number(doc.total).toFixed(2)}\n\nThank you!`);
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
     window.open(gmailUrl, '_blank');
@@ -75,7 +82,7 @@ const PrintViewModal = ({ doc, onClose }) => {
     if (window.html2pdf) {
       const opt = {
         margin: 0,
-        filename: `${doc.invoiceNumber || 'Document'}.pdf`,
+      filename: `${doc.invoiceNumber || doc.fullReceiptNo || 'Document'}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2, 
@@ -134,7 +141,7 @@ const PrintViewModal = ({ doc, onClose }) => {
 
         {/* Bottom Footer */}
         <div className="pvm-footer print-hide">
-           {!isSalarySlip && (
+           {!isSalarySlip && !isPaymentReceipt && (
              <div className="pvm-checkbox-row">
                <label><input type="checkbox" checked={copies.original} onChange={() => handleCopyChange('original')} /> Original</label>
                <label><input type="checkbox" checked={copies.duplicate} onChange={() => handleCopyChange('duplicate')} /> Duplicate</label>

@@ -28,16 +28,18 @@ const Ledger = () => {
     setLoading(true);
     try {
       const custList = await getItems('contacts', user.id);
-      setContacts(custList);
+      
+      const combined = custList || [];
+      setContacts(combined);
 
-      // Fetch balances for each contact
+      // Fetch balances for each entity
       const balances = {};
       let totalDr = 0;
       let totalCr = 0;
 
-      for (const contact of custList) {
-        const bal = await getContactBalance(contact.id, user.id);
-        balances[contact.id] = bal;
+      for (const account of combined) {
+        const bal = await getContactBalance(account.id, user.id);
+        balances[account.id] = bal;
         if (bal.position === 'Dr') totalDr += bal.balance;
         else totalCr += bal.balance;
       }
@@ -57,7 +59,8 @@ const Ledger = () => {
 
   const filteredContacts = contacts.filter(c => {
     const bal = ledgerBalances[c.id] || { balance: 0, position: 'Dr' };
-    const matchesSearch = (c.companyName || c.customerName || c.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const name = c.companyName || c.customerName || c.name || '';
+    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || c.type === filterType;
     const matchesOutstanding = showOutstandingOnly ? bal.balance > 0 : true;
     return matchesSearch && matchesType && matchesOutstanding;
@@ -92,7 +95,7 @@ const Ledger = () => {
             <div className="l-card-icon"><ArrowDownLeft size={24} /></div>
           </div>
           <div className="l-card-value">₹{totals.dr.toLocaleString()}</div>
-          <div className="l-card-subtext">Total amount to collect from customers</div>
+          <div className="l-card-subtext">Total amount to collect from customers/staff</div>
         </div>
 
         <div className="l-card payable">
@@ -101,7 +104,7 @@ const Ledger = () => {
             <div className="l-card-icon"><ArrowUpRight size={24} /></div>
           </div>
           <div className="l-card-value">₹{totals.cr.toLocaleString()}</div>
-          <div className="l-card-subtext">Total amount to pay to vendors</div>
+          <div className="l-card-subtext">Total amount to pay to vendors/staff</div>
         </div>
       </div>
 
@@ -111,7 +114,7 @@ const Ledger = () => {
           <Search className="l-search-icon" size={20} />
           <input 
             className="l-search-input" 
-            placeholder={t('search_contacts') || 'Search contacts by name...'} 
+            placeholder={t('search_contacts') || 'Search accounts by name...'} 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
@@ -163,14 +166,14 @@ const Ledger = () => {
               title={`View ${c.companyName || c.customerName || c.name}'s Ledger`}
             >
               <div className="l-account-left">
-                <div className={`l-avatar ${c.type === 'customer' ? 'customer' : 'vendor'}`}>
+                <div className={`l-avatar ${c.type}`}>
                   {initial}
                 </div>
                 <div className="l-account-info">
                   <h3 className="l-account-name">{c.companyName || c.customerName || c.name}</h3>
                   <div className="l-account-meta">
-                    <span className={`l-account-type ${c.type === 'customer' ? 'customer' : 'vendor'}`}>
-                      {c.type}
+                    <span className={`l-account-type ${c.type}`}>
+                      {c.type === 'staff' ? (c.designation || 'Staff') : c.type}
                     </span>
                     <span className="l-account-phone">{c.phone || 'No phone'}</span>
                   </div>
