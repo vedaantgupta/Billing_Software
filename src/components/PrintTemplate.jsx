@@ -287,6 +287,9 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
               </div>
             </div>
             <div className="pt-ss-signature">
+              {company?.signature && (
+                <img src={company.signature} alt="Signature" style={{ maxHeight: '50px', display: 'block', margin: '0 auto 5px' }} />
+              )}
               <div className="pt-ss-sig-line"></div>
               <div className="pt-ss-sig-label">Authorized Signatory</div>
               <div style={{ fontSize: '9px', color: '#64748b' }}>HR Manager / Finance</div>
@@ -443,7 +446,13 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                <div className="pt-pv-signature-box">
                  <div className="pt-pv-certified-text">Certified that the particulars given above are true and correct.</div>
                  <div className="pt-pv-for-comp">For {company?.name || 'VEDAANT POOLS TECHNOLOGY'}</div>
-                 <div className="pt-pv-sig-space"></div>
+                 {company?.signature ? (
+                    <div style={{ textAlign: 'center', padding: '5px 0' }}>
+                       <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
+                    </div>
+                  ) : (
+                    <div className="pt-pv-sig-space"></div>
+                  )}
                  <div className="pt-pv-sig-label">Authorised Signatory</div>
                </div>
             </div>
@@ -792,6 +801,11 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                   <div className="pt-signature-box">
                     <div className="pt-certify-text">Certified that the particulars given above are true and correct.</div>
                     <div className="pt-sig-company">For {company?.name || ''}</div>
+                    {company?.signature && (
+                       <div style={{ textAlign: 'center', padding: '5px 0' }}>
+                          <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
+                       </div>
+                    )}
                     <div className="pt-sig-label">Authorised Signatory</div>
                   </div>
                 </div>

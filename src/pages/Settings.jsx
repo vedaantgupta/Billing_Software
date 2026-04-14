@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Activity, Plus, Building2, Save } from 'lucide-react';
+import { Shield, Users, Activity, Plus, Building2, Save, PenTool, Eraser, RotateCcw, RotateCw, Trash2, Upload, Fingerprint, Type } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getDB, saveDB, getItems, logActivity } from '../utils/db'; // Import our local DB
 
@@ -32,15 +32,179 @@ const Settings = () => {
      paymentTerms: '100% advance against finalization of offer',
      terms: 'Subject to our home Jurisdiction.\nOur Responsibility Ceases as soon as goods leave our Premises.\nGoods once sold will not be taken back.',
      salaryCycleStart: '1',
-     logo: null
+     logo: null,
+     signature: null
   });
+
+  const [penColor, setPenColor] = useState('#000000');
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
+   const [undoStack, setUndoStack] = useState([]);
+   const [redoStack, setRedoStack] = useState([]);
+   const canvasRef = React.useRef(null);
+  
+  // New States for Signature Enhancements
+  const [signatureMode, setSignatureMode] = useState('draw'); // 'draw' | 'type'
+  const [typedName, setTypedName] = useState('');
+  const [selectedFont, setSelectedFont] = useState('Caveat');
+  const [isEraser, setIsEraser] = useState(false);
+
+  // Load Google Fonts for Typed Signatures
+  useEffect(() => {
+    if (!document.getElementById('sig-fonts')) {
+      const style = document.createElement('style');
+      style.id = 'sig-fonts';
+      style.innerHTML = `@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Great+Vibes&display=swap');`;
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  // Initialize Canvas
+  useEffect(() => {
+    if (activeTab === 'signature' && signatureMode === 'draw' && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      const ctx = canvas.getContext('2d');
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 2;
+    }
+  }, [activeTab, signatureMode]);
+
+  const startDrawing = (e) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    setUndoStack(prev => [...prev, canvas.toDataURL()]);
+    setRedoStack([]); // Clear redo stack on new stroke
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.strokeStyle = penColor;
+    ctx.lineWidth = isEraser ? 15 : 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+    setIsDrawing(true);
+    if (!isEraser) setIsCanvasEmpty(false);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setIsCanvasEmpty(true);
+    setUndoStack([]);
+  };
+
+  const undo = () => {
+    if (undoStack.length === 0) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const lastState = undoStack[undoStack.length - 1];
+    const img = new Image();
+    img.src = lastState;
+    img.onload = () => {
+      setRedoStack(prev => [...prev, canvas.toDataURL()]); // Save current state to redo
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      setUndoStack(prev => prev.slice(0, -1));
+      if (undoStack.length === 1) setIsCanvasEmpty(true);
+    };
+  };
+
+  const redo = () => {
+    if (redoStack.length === 0) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const nextState = redoStack[redoStack.length - 1];
+    const img = new Image();
+    img.src = nextState;
+    img.onload = () => {
+      setUndoStack(prev => [...prev, canvas.toDataURL()]);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      setRedoStack(prev => prev.slice(0, -1));
+      setIsCanvasEmpty(false);
+    };
+  };
+
+  const saveFromCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dataUrl = canvas.toDataURL('image/png');
+    setCompanyProfile({ ...companyProfile, signature: dataUrl });
+    alert('Drawn signature captured! Click "Save All Signature Settings" below to persist.');
+  };
+
+  const saveTypedSignature = () => {
+    if (!typedName.trim()) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = penColor;
+    
+    let fontStr = `60px "${selectedFont}", cursive`;
+    if (selectedFont === 'Great Vibes') fontStr = `75px "${selectedFont}", cursive`;
+    else if (selectedFont === 'Dancing Script') fontStr = `65px "${selectedFont}", cursive`;
+    
+    ctx.font = fontStr;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(typedName, canvas.width / 2, canvas.height / 2);
+    
+    setCompanyProfile({ ...companyProfile, signature: canvas.toDataURL('image/png') });
+    alert('Typed signature captured! Click "Save All Signature Settings" below to persist.');
+  };
+
 
   const [activityLogs, setActivityLogs] = useState([]);
 
   useEffect(() => {
      const db = getDB();
      if(db.company) {
-        setCompanyProfile(db.company);
+        setCompanyProfile(prev => {
+           const merged = { ...prev, ...db.company };
+           // Prevent controlled to uncontrolled input warnings
+           Object.keys(merged).forEach(key => {
+              if (merged[key] === null || merged[key] === undefined) {
+                 merged[key] = '';
+              }
+           });
+           return merged;
+        });
      }
   }, []);
 
@@ -83,6 +247,17 @@ const Settings = () => {
     }
   };
 
+  const handleSignatureUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompanyProfile({ ...companyProfile, signature: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -101,6 +276,9 @@ const Settings = () => {
         </button>
         <button className={`btn ${activeTab === 'activity' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('activity')} style={{ whiteSpace: 'nowrap' }}>
           <Activity size={16} /> Activity Log
+        </button>
+        <button className={`btn ${activeTab === 'signature' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('signature')} style={{ whiteSpace: 'nowrap' }}>
+          <Fingerprint size={16} /> Digital Signature
         </button>
       </div>
 
@@ -306,6 +484,195 @@ const Settings = () => {
                   <div><strong>{log.user}</strong> {log.action}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'signature' && (
+          <div className="signature-section">
+            <h3 className="mb-2">Digital Signature Setup</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              Create or upload your official digital signature. This will be automatically applied to all your Invoices, Quotations, and Payment Receipts.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
+              {/* Creator Area */}
+              <div className="glass" style={{ padding: '1.5rem', background: '#fff' }}>
+                <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                    <button className={`btn ${signatureMode === 'draw' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSignatureMode('draw')}>
+                        <PenTool size={16} /> Draw Signature
+                    </button>
+                    <button className={`btn ${signatureMode === 'type' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSignatureMode('type')}>
+                        <Type size={16} /> Type Signature
+                    </button>
+                </div>
+
+                {signatureMode === 'draw' && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button onClick={() => { setIsEraser(false); setPenColor('#000000'); }} style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#000', border: !isEraser && penColor === '#000000' ? '3px solid var(--primary-color)' : '1px solid #ddd', cursor: 'pointer' }} title="Black Pen" />
+                          <button onClick={() => { setIsEraser(false); setPenColor('#0000b3'); }} style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#0000b3', border: !isEraser && penColor === '#0000b3' ? '3px solid var(--primary-color)' : '1px solid #ddd', cursor: 'pointer' }} title="Blue Pen" />
+                          <button onClick={() => { setIsEraser(false); setPenColor('#cc0000'); }} style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#cc0000', border: !isEraser && penColor === '#cc0000' ? '3px solid var(--primary-color)' : '1px solid #ddd', cursor: 'pointer' }} title="Red Pen" />
+                          <div style={{ borderLeft: '1px solid #cbd5e1', height: '24px', margin: '0 0.5rem' }}></div>
+                          <button className={`btn ${isEraser ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setIsEraser(!isEraser)} style={{ padding: '6px 10px', fontSize: '12px' }} title="Eraser Tool">
+                             <i className="bi bi-eraser-fill" style={{ fontSize: '14px' }}></i> Eraser
+                          </button>
+                       </div>
+                    </div>
+
+                    <div style={{ border: '2px dashed #e2e8f0', borderRadius: '8px', background: '#f8fafc', position: 'relative', height: '250px' }}>
+                       <canvas 
+                         ref={canvasRef}
+                         onMouseDown={startDrawing}
+                         onMouseMove={draw}
+                         onMouseUp={stopDrawing}
+                         onMouseOut={stopDrawing}
+                         onTouchStart={startDrawing}
+                         onTouchMove={draw}
+                         onTouchEnd={stopDrawing}
+                         style={{ 
+                            width: '100%', 
+                            height: '100%', 
+                            cursor: isEraser 
+                               ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' fill=\'currentColor\' class=\'bi bi-eraser-fill\' viewBox=\'0 0 16 16\'%3E%3Cpath d=\'M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z\'/%3E%3C/svg%3E") 0 24, auto' 
+                               : 'crosshair', 
+                            touchAction: 'none' 
+                         }}
+                       />
+                       {(undoStack.length > 0 || redoStack.length > 0 || !isCanvasEmpty) && (
+                          <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '0.5rem' }}>
+                             {undoStack.length > 0 && (
+                                <button className="btn btn-secondary" onClick={undo} style={{ padding: '4px 8px', fontSize: '11px' }}>
+                                   <RotateCcw size={12} /> Undo
+                                </button>
+                             )}
+                             {redoStack.length > 0 && (
+                                <button className="btn btn-secondary" onClick={redo} style={{ padding: '4px 8px', fontSize: '11px' }}>
+                                   <RotateCw size={12} /> Redo
+                                </button>
+                             )}
+                             {!isCanvasEmpty && (
+                                <button className="btn btn-secondary" onClick={clearCanvas} style={{ padding: '4px 8px', fontSize: '11px', color: '#ef4444' }}>
+                                   <Trash2 size={12} /> Clear
+                                </button>
+                             )}
+                          </div>
+                       )}
+                    </div>
+                    
+                    <div className="mt-4 flex justify-between items-center">
+                       <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          Tip: Use "Eraser" to correct lines or erase mistakes.
+                       </div>
+                       <button className="btn btn-primary" onClick={saveFromCanvas} disabled={isCanvasEmpty}>
+                         <PenTool size={16} /> Use This Drawing
+                       </button>
+                    </div>
+                  </>
+                )}
+
+                {signatureMode === 'type' && (
+                  <div style={{ minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
+                     <div className="form-group">
+                        <label className="form-label">Type Your Name</label>
+                        <input 
+                           className="form-input" 
+                           placeholder="e.g. John Doe" 
+                           value={typedName} 
+                           onChange={e => setTypedName(e.target.value)} 
+                           style={{ fontSize: '1.2rem', padding: '0.875rem' }} 
+                        />
+                     </div>
+                     
+                     <div className="flex gap-4 mt-2">
+                        <div className="form-group" style={{ flex: 1 }}>
+                           <label className="form-label">Select Style</label>
+                           <select className="form-input" value={selectedFont} onChange={e => setSelectedFont(e.target.value)}>
+                              <option value="Caveat">Modern Casual</option>
+                              <option value="Dancing Script">Elegant Cursive</option>
+                              <option value="Great Vibes">Classic Calligraphy</option>
+                           </select>
+                        </div>
+                        <div className="form-group">
+                           <label className="form-label">Color</label>
+                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                              <button onClick={() => setPenColor('#000000')} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#000', border: penColor === '#000000' ? '3px solid var(--primary-color)' : '1px solid #ddd', cursor: 'pointer' }} />
+                              <button onClick={() => setPenColor('#0000b3')} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#0000b3', border: penColor === '#0000b3' ? '3px solid var(--primary-color)' : '1px solid #ddd', cursor: 'pointer' }} />
+                           </div>
+                        </div>
+                     </div>
+
+                     <div style={{ flex: 1, border: '2px dashed #e2e8f0', borderRadius: '8px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1rem 0', minHeight: '130px', overflow: 'hidden' }}>
+                        {typedName ? (
+                           <div style={{ fontFamily: `"${selectedFont}", cursive`, fontSize: selectedFont === 'Great Vibes' ? '3.5rem' : '3rem', color: penColor, padding: '0 1rem' }}>
+                             {typedName}
+                           </div>
+                        ) : (
+                           <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Preview will appear here</div>
+                        )}
+                     </div>
+
+                     <div className="flex justify-between items-center mt-auto">
+                       <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                          Real-time generation using Google Fonts.
+                       </div>
+                       <button className="btn btn-primary" onClick={saveTypedSignature} disabled={!typedName.trim()}>
+                         <Type size={16} /> Use Typed Signature
+                       </button>
+                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload & Preview */}
+              <div className="flex flex-col gap-4">
+                 <div className="glass" style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Signature Preview</h4>
+                    <div style={{ flex: 1, background: '#f8fafc', borderRadius: '8px', border: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem', minHeight: '150px' }}>
+                       {companyProfile.signature ? (
+                          <img src={companyProfile.signature} alt="Signature Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                       ) : (
+                          <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                             <Fingerprint size={48} style={{ opacity: 0.2, marginBottom: '0.5rem' }} />
+                             <p style={{ fontSize: '0.75rem' }}>No signature saved yet</p>
+                          </div>
+                       )}
+                    </div>
+                    {companyProfile.signature && (
+                       <button 
+                         className="btn btn-secondary mt-2" 
+                         onClick={() => setCompanyProfile({...companyProfile, signature: null})}
+                         style={{ color: '#ef4444', width: '100%' }}
+                       >
+                         <Trash2 size={14} /> Remove Signature
+                       </button>
+                    )}
+                 </div>
+
+                 <div className="glass" style={{ padding: '1.5rem' }}>
+                    <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Upload Image</h4>
+                    <div 
+                      style={{ border: '2px dashed #e2e8f0', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', cursor: 'pointer', position: 'relative' }}
+                      onDragOver={e => e.preventDefault()}
+                      onDrop={e => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files[0];
+                        if (file) handleSignatureUpload({ target: { files: [file] } });
+                      }}
+                    >
+                       <Upload size={24} color="#94a3b8" />
+                       <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.5rem' }}>Click or drag PNG/JPG signature</p>
+                       <input type="file" accept="image/*" onChange={handleSignatureUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+                    </div>
+                 </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4" style={{ borderTop: '2px solid var(--border-color)' }}>
+                <button className="btn btn-primary" onClick={handleCompanyProfileSave} style={{ padding: '0.75rem 2rem' }}>
+                  <Save size={18} style={{ marginRight: '0.5rem', display: 'inline' }} /> Save All Signature Settings
+                </button>
             </div>
           </div>
         )}
