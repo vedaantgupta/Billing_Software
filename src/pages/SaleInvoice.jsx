@@ -100,7 +100,7 @@ const SaleInvoice = () => {
   const [additionalChargeName, setAdditionalChargeName] = useState('Freight');
   const [additionalChargeValue, setAdditionalChargeValue] = useState('');
   const [companySettings, setCompanySettings] = useState(null);
-
+  const [notes, setNotes] = useState([]);
   // ── document state ──
   const [doc, setDoc] = useState({
     docType: 'Sale Invoice',
@@ -154,7 +154,7 @@ const SaleInvoice = () => {
       ]);
       setCustomers(contactList.filter(c => c.type === 'customer' || !c.type));
       setProducts(productList);
-      
+
       const db = getDB();
       if (db.company) {
         setCompanySettings(db.company);
@@ -266,6 +266,32 @@ const SaleInvoice = () => {
 
     items[idx] = item;
     setDoc(prev => ({ ...prev, items }));
+  };
+
+  // Add note
+  const addNote = () => {
+    setNotes(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        title: '',
+        detail: ''
+      }
+    ]);
+  };
+
+  // Update note
+  const updateNote = (id, field, value) => {
+    setNotes(prev =>
+      prev.map(n =>
+        n.id === id ? { ...n, [field]: value } : n
+      )
+    );
+  };
+
+  // Delete note
+  const deleteNote = (id) => {
+    setNotes(prev => prev.filter(n => n.id !== id));
   };
 
   const addItem_ = () => setDoc(prev => ({ ...prev, items: [...prev.items, BLANK_ITEM()] }));
@@ -561,29 +587,30 @@ const SaleInvoice = () => {
             </div>
 
             {/* Invoice No + Date */}
-            <div className="si-invoice-no-row" style={{ display: 'grid', gridTemplateColumns: '130px 1fr', alignItems: 'center', gap: '0.75rem', marginBottom: '0.65rem' }}>
+            <div className="si-field-row two-col">
               <label className="si-label">
-                Sale Invoice No.<span style={{ color: '#ef4444', marginLeft: 2 }}>*</span>
+                Sale Invoice No.<span className="req">*</span>
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                <input
-                  className="si-no-input"
-                  style={{ flex: 1, padding: '0.42rem 0.75rem', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '0.82rem', fontFamily: 'Inter, sans-serif' }}
-                  placeholder="Invoice No."
-                  value={doc.invoiceDetail.invoiceNo}
-                  onChange={e => handleNested('invoiceDetail', 'invoiceNo', e.target.value)}
-                />
-                <div className="si-date-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span className="si-date-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>Date<span style={{ color: '#ef4444' }}>*</span></span>
-                  <input
-                    type="date"
-                    className="si-date-input"
-                    style={{ width: '140px', padding: '0.42rem 0.65rem', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '0.82rem' }}
-                    value={doc.invoiceDetail.date}
-                    onChange={e => handleNested('invoiceDetail', 'date', e.target.value)}
-                  />
-                </div>
-              </div>
+              <input
+                className="si-input"
+                placeholder="Invoice No."
+                value={doc.invoiceDetail.invoiceNo}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'invoiceNo', e.target.value)
+                }
+              />
+
+              <label className="si-label">
+                Date<span className="req">*</span>
+              </label>
+              <input
+                type="date"
+                className="si-input"
+                value={doc.invoiceDetail.date}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'date', e.target.value)
+                }
+              />
             </div>
 
             {/* Challan No + Challan Date */}
@@ -684,50 +711,34 @@ const SaleInvoice = () => {
                 onClick={() => handleNested('discount', 'unit', '%')}
               >%</span>
             </div>
-            <button className="si-add-item-btn" onClick={addItem_}>
-              <span>+</span> Add Item
-            </button>
-            <button className="si-menu-btn">⋮</button>
           </div>
         </div>
 
         <div className="si-table-scroll" style={{ overflowX: 'auto' }}>
           <table className="si-product-table">
-            <colgroup>
-              <col style={{ width: '45px' }} />
-              <col style={{ width: 'auto' }} />
-              <col style={{ width: '130px' }} />
-              <col style={{ width: '110px' }} />
-              <col style={{ width: '85px' }} />
-              <col style={{ width: '80px' }} />
-              <col style={{ width: '100px' }} />
-              <col style={{ width: '100px' }} />
-              <col style={{ width: '110px' }} />
-              <col style={{ width: '40px' }} />
-            </colgroup>
             <thead>
               <tr>
-                <th style={{ textAlign: 'center' }}>SR.</th>
-                <th>PRODUCT / OTHER CHARGES</th>
-                <th>BARCODE NO.</th>
-                <th>HSN/SAC CODE</th>
-                <th>QTY.</th>
-                <th>UOM</th>
-                <th>PRICE (RS)</th>
-                <th>IGST</th>
-                <th>TOTAL</th>
-                <th></th>
+                <th className="sr-col" style={{ textAlign: 'center' }}>SR.</th>
+                <th className="product-col">PRODUCT / OTHER CHARGES</th>
+                <th className="barcode-col">BARCODE NO.</th>
+                <th className="hsn-col">HSN/SAC CODE</th>
+                <th className="qty-col">QTY. / STOCK</th>
+                <th className="uom-col">UOM</th>
+                <th className="price-col">PRICE (RS)</th>
+                <th className="igst-col">IGST</th>
+                <th className="total-col">TOTAL</th>
+                <th className="action-col"></th>
               </tr>
             </thead>
             <tbody>
               {doc.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="si-sr-num" style={{ textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8' }}>{idx + 1}</td>
+                  <td className="si-sr-num">{idx + 1}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <select
                         className="si-cell-select"
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, textAlign: 'left' }}
                         value={item.productId}
                         onChange={e => handleItemChange(idx, 'productId', e.target.value)}
                       >
@@ -738,8 +749,7 @@ const SaleInvoice = () => {
                       </select>
                       <button
                         type="button"
-                        className="si-ms-add-btn"
-                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="si-cell-add-btn"
                         onClick={() => {
                           setActiveItemIdx(idx);
                           setShowAddProduct(true);
@@ -776,7 +786,6 @@ const SaleInvoice = () => {
                     <input
                       type="number"
                       className="si-cell-input"
-                      style={{ textAlign: 'center' }}
                       placeholder="Qty."
                       value={item.quantity}
                       min={0}
@@ -786,7 +795,6 @@ const SaleInvoice = () => {
                   <td>
                     <input
                       className="si-cell-input"
-                      style={{ textAlign: 'center' }}
                       placeholder="UOM"
                       value={item.unit}
                       onChange={e => handleItemChange(idx, 'unit', e.target.value)}
@@ -796,7 +804,6 @@ const SaleInvoice = () => {
                     <input
                       type="number"
                       className="si-cell-input"
-                      style={{ textAlign: 'right' }}
                       placeholder="Price"
                       value={item.rate}
                       min={0}
@@ -817,7 +824,7 @@ const SaleInvoice = () => {
                     <div className="si-tax-display" style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, textAlign: 'center', marginTop: '3px' }}>{(item.taxAmount || 0).toFixed(2)}</div>
                   </td>
                   <td>
-                    <div className="si-total-value" style={{ background: '#f0fdf4', padding: '0.38rem 0.6rem', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#059669', textAlign: 'right' }}>
+                    <div className="si-total-value">
                       {((item.amount || 0) + (item.taxAmount || 0)).toFixed(2)}
                     </div>
                   </td>
@@ -831,23 +838,25 @@ const SaleInvoice = () => {
 
               {/* Summary row */}
               <tr className="si-total-inv-row">
-                <td colSpan={2} style={{ textAlign: 'right', fontWeight: 700, color: '#92400e', paddingRight: '0.75rem' }}>Total Inv. Val</td>
+                <td colSpan={2} style={{ paddingLeft: '0.5rem', paddingRight: '1rem', borderLeft: 'none' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <button className="si-add-item-btn" onClick={addItem_}>
+                      <span>+</span> Add Row
+                    </button>
+                    <span style={{ fontWeight: 800, color: '#92400e', fontSize: '0.95rem' }}>Total Inv. Val</span>
+                  </div>
+                </td>
                 <td></td>
                 <td></td>
-                <td style={{ textAlign: 'center', fontWeight: 700 }}>{totalQty}</td>
+                <td style={{ textAlign: 'center', fontWeight: 800, fontSize: '0.9rem' }}>{totalQty}</td>
                 <td></td>
-                <td style={{ textAlign: 'right', fontWeight: 700 }}>{totalPrice.toFixed(2)}</td>
-                <td style={{ textAlign: 'center', fontWeight: 700 }}>{totalTaxSum.toFixed(2)}</td>
-                <td style={{ textAlign: 'right', fontWeight: 700, color: '#059669' }}>{totalInvVal.toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 800, fontSize: '0.9rem' }}>{totalPrice.toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 800, fontSize: '0.9rem' }}>{totalTaxSum.toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 800, fontSize: '0.95rem', color: '#059669' }}>{totalInvVal.toFixed(2)}</td>
                 <td></td>
               </tr>
             </tbody>
           </table>
-        </div>
-
-        {/* Horizontal scroll hint */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', color: '#cbd5e1', fontSize: '0.7rem' }}>
-          ← scroll →
         </div>
       </div>
 
@@ -873,29 +882,139 @@ const SaleInvoice = () => {
 
           {/* Terms & Condition */}
           <div className="si-terms-section" style={{ marginTop: '1rem' }}>
-            <div className="si-section-title" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ width: '3px', height: '14px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: '2px' }}></span>
+            <div
+              className="si-section-title"
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#475569',
+                marginBottom: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <span
+                style={{
+                  width: '3px',
+                  height: '14px',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  borderRadius: '2px'
+                }}
+              ></span>
               Terms &amp; Condition / Additional Note
             </div>
-            <div className="si-terms-row" style={{ display: 'grid', gridTemplateColumns: '80px 1fr', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
+
+            {/* Default Title */}
+            <div className="si-terms-row">
               <label className="si-label">Title</label>
               <input
                 className="si-input"
                 value={doc.termsTitle}
-                onChange={e => setDoc(prev => ({ ...prev, termsTitle: e.target.value }))}
+                onChange={e =>
+                  setDoc(prev => ({ ...prev, termsTitle: e.target.value }))
+                }
               />
             </div>
-            <div className="si-terms-row align-top" style={{ display: 'grid', gridTemplateColumns: '80px 1fr', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.6rem' }}>
+
+            {/* Default Detail */}
+            <div className="si-terms-row align-top">
               <label className="si-label">Detail</label>
-              <textarea
-                className="si-textarea"
-                rows={3}
-                placeholder="Enter terms &amp; condition"
-                value={doc.termsDetail}
-                onChange={e => setDoc(prev => ({ ...prev, termsDetail: e.target.value }))}
-              />
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <textarea
+                  className="si-textarea"
+                  rows={3}
+                  placeholder="Enter terms & condition"
+                  value={doc.termsDetail}
+                  onChange={e =>
+                    setDoc(prev => ({ ...prev, termsDetail: e.target.value }))
+                  }
+                  style={{ flex: 1 }}
+                />
+
+                <button
+                  className="si-delete-btn"
+                  onClick={() =>
+                    setDoc(prev => ({ ...prev, termsDetail: '' }))
+                  }
+                  title="Delete Terms"
+                >
+                  <i className="bi bi-trash3-fill"></i>
+                </button>
+              </div>
             </div>
-            <button className="si-add-notes-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 1rem', border: '2px dashed #e2e8f0', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', cursor: 'pointer', background: 'transparent' }}>
+
+            {/* 🔥 Dynamic Notes (FIXED) */}
+            {notes.map(note => (
+              <div
+                key={note.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '80px 1fr auto',
+                  gap: '0.75rem',
+                  marginBottom: '0.75rem',
+                  alignItems: 'start'
+                }}
+              >
+                {/* Title */}
+                <label className="si-label">Title</label>
+                <input
+                  className="si-input"
+                  placeholder="Note Title"
+                  value={note.title}
+                  onChange={(e) =>
+                    updateNote(note.id, 'title', e.target.value)
+                  }
+                />
+                <div></div>
+
+                {/* Detail */}
+                <label className="si-label">Detail</label>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <textarea
+                    className="si-textarea"
+                    rows={2}
+                    placeholder="Note Detail..."
+                    value={note.detail}
+                    onChange={(e) =>
+                      updateNote(note.id, 'detail', e.target.value)
+                    }
+                    style={{ flex: 1 }}
+                  />
+
+                  <button
+                    onClick={() => deleteNote(note.id)}
+                    className="si-delete-btn"
+                    title="Delete Note"
+                  >
+                    <i className="bi bi-trash3-fill"></i>
+                  </button>
+                </div>
+
+                <div></div>
+              </div>
+            ))}
+
+            {/* Add Note Button */}
+            <button
+              className="si-add-notes-btn"
+              onClick={addNote}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.45rem 1rem',
+                border: '2px dashed #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                color: '#94a3b8',
+                cursor: 'pointer',
+                background: 'transparent'
+              }}
+            >
               + Add Notes
             </button>
           </div>
@@ -1097,77 +1216,88 @@ const SaleInvoice = () => {
 
       {/* ── Footer Actions ──────────────────────────────────────── */}
       <div className="si-footer-actions">
-        <button className="si-btn si-btn-back" onClick={() => navigate('/documents')}>
-          ← Back
-        </button>
-        <button
-          className="si-btn si-btn-print"
-          onClick={() => handleSave(true)}
-          disabled={isSubmitting}
-        >
-          🖨 Save &amp; Print
-        </button>
-        <button
-          className="si-btn si-btn-save"
-          onClick={() => handleSave(false)}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? '⏳ Saving...' : '💾 Save'}
-        </button>
+        <div className="si-footer-left">
+          <button
+            className="si-btn si-btn-back"
+            onClick={() => navigate('/documents')}
+          >
+            ← Back
+          </button>
+        </div>
+
+        <div className="si-footer-right">
+          <button
+            className="si-btn si-btn-print"
+            onClick={() => handleSave(true)}
+            disabled={isSubmitting}
+          >
+            🖨 Save & Print
+          </button>
+
+          <button
+            className="si-btn si-btn-save"
+            onClick={() => handleSave(false)}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '⏳ Saving...' : '💾 Save'}
+          </button>
+        </div>
       </div>
 
 
       {/* ── Additional Charge Modal ──────────────────────────── */}
-      {additionalChargeModal && (
-        <div className="si-modal-overlay" onClick={() => setAdditionalChargeModal(false)}>
-          <div className="si-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '580px' }}>
-            <div className="si-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div className="si-modal-title" style={{ margin: 0 }}>Add Additional Charge</div>
-              <button style={{ border: 'none', background: 'none', fontSize: '1.5rem', cursor: 'pointer' }} onClick={() => setAdditionalChargeModal(false)}>✕</button>
-            </div>
-            <div className="si-modal-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="si-field-row" style={{ display: 'block' }}>
-                  <label className="si-label">Charge Name</label>
-                  <input
-                    className="si-input"
-                    value={additionalChargeName}
-                    onChange={e => setAdditionalChargeName(e.target.value)}
-                    placeholder="e.g. Freight, Packaging"
-                  />
-                </div>
-                <div className="si-field-row" style={{ display: 'block' }}>
-                  <label className="si-label">Amount (Rs)</label>
-                  <input
-                    type="number"
-                    className="si-input"
-                    value={additionalChargeValue}
-                    onChange={e => setAdditionalChargeValue(e.target.value)}
-                    placeholder="0"
-                    min={0}
-                  />
+      {
+        additionalChargeModal && (
+          <div className="si-modal-overlay" onClick={() => setAdditionalChargeModal(false)}>
+            <div className="si-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '580px' }}>
+              <div className="si-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div className="si-modal-title" style={{ margin: 0 }}>Add Additional Charge</div>
+                <button style={{ border: 'none', background: 'none', fontSize: '1.5rem', cursor: 'pointer' }} onClick={() => setAdditionalChargeModal(false)}>✕</button>
+              </div>
+              <div className="si-modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="si-field-row" style={{ display: 'block' }}>
+                    <label className="si-label">Charge Name</label>
+                    <input
+                      className="si-input"
+                      value={additionalChargeName}
+                      onChange={e => setAdditionalChargeName(e.target.value)}
+                      placeholder="e.g. Freight, Packaging"
+                    />
+                  </div>
+                  <div className="si-field-row" style={{ display: 'block' }}>
+                    <label className="si-label">Amount (Rs)</label>
+                    <input
+                      type="number"
+                      className="si-input"
+                      value={additionalChargeValue}
+                      onChange={e => setAdditionalChargeValue(e.target.value)}
+                      placeholder="0"
+                      min={0}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '2rem' }}>
-              <button className="si-btn si-btn-back" onClick={() => setAdditionalChargeModal(false)}>Cancel</button>
-              <button
-                className="si-btn si-btn-save"
-                onClick={() => {
-                  setDoc(prev => ({
-                    ...prev,
-                    additionalCharge: Number(additionalChargeValue) || 0,
-                    additionalChargeName: additionalChargeName,
-                  }));
-                  setAdditionalChargeModal(false);
-                }}
-              >
-                Apply
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '2rem' }}>
+                <button className="si-btn si-btn-back" onClick={() => setAdditionalChargeModal(false)}>Cancel</button>
+                <button
+                  className="si-btn si-btn-save"
+                  onClick={() => {
+                    setDoc(prev => ({
+                      ...prev,
+                      additionalCharge: Number(additionalChargeValue) || 0,
+                      additionalChargeName: additionalChargeName,
+                    }));
+                    setAdditionalChargeModal(false);
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
 
       <ContactModal
@@ -1187,7 +1317,7 @@ const SaleInvoice = () => {
           }
         }}
       />
-    </div>
+    </div >
   );
 };
 

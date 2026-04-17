@@ -38,6 +38,11 @@ import ContactProfile from './pages/ContactProfile';
 import StaffProfile from './pages/StaffProfile';
 import StaffSalaryHistory from './pages/StaffSalaryHistory';
 import RecordStaffPayment from './pages/RecordStaffPayment';
+import ProductProfile from './pages/ProductProfile';
+import DailyExpenses from './pages/DailyExpenses';
+import AddDailyExpense from './pages/AddDailyExpense';
+import OtherIncome from './pages/OtherIncome';
+import AddOtherIncome from './pages/AddOtherIncome';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 
@@ -79,6 +84,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Products />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/products/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <ProductProfile />
               </Layout>
             </ProtectedRoute>
           } />
@@ -340,6 +352,49 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <RecordStaffPayment />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/expenses/daily" element={
+            <ProtectedRoute>
+              <Layout>
+                <DailyExpenses />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/expenses/daily/new" element={
+            <ProtectedRoute>
+              <Layout extended={true}>
+                <AddDailyExpense />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/expenses/daily/edit/:id" element={
+            <ProtectedRoute>
+              <Layout extended={true}>
+                <AddDailyExpense />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/income/other" element={
+            <ProtectedRoute>
+              <Layout>
+                <OtherIncome />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/income/other/new" element={
+            <ProtectedRoute>
+              <Layout extended={true}>
+                <AddOtherIncome />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/income/other/edit/:id" element={
+            <ProtectedRoute>
+              <Layout extended={true}>
+                <AddOtherIncome />
               </Layout>
             </ProtectedRoute>
           } />

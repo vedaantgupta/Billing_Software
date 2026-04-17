@@ -1,0 +1,8 @@
+/* Reusing styles from AddDailyExpense for consistency */
+.add-income-page {
+  animation: fadeIn 0.4s ease-out;
+  padding-bottom: 2rem;
+}
+
+.text-right { text-align: right; }
+.font-bold { font-weight: 700; }

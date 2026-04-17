@@ -309,25 +309,25 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
     return (
       <div className="print-container pt-payment-voucher">
         <div className="pt-pv-wrapper">
-          
+
           {/* 1. Top Header */}
           <div className="pt-pv-top-header">
-             <div className="pt-pv-company-meta">
-               <h1 className="pt-pv-company-name">{company?.name || 'VEDAANT POOLS TECHNOLOGY'}</h1>
-               <div className="pt-pv-company-address">
-                 {company?.address || 'HOUSE NO L-1, VANDANA VIHAR COLONGY, BHANGAD ROAD BEHIND PAGARE GAS GODOWN indore, Madhya Pradesh - 452011'}
-               </div>
-             </div>
-             <div className="pt-pv-owner-meta">
-               <table>
-                 <tbody>
-                   <tr><th>Name</th><td>: {company?.ownerName || '-'}</td></tr>
-                   <tr><th>Phone</th><td>: {company?.phone || '-'}</td></tr>
-                   <tr><th>Email</th><td>: {company?.email || '-'}</td></tr>
-                   <tr><th>PAN</th><td>: {company?.pan || '-'}</td></tr>
-                 </tbody>
-               </table>
-             </div>
+            <div className="pt-pv-company-meta">
+              <h1 className="pt-pv-company-name">{company?.name || 'VEDAANT POOLS TECHNOLOGY'}</h1>
+              <div className="pt-pv-company-address">
+                {company?.address || 'HOUSE NO L-1, VANDANA VIHAR COLONGY, BHANGAD ROAD BEHIND PAGARE GAS GODOWN indore, Madhya Pradesh - 452011'}
+              </div>
+            </div>
+            <div className="pt-pv-owner-meta">
+              <table>
+                <tbody>
+                  <tr><th>Name</th><td>: {company?.ownerName || '-'}</td></tr>
+                  <tr><th>Phone</th><td>: {company?.phone || '-'}</td></tr>
+                  <tr><th>Email</th><td>: {company?.email || '-'}</td></tr>
+                  <tr><th>PAN</th><td>: {company?.pan || '-'}</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* 2. Title Bar */}
@@ -387,7 +387,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                       <div className="pt-pv-account-name">{p.customerName}</div>
                       {p.invoiceList && <div className="pt-pv-invoice-no">Invoice No : {p.invoiceList}</div>}
                     </div>
-                    
+
                     <div className="pt-pv-remarks-block">
                       <strong>Remarks :</strong>
                       <div className="pt-pv-remarks-text">{p.remarks || '-'}</div>
@@ -434,27 +434,27 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
             </div>
 
             <div className="pt-pv-footer-row">
-               <div className="pt-pv-terms-box">
-                 <div className="pt-pv-footer-label">Terms and Conditions</div>
-                 <div className="pt-pv-terms-text">
-                   Subject to our home Jurisdiction.<br />
-                   Our Responsibility Ceases as soon as goods leaves our Premises.<br />
-                   Goods once sold will not taken back.<br />
-                   Delivery Ex-Premises.
-                 </div>
-               </div>
-               <div className="pt-pv-signature-box">
-                 <div className="pt-pv-certified-text">Certified that the particulars given above are true and correct.</div>
-                 <div className="pt-pv-for-comp">For {company?.name || 'VEDAANT POOLS TECHNOLOGY'}</div>
-                 {company?.signature ? (
-                    <div style={{ textAlign: 'center', padding: '5px 0' }}>
-                       <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
-                    </div>
-                  ) : (
-                    <div className="pt-pv-sig-space"></div>
-                  )}
-                 <div className="pt-pv-sig-label">Authorised Signatory</div>
-               </div>
+              <div className="pt-pv-terms-box">
+                <div className="pt-pv-footer-label">Terms and Conditions</div>
+                <div className="pt-pv-terms-text">
+                  Subject to our home Jurisdiction.<br />
+                  Our Responsibility Ceases as soon as goods leaves our Premises.<br />
+                  Goods once sold will not taken back.<br />
+                  Delivery Ex-Premises.
+                </div>
+              </div>
+              <div className="pt-pv-signature-box">
+                <div className="pt-pv-certified-text">Certified that the particulars given above are true and correct.</div>
+                <div className="pt-pv-for-comp">For {company?.name || 'VEDAANT POOLS TECHNOLOGY'}</div>
+                {company?.signature ? (
+                  <div style={{ textAlign: 'center', padding: '5px 0' }}>
+                    <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
+                  </div>
+                ) : (
+                  <div className="pt-pv-sig-space"></div>
+                )}
+                <div className="pt-pv-sig-label">Authorised Signatory</div>
+              </div>
             </div>
           </div>
 
@@ -802,9 +802,9 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                     <div className="pt-certify-text">Certified that the particulars given above are true and correct.</div>
                     <div className="pt-sig-company">For {company?.name || ''}</div>
                     {company?.signature && (
-                       <div style={{ textAlign: 'center', padding: '5px 0' }}>
-                          <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
-                       </div>
+                      <div style={{ textAlign: 'center', padding: '5px 0' }}>
+                        <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
+                      </div>
                     )}
                     <div className="pt-sig-label">Authorised Signatory</div>
                   </div>

@@ -1,0 +1,12 @@
+/* Reusing styles from DailyExpenses where applicable or providing income-specific ones */
+.incomes-page {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.income-title {
+  font-weight: 500;
+}
+
+.payment-badge.cash { color: #16a34a; }
+.payment-badge.cheque { color: #2563eb; }
+.payment-badge.online { color: #7c3aed; }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getItems, addItem, updateItem, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
-import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink } from 'lucide-react';
 import Barcode from 'react-barcode';
 
 const UNITS = ['Pieces (PCS)', 'Numbers (NOS)', 'Kilograms (KGS)', 'Grams (GMS)', 'Meters (MTR)', 'Centimeters (CMS)', 'Liters (LTR)', 'Milliliters (MLT)', 'Boxes (BOX)', 'Packets (PAC)', 'Dozens (DZN)', 'Rolls (ROL)', 'Tons (TON)'];
@@ -39,6 +40,7 @@ const Products = () => {
   });
 
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const loadProducts = useCallback(async () => {
     if (user?.id) {
@@ -267,6 +269,14 @@ const Products = () => {
                       title="Delete Item"
                     >
                        <Trash2 size={18} />
+                    </button>
+                    <button 
+                      className="text-secondary hover-primary" 
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#10b981' }}
+                      onClick={() => navigate(`/products/${p.id || p._dbId}`)}
+                      title="View Profile"
+                    >
+                       <ExternalLink size={18} />
                     </button>
                   </div>
                 </td>
