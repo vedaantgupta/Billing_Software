@@ -1,0 +1,271 @@
+/* ===== PRODUCT TABLE CARD ===== */
+.pt-table-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.pt-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: linear-gradient(135deg, #fffbf0 0%, #fefcf3 100%);
+}
+
+.pt-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pt-add-item-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.25);
+}
+
+.pt-add-item-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(99, 102, 241, 0.35);
+}
+
+/* ===== TABLE ===== */
+.pt-product-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.pt-product-table th {
+    padding: 0.8rem 0.5rem;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    white-space: nowrap;
+}
+
+.pt-product-table td {
+    padding: 0.75rem 0.6rem;
+    border: 1px solid #e2e8f0;
+    vertical-align: top;
+    text-align: center;
+    height: 50px;
+}
+
+.pt-product-table th:nth-child(2),
+.pt-product-table td:nth-child(2) {
+    text-align: left;
+}
+
+/* Column widths */
+.pt-product-table .sr-col {
+    width: 45px;
+    min-width: 45px;
+}
+
+.pt-product-table .product-col {
+    width: 200px;
+    min-width: 200px;
+}
+
+.pt-product-table .barcode-col {
+    width: 100px;
+    min-width: 100px;
+}
+
+.pt-product-table .hsn-col {
+    width: 100px;
+    min-width: 100px;
+}
+
+.pt-product-table .qty-col {
+    width: 100px;
+    min-width: 100px;
+}
+
+.pt-product-table .uom-col {
+    width: 100px;
+    min-width: 100px;
+}
+
+.pt-product-table .price-col {
+    width: 100px;
+    min-width: 100px;
+}
+
+.pt-product-table .igst-col {
+    width: 100px;
+    min-width: 100px;
+}
+
+.pt-product-table .total-col {
+    width: 100px;
+    min-width: 100px;
+}
+
+.pt-product-table .action-col {
+    width: 40px;
+    min-width: 40px;
+}
+
+/* Cells */
+.pt-sr-num {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.pt-cell-input,
+.pt-cell-select {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #334155;
+    background: #f8fafc;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.pt-cell-select {
+    appearance: none;
+    cursor: pointer;
+}
+
+.pt-cell-input:focus,
+.pt-cell-select:focus {
+    outline: none;
+    background: white;
+    border-color: #cbd5e1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Add button inside cell */
+.pt-cell-add-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1.5px solid #818cf8;
+    background: white;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pt-cell-add-btn:hover {
+    background: #e0e7ff;
+}
+
+/* Notes */
+.pt-cell-note {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: none;
+    background: #fefce8;
+    font-size: 0.75rem;
+    color: #78716c;
+    font-family: 'Inter', sans-serif;
+    resize: none;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    text-align: left;
+}
+
+/* Tax & Total */
+.pt-tax-display {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 3px;
+}
+
+.pt-total-value {
+    background: #ecfdf5;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #059669;
+    text-align: center;
+    width: 100%;
+}
+
+/* Remove button */
+.pt-remove-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: #f8fafc;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1.1rem;
+}
+
+.pt-remove-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Total row */
+.pt-total-inv-row td {
+    padding: 0.8rem 0.6rem;
+    background: #fffef0;
+    border-top: 2px solid #fef3c7;
+    border-bottom: 2px solid #fef3c7;
+}
+
+/* Scroll */
+.pt-table-scroll {
+    overflow-x: auto;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.pt-table-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.pt-table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 10px;
+}
+
+.pt-table-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.4);
+}

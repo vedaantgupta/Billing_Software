@@ -10,6 +10,7 @@ import {
   BadgePercent, Briefcase, FileText, ShoppingCart
 } from 'lucide-react';
 import './Quotation.css';
+import './product-table.css';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -487,6 +488,7 @@ const Quotation = () => {
                 />
                 <input
                   className="quo-input quo-postfix-input"
+                  style={{ width: '90px' }}
                   value={doc.docNumberPostfix}
                   onChange={e => setDoc({ ...doc, docNumberPostfix: e.target.value })}
                 />
@@ -545,14 +547,17 @@ const Quotation = () => {
       </div>
 
       {/* Items Table */}
-      <div className="quo-card">
-        <div className="quo-card-header">
+      <div className="pt-table-card">
+        <div className="pt-table-header">
           <div className="quo-card-header-left">
             <div className="quo-card-icon items">📦</div>
-            <div className="quo-card-title">Product Items</div>
+            <div>
+              <div className="quo-card-title">Product Items</div>
+              <div className="quo-card-subtitle">{doc.items.length} item{doc.items.length !== 1 ? 's' : ''}</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span className="quo-label" style={{ alignSelf: 'center' }}>Discount: </span>
+          <div className="pt-table-actions">
+            <span className="quo-label" style={{ marginRight: '0.25rem' }}>Discount:</span>
             <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
               <button
                 className={`quo-btn-secondary ${doc.discount.unit === 'Rs' ? 'active-tab' : ''}`}
@@ -568,30 +573,41 @@ const Quotation = () => {
             <MoreVertical size={18} color="#94a3b8" />
           </div>
         </div>
-        <div className="quo-table-scroll">
-          <table className="quo-product-table">
+        <div className="pt-table-scroll">
+          <table className="pt-product-table">
+            <colgroup>
+              <col className="sr-col" />
+              <col className="product-col" />
+              <col className="hsn-col" />
+              <col className="qty-col" />
+              <col className="uom-col" />
+              <col className="price-col" />
+              <col className="igst-col" />
+              <col className="total-col" />
+              <col className="action-col" />
+            </colgroup>
             <thead>
               <tr>
-                <th style={{ width: '50px' }}>SR.</th>
+                <th style={{ textAlign: 'center' }}>SR.</th>
                 <th>PRODUCT / OTHER CHARGES</th>
-                <th style={{ width: '150px' }}>HSN/SAC CODE</th>
-                <th style={{ width: '100px' }}>QTY.</th>
-                <th style={{ width: '100px' }}>UOM</th>
-                <th style={{ width: '150px' }}>PRICE</th>
-                <th style={{ width: '150px' }}>IGST</th>
-                <th style={{ width: '150px' }}>TOTAL</th>
-                <th style={{ width: '50px' }}></th>
+                <th>HSN/SAC CODE</th>
+                <th>QTY.</th>
+                <th>UOM</th>
+                <th>PRICE</th>
+                <th>IGST</th>
+                <th>TOTAL</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {doc.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="quo-sr-num">{idx + 1}</td>
+                  <td className="pt-sr-num">{idx + 1}</td>
                   <td>
                     <div className="flex gap-2 items-center">
                       <select
-                        className="quo-cell-select"
-                        style={{ flex: 1 }}
+                        className="pt-cell-select"
+                        style={{ flex: 1, textAlign: 'left' }}
                         value={item.productId}
                         onChange={e => handleItemChange(idx, 'productId', e.target.value)}
                       >
@@ -600,8 +616,7 @@ const Quotation = () => {
                       </select>
                       <button
                         type="button"
-                        className="quo-ms-add-btn"
-                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="pt-cell-add-btn"
                         onClick={() => {
                           setActiveItemIdx(idx);
                           setShowAddProduct(true);
@@ -611,7 +626,7 @@ const Quotation = () => {
                       </button>
                     </div>
                     <textarea
-                      className="quo-cell-note"
+                      className="pt-cell-note"
                       placeholder="Item Note..."
                       rows={2}
                       value={item.note}
@@ -620,7 +635,7 @@ const Quotation = () => {
                   </td>
                   <td>
                     <input
-                      className="quo-cell-input"
+                      className="pt-cell-input"
                       placeholder="HSN/SAC"
                       value={item.hsn}
                       onChange={e => handleItemChange(idx, 'hsn', e.target.value)}
@@ -629,18 +644,16 @@ const Quotation = () => {
                   <td>
                     <input
                       type="number"
-                      className="quo-cell-input"
+                      className="pt-cell-input"
                       placeholder="Qty."
-                      style={{ textAlign: 'center' }}
                       value={item.quantity}
                       onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
                     />
                   </td>
                   <td>
                     <input
-                      className="quo-cell-input"
+                      className="pt-cell-input"
                       placeholder="UOM"
-                      style={{ textAlign: 'center' }}
                       value={item.unit}
                       onChange={e => handleItemChange(idx, 'unit', e.target.value)}
                     />
@@ -648,16 +661,15 @@ const Quotation = () => {
                   <td>
                     <input
                       type="number"
-                      className="quo-cell-input"
+                      className="pt-cell-input"
                       placeholder="Price"
-                      style={{ textAlign: 'right' }}
                       value={item.rate}
                       onChange={e => handleItemChange(idx, 'rate', e.target.value)}
                     />
                   </td>
                   <td>
                     <select
-                      className="quo-cell-select"
+                      className="pt-cell-select"
                       value={item.taxRate}
                       onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}
                     >
@@ -667,192 +679,231 @@ const Quotation = () => {
                       <option value="18">18%</option>
                       <option value="28">28%</option>
                     </select>
-                    <div className="quo-tax-display">{item.taxAmount.toFixed(2)}</div>
+                    <div className="pt-tax-display">{item.taxAmount.toFixed(2)}</div>
                   </td>
                   <td>
-                    <div className="quo-total-value">{(item.amount + item.taxAmount).toFixed(2)}</div>
+                    <div className="pt-total-value">{(item.amount + item.taxAmount).toFixed(2)}</div>
                   </td>
-                  <td>
-                    <button className="quo-remove-btn" onClick={() => removeItem(idx)}>×</button>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <button className="pt-remove-btn" onClick={() => removeItem(idx)}>×</button>
                   </td>
                 </tr>
               ))}
-              <tr className="quo-summary-row">
-                <td colSpan={2} className="quo-summary-label">Total Quotation. Val</td>
+              <tr className="pt-total-inv-row">
+                <td colSpan={2}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 1rem' }}>
+                    <button className="pt-add-item-btn" onClick={addItem_}>
+                      <Plus size={16} /> Add Row
+                    </button>
+                    <span style={{ color: '#854d0e', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase' }}>Total Quotation. Val</span>
+                  </div>
+                </td>
                 <td></td>
-                <td style={{ textAlign: 'center' }}>{doc.items.reduce((a, i) => a + Number(i.quantity), 0)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{doc.items.reduce((a, i) => a + Number(i.quantity), 0)}</td>
                 <td></td>
-                <td style={{ textAlign: 'right' }}>{doc.items.reduce((a, i) => a + (Number(i.quantity) * Number(i.rate)), 0).toFixed(2)}</td>
-                <td style={{ textAlign: 'center' }}>{doc.totalTax.toFixed(2)}</td>
-                <td style={{ textAlign: 'right' }}>{(doc.taxable + doc.totalTax).toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{doc.items.reduce((a, i) => a + (Number(i.quantity) * Number(i.rate)), 0).toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#64748b' }}>{doc.totalTax.toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>{(doc.taxable + doc.totalTax).toFixed(2)}</td>
                 <td></td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9' }}>
-          <button className="quo-btn quo-btn-secondary" style={{ color: '#10b981' }} onClick={addItem_}>
-            <Plus size={16} /> Add Product
-          </button>
-        </div>
       </div>
 
       {/* Footer Grid */}
-      <div className="quo-footer-grid">
-        <div className="quo-notes-section">
+      <div className="quo-bottom-grid">
+        <div className="quo-left-bottom">
           {/* Bank */}
-          <div className="quo-card" style={{ padding: '1.25rem' }}>
-            <div className="quo-field-row">
-              <label className="quo-label">Bank</label>
-              <select className="quo-select" value={doc.bank} onChange={e => setDoc({ ...doc, bank: e.target.value })}>
-                {banks.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
+          <div className="quo-due-date-row" style={{ marginBottom: "1rem" }}>
+            <label className="quo-label">Bank</label>
+            <select className="quo-input yellow-bg" value={doc.bank} onChange={e => setDoc({ ...doc, bank: e.target.value })}>
+              <option value="">Select Bank</option>
+              {banks.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
           </div>
+          <div className="quo-divider" />
 
           {/* Terms */}
-          <div className="quo-card" style={{ padding: '1.25rem' }}>
-            <div className="quo-card-title" style={{ marginBottom: '1rem' }}>Terms & Condition / Additional Note</div>
+          <div className="quo-terms-section">
+            <div className="quo-section-title">Terms & Condition / Additional Note</div>
             {doc.terms.map((term, idx) => (
-              <div key={idx} className="quo-terms-card" style={{ marginBottom: '0.75rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
-                  <label className="quo-label" style={{ width: '60px' }}>Title</label>
+              <div key={idx}>
+                <div className="quo-terms-row">
+                  <label className="quo-label">Title</label>
                   <input
                     className="quo-input"
                     value={term.title}
                     onChange={e => updateTerm(idx, 'title', e.target.value)}
                   />
-                  <Trash2 size={18} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => {
-                    const t = [...doc.terms]; t.splice(idx, 1); setDoc({ ...doc, terms: t });
-                  }} />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <label className="quo-label" style={{ width: '60px' }}>Detail</label>
-                  <textarea
-                    className="quo-textarea"
-                    rows={2}
-                    value={term.detail}
-                    onChange={e => updateTerm(idx, 'detail', e.target.value)}
-                  />
+                <div className="quo-terms-row align-top">
+                  <label className="quo-label">Detail</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                    <textarea
+                      className="quo-textarea"
+                      rows={2}
+                      value={term.detail}
+                      onChange={e => updateTerm(idx, 'detail', e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      className="quo-delete-btn"
+                      onClick={() => {
+                        const t = [...doc.terms]; t.splice(idx, 1); setDoc({ ...doc, terms: t });
+                      }}
+                      title="Delete Term"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
-            <button className="quo-add-notes-btn" onClick={addTerm}><Plus size={16} /> Add Notes</button>
+            <button className="quo-add-notes-btn" onClick={addTerm}>
+              + Add Notes
+            </button>
           </div>
 
-          <div className="quo-card" style={{ padding: '1.25rem' }}>
-            <label className="quo-label">Document Note / Remarks</label>
+          <div className="quo-divider" style={{ marginTop: '1rem' }} />
+          <div className="quo-doc-note-row">
+            <div className="quo-doc-note-label">
+              <label className="quo-label">Document Note / Remarks</label>
+              <span className="quo-label-italic">Not Visible on Print</span>
+            </div>
             <textarea
               className="quo-textarea"
-              placeholder="Internal remarks..."
+              rows={3}
               value={doc.documentNote}
               onChange={e => setDoc({ ...doc, documentNote: e.target.value })}
             />
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.25rem', fontStyle: 'italic' }}>Not Visible on Print</div>
           </div>
         </div>
 
-        <div className="quo-summary-section">
-          <div className="quo-calc-table">
-            <div className="quo-calc-row">
-              <span className="quo-calc-label">Taxable</span>
-              <span className="quo-calc-val">{doc.taxable.toFixed(2)}</span>
-            </div>
-            <div className="quo-add-additional" onClick={() => setDoc({ ...doc, additionalCharge: doc.additionalCharge ? 0 : 500 })}>
-              + Add Additional Charge
-            </div>
-            {doc.additionalCharge > 0 && (
-              <div className="quo-calc-row">
-                <input className="quo-input" style={{ width: '100px', padding: '2px 4px' }} value={doc.additionalChargeName} onChange={e => setDoc({ ...doc, additionalChargeName: e.target.value })} />
-                <input className="quo-input" style={{ width: '80px', padding: '2px 4px', textAlign: 'right' }} type="number" value={doc.additionalCharge} onChange={e => setDoc({ ...doc, additionalCharge: Number(e.target.value) })} />
-              </div>
-            )}
-            <div className="quo-calc-row bordered">
-              <span className="quo-calc-label">Total Taxable</span>
-              <span className="quo-calc-val">{doc.totalTaxable.toFixed(2)}</span>
-            </div>
-            <div className="quo-calc-row">
-              <span className="quo-calc-label">Total Tax</span>
-              <span className="quo-calc-val">{doc.totalTax.toFixed(2)}</span>
-            </div>
+        {/* RIGHT: Totals Panel */}
+        <div className="quo-right-bottom">
+          <div className="quo-totals-row">
+            <span className="quo-totals-label">Taxable</span>
+            <span className="quo-totals-value">{doc.taxable.toFixed(2)}</span>
+          </div>
 
-            <div className="quo-calc-row">
-              <div className="quo-modifier-row">
-                <span>TCS</span>
-                <select className="quo-mod-select" value={doc.tcs.mode} onChange={e => handleNested('tcs', 'mode', e.target.value)}>
-                  <option value="+">+</option>
-                  <option value="-">-</option>
-                </select>
-                <input className="quo-mod-input" type="number" value={doc.tcs.value} onChange={e => handleNested('tcs', 'value', e.target.value)} />
-                <select className="quo-mod-select" value={doc.tcs.unit} onChange={e => handleNested('tcs', 'unit', e.target.value)}>
-                  <option value="%">%</option>
-                  <option value="Rs">Rs</option>
-                </select>
-              </div>
-              <span className="quo-calc-val">
-                {((Number(doc.tcs.unit === '%' ? doc.totalTaxable * (Number(doc.tcs.value) / 100) : doc.tcs.value)) || 0).toFixed(2)}
+          <div
+            className="quo-add-charge-link"
+            onClick={() => setDoc({ ...doc, additionalCharge: doc.additionalCharge ? 0 : 500 })}
+          >
+            + Add Additional Charge
+          </div>
+
+          {doc.additionalCharge > 0 && (
+            <div className="quo-totals-row">
+              <span className="quo-totals-label" style={{ display: 'flex', gap: '0.5rem' }}>
+                <input className="quo-input" style={{ width: '120px', padding: '2px 6px', height: 'auto' }} value={doc.additionalChargeName} onChange={e => setDoc({ ...doc, additionalChargeName: e.target.value })} />
+              </span>
+              <span className="quo-totals-value">
+                <input className="quo-input" style={{ width: '90px', padding: '2px 6px', height: 'auto', textAlign: 'right' }} type="number" value={doc.additionalCharge} onChange={e => setDoc({ ...doc, additionalCharge: Number(e.target.value) })} />
               </span>
             </div>
+          )}
 
-            <div className="quo-calc-row">
-              <div className="quo-modifier-row">
-                <span>Discount</span>
-                <select className="quo-mod-select" value={doc.discount.mode} onChange={e => handleNested('discount', 'mode', e.target.value)}>
-                  <option value="+">+</option>
-                  <option value="-">-</option>
-                </select>
-                <input className="quo-mod-input" type="number" value={doc.discount.value} onChange={e => handleNested('discount', 'value', e.target.value)} />
-                <select className="quo-mod-select" value={doc.discount.unit} onChange={e => handleNested('discount', 'unit', e.target.value)}>
-                  <option value="%">%</option>
-                  <option value="Rs">Rs</option>
-                </select>
-              </div>
-              <span className="quo-calc-val" style={{ color: '#ef4444' }}>
-                -{((Number(doc.discount.unit === '%' ? doc.totalTaxable * (Number(doc.discount.value) / 100) : doc.discount.value)) || 0).toFixed(2)}
-              </span>
+          <div className="quo-totals-row">
+            <span className="quo-totals-label">Total Taxable</span>
+            <span className="quo-totals-value">{doc.totalTaxable.toFixed(2)}</span>
+          </div>
+
+          <div className="quo-totals-row">
+            <span className="quo-totals-label">Total Tax</span>
+            <span className="quo-totals-value">{doc.totalTax.toFixed(2)}</span>
+          </div>
+
+          {/* TCS */}
+          <div className="quo-totals-row" style={{ alignItems: 'center' }}>
+            <span className="quo-totals-label">TCS</span>
+            <div className="quo-modifier-row" style={{ borderBottom: 'none', padding: 0, gap: '0.25rem' }}>
+              <select className="quo-modifier-select" style={{ padding: '2px 4px' }} value={doc.tcs.mode} onChange={e => handleNested('tcs', 'mode', e.target.value)}>
+                <option value="+">+</option>
+                <option value="-">-</option>
+              </select>
+              <input type="number" className="quo-modifier-input" style={{ width: '60px', padding: '2px 4px' }} placeholder="0" value={doc.tcs.value} min={0} onChange={e => handleNested('tcs', 'value', e.target.value)} />
+              <select className="quo-modifier-unit" style={{ width: '45px', padding: '2px 4px' }} value={doc.tcs.unit} onChange={e => handleNested('tcs', 'unit', e.target.value)}>
+                <option value="%">%</option>
+                <option value="Rs">Rs</option>
+              </select>
             </div>
+            <span className="quo-totals-value">
+              {((Number(doc.tcs.unit === '%' ? doc.totalTaxable * (Number(doc.tcs.value) / 100) : doc.tcs.value)) || 0).toFixed(2)}
+            </span>
+          </div>
 
-            <div className="quo-calc-row bordered">
-              <span className="quo-calc-label">Round Off</span>
-              <label className="quo-switch">
+          {/* Discount */}
+          <div className="quo-totals-row" style={{ alignItems: 'center' }}>
+            <span className="quo-totals-label">Discount</span>
+            <div className="quo-modifier-row" style={{ borderBottom: 'none', padding: 0, gap: '0.25rem' }}>
+              <select className="quo-modifier-select" style={{ padding: '2px 4px' }} value={doc.discount.mode} onChange={e => handleNested('discount', 'mode', e.target.value)}>
+                <option value="-">-</option>
+                <option value="+">+</option>
+              </select>
+              <input type="number" className="quo-modifier-input" style={{ width: '60px', padding: '2px 4px' }} placeholder="0" value={doc.discount.value} min={0} onChange={e => handleNested('discount', 'value', e.target.value)} />
+              <select className="quo-modifier-unit" style={{ width: '45px', padding: '2px 4px' }} value={doc.discount.unit} onChange={e => handleNested('discount', 'unit', e.target.value)}>
+                <option value="Rs">Rs</option>
+                <option value="%">%</option>
+              </select>
+            </div>
+            <span className="quo-totals-value" style={{ color: '#ef4444' }}>
+              -{((Number(doc.discount.unit === '%' ? doc.totalTaxable * (Number(doc.discount.value) / 100) : doc.discount.value)) || 0).toFixed(2)}
+            </span>
+          </div>
+
+          {/* Round Off */}
+          <div className="quo-roundoff-row">
+            <div className="quo-roundoff-left">
+              <span style={{ fontSize: '0.83rem', fontWeight: 600, color: '#475569' }}>Round Off</span>
+              <label className="quo-toggle-switch">
                 <input type="checkbox" checked={doc.roundOff} onChange={e => setDoc({ ...doc, roundOff: e.target.checked })} />
-                <span className="quo-slider"></span>
+                <span className="quo-toggle-thumb"></span>
               </label>
-              <span className="quo-calc-val">
-                {doc.roundOff ? (Math.round(doc.grandTotal) - doc.grandTotal).toFixed(2) : '0.00'}
-              </span>
             </div>
-
-            <div className="quo-grand-total-box">
-              <span className="quo-grand-total-label">Grand Total</span>
-              <span className="quo-grand-total-val">{doc.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-            </div>
-
-            <div className="quo-in-words">
-              Total in words: <br />
-              <strong>{numberToWords(doc.grandTotal)}</strong>
-            </div>
-
-            <div className="quo-smart-suggestion">
-              <span>Smart Suggestion</span>
-              <div className="quo-plus-circle">+</div>
-            </div>
+            <span style={{ fontSize: '0.83rem', fontWeight: 700, color: '#475569' }}>
+              {doc.roundOff ? (Math.round(doc.grandTotal) - doc.grandTotal).toFixed(2) : '0.00'}
+            </span>
           </div>
 
-          <div className="quo-actions">
-            <button className="quo-btn quo-btn-secondary" onClick={() => navigate('/documents')}>
-              Back
-            </button>
-            <button className="quo-btn quo-btn-danger" onClick={() => { if (window.confirm('Discard?')) navigate('/documents'); }}>
-              Discard
-            </button>
-            <button className="quo-btn quo-btn-primary" onClick={() => handleSave(true)} disabled={isSubmitting}>
-              <Printer size={18} /> Save & Print
-            </button>
-            <button className="quo-btn quo-btn-primary" style={{ background: '#059669' }} onClick={() => handleSave(false)} disabled={isSubmitting}>
-              <Save size={18} /> Save
-            </button>
+          {/* Grand Total */}
+          <div className="quo-grand-total">
+            <span className="quo-grand-label">Grand Total</span>
+            <span className="quo-grand-value">₹ {doc.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
+
+          {/* Total in words */}
+          <div className="quo-words-row">
+            <div className="quo-words-label">Total in words</div>
+            <div className="quo-words-value">{numberToWords(doc.grandTotal)}</div>
+          </div>
+
+          {/* Smart Suggestion */}
+          <div className="quo-smart-box">
+            <span className="quo-smart-label">Smart Suggestion</span>
+            <button className="quo-smart-add">+</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="quo-action-bar">
+        <div className="quo-action-left">
+          <button className="quo-btn quo-btn-ghost" onClick={() => navigate('/documents')}>
+            <ArrowLeft size={18} /> Back
+          </button>
+          <button className="quo-btn quo-btn-danger" onClick={() => { if (window.confirm('Discard?')) navigate('/documents'); }}>
+            <Trash2 size={18} /> Discard
+          </button>
+        </div>
+        <div className="quo-action-right">
+          <button className="quo-btn quo-btn-print" onClick={() => handleSave(true)} disabled={isSubmitting}>
+            <Printer size={18} /> Save & Print
+          </button>
+          <button className="quo-btn quo-btn-save" onClick={() => handleSave(false)} disabled={isSubmitting}>
+            <Save size={18} /> {isSubmitting ? 'Saving...' : 'Save'}
+          </button>
         </div>
       </div>
 
@@ -880,7 +931,7 @@ const Quotation = () => {
         onClose={() => setShowContactModal(false)}
         onSave={handleContactSaved}
       />
-    </div>
+    </div >
   );
 };
 

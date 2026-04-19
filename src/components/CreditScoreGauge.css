@@ -1,0 +1,173 @@
+.cs-gauge-pixel-perfect {
+  position: relative;
+  width: 500px;
+  min-width: 500px;
+  background: #020617;
+  /* Near black tech surface */
+  padding: 3rem 2rem 2rem;
+  border-radius: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 0 80px rgba(0, 0, 0, 0.9),
+    0 40px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+/* Cyber Grid Overlay */
+.cs-tech-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.cs-top-points {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.plus-pts {
+  color: #10b981;
+  font-weight: 900;
+  font-size: 1.25rem;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.pts-label {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.cs-svg-hq {
+  filter:
+    drop-shadow(0 0 6px rgba(0,0,0,0.6))
+    drop-shadow(0 0 20px rgba(59,130,246,0.12));
+}
+
+.segment-path {
+  stroke-linecap: butt;
+  transition: all 0.4s ease;
+  opacity: 0.95;
+}
+
+/* Per-segment neon glow — intense electric bloom */
+.seg-poor      { filter: drop-shadow(0 0 6px #ff2020) drop-shadow(0 0 18px #ff0000) drop-shadow(0 0 40px #cc0000); }
+.seg-fair      { filter: drop-shadow(0 0 6px #ffcc00) drop-shadow(0 0 18px #ffaa00) drop-shadow(0 0 40px #cc7700); }
+.seg-good      { filter: drop-shadow(0 0 6px #00ffaa) drop-shadow(0 0 18px #00e08a) drop-shadow(0 0 40px #00a060); }
+.seg-excellent { filter: drop-shadow(0 0 6px #00ffcc) drop-shadow(0 0 18px #00cc99) drop-shadow(0 0 40px #009966); }
+
+.cs-hq-label {
+  font-size: 5.5px;
+  font-weight: 900;
+  fill: white;
+  letter-spacing: 0.06em;
+  opacity: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+}
+
+.cs-hq-score-num {
+  font-size: 38px;
+  font-weight: 900;
+  fill: white;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -1px;
+}
+
+.cs-hq-score-label {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  filter: drop-shadow(0 0 12px currentColor) brightness(1.5);
+}
+
+.cs-bottom-pills {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -10px;
+  padding: 0 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.pill-status {
+  background: #dc2626;
+  /* Matches the red 'POOR' box in image */
+  padding: 0.25rem 0.75rem;
+  color: white;
+  font-weight: 900;
+  font-size: 0.65rem;
+  border-radius: 4px;
+}
+
+.pill-range {
+  background: #111827;
+  padding: 0.25rem 0.75rem;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.pill-range {
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+@keyframes hpulse {
+  0% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 15px currentColor);
+  }
+
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 25px currentColor);
+  }
+
+  100% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 15px currentColor);
+  }
+}
+
+.cs-hq-score-label {
+  animation: hpulse 2s infinite ease-in-out;
+}
+
+/* Card Integration Overlay */
+.cs-gauge-card {
+  width: auto !important;
+  max-width: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.cs-card-title {
+  display: none !important;
+  /* Title is integrated into the gauge block */
+}

@@ -6,6 +6,7 @@ import { postToLedger } from '../utils/ledger';
 import ProductModal from '../components/ProductModal';
 import ContactModal from '../components/ContactModal';
 import './PurchaseInvoice.css';
+import './product-table.css';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -106,6 +107,7 @@ const PurchaseInvoice = () => {
   const [additionalChargeModal, setAdditionalChargeModal] = useState(false);
   const [additionalChargeName, setAdditionalChargeName] = useState('Freight');
   const [additionalChargeValue, setAdditionalChargeValue] = useState('');
+  const [notes, setNotes] = useState([]);
 
   // ── document state ──
   const [doc, setDoc] = useState({
@@ -253,6 +255,32 @@ const PurchaseInvoice = () => {
 
     items[idx] = item;
     setDoc(prev => ({ ...prev, items }));
+  };
+
+  // Add note
+  const addNote = () => {
+    setNotes(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        title: '',
+        detail: ''
+      }
+    ]);
+  };
+
+  // Update note
+  const updateNote = (id, field, value) => {
+    setNotes(prev =>
+      prev.map(n =>
+        n.id === id ? { ...n, [field]: value } : n
+      )
+    );
+  };
+
+  // Delete note
+  const deleteNote = (id) => {
+    setNotes(prev => prev.filter(n => n.id !== id));
   };
 
   const addItem_ = () => setDoc(prev => ({ ...prev, items: [...prev.items, BLANK_ITEM()] }));
@@ -553,27 +581,32 @@ const PurchaseInvoice = () => {
             </div>
 
             {/* Invoice No + Date */}
-            <div className="pi-invoice-no-row">
+            <div className="pi-field-row two-col">
               <label className="pi-label">
-                Purchase Invoice No.<span style={{ color: '#ef4444', marginLeft: 2 }}>*</span>
+                Purchase Invoice No.<span className="req">*</span>
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                <input
-                  className="pi-no-input"
-                  placeholder="Invoice No."
-                  value={doc.invoiceDetail.invoiceNo}
-                  onChange={e => handleNested('invoiceDetail', 'invoiceNo', e.target.value)}
-                />
-                <div className="pi-date-group">
-                  <span className="pi-date-label">Date<span style={{ color: '#ef4444' }}>*</span></span>
-                  <input
-                    type="date"
-                    className="pi-date-input"
-                    value={doc.invoiceDetail.date}
-                    onChange={e => handleNested('invoiceDetail', 'date', e.target.value)}
-                  />
-                </div>
-              </div>
+
+              <input
+                className="pi-input"
+                placeholder="Invoice No."
+                value={doc.invoiceDetail.invoiceNo}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'invoiceNo', e.target.value)
+                }
+              />
+
+              <div></div> {/* 🔥 50px GAP */}
+
+              <label className="pi-label">Date</label>
+
+              <input
+                type="date"
+                className="pi-input"
+                value={doc.invoiceDetail.date}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'date', e.target.value)
+                }
+              />
             </div>
 
             {/* Challan No + Challan Date */}
@@ -583,14 +616,21 @@ const PurchaseInvoice = () => {
                 className="pi-input"
                 placeholder="Challan No."
                 value={doc.invoiceDetail.challanNo}
-                onChange={e => handleNested('invoiceDetail', 'challanNo', e.target.value)}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'challanNo', e.target.value)
+                }
               />
+
+              <div></div> {/* 🔥 50px GAP */}
+
               <label className="pi-label">Challan Date</label>
               <input
                 className="pi-input"
                 placeholder="dd/mm/yy"
                 value={doc.invoiceDetail.challanDate}
-                onChange={e => handleNested('invoiceDetail', 'challanDate', e.target.value)}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'challanDate', e.target.value)
+                }
               />
             </div>
 
@@ -601,14 +641,21 @@ const PurchaseInvoice = () => {
                 className="pi-input"
                 placeholder="L.R. No."
                 value={doc.invoiceDetail.lrNo}
-                onChange={e => handleNested('invoiceDetail', 'lrNo', e.target.value)}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'lrNo', e.target.value)
+                }
               />
+
+              <div></div> {/* 🔥 50px GAP */}
+
               <label className="pi-label">E-Way No.</label>
               <input
                 className="pi-input"
                 placeholder="E-Way No."
                 value={doc.invoiceDetail.ewayNo}
-                onChange={e => handleNested('invoiceDetail', 'ewayNo', e.target.value)}
+                onChange={e =>
+                  handleNested('invoiceDetail', 'ewayNo', e.target.value)
+                }
               />
             </div>
 
@@ -634,8 +681,8 @@ const PurchaseInvoice = () => {
       </div>
 
       {/* ── Product Items Table ──────────────────────────────── */}
-      <div className="pi-table-card">
-        <div className="pi-table-header">
+      <div className="pt-table-card">
+        <div className="pt-table-header">
           <div className="pi-card-header-left">
             <div className="pi-card-icon items">📦</div>
             <div>
@@ -643,7 +690,7 @@ const PurchaseInvoice = () => {
               <div className="pi-card-subtitle">{doc.items.length} item{doc.items.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
-          <div className="pi-table-actions">
+          <div className="pt-table-actions">
             <span className="pi-toggle-label" style={{ marginRight: '0.25rem' }}>Discount :</span>
             <div className="pi-discount-toggle">
               <span className="pi-toggle-label">Discount :</span>
@@ -656,15 +703,12 @@ const PurchaseInvoice = () => {
                 onClick={() => handleNested('discount', 'unit', '%')}
               >%</span>
             </div>
-            <button className="pi-add-item-btn" onClick={addItem_}>
-              <span>+</span> Add Item
-            </button>
             <button className="pi-menu-btn">⋮</button>
           </div>
         </div>
 
-        <div className="pi-table-scroll">
-          <table className="pi-product-table">
+        <div className="pt-table-scroll">
+          <table className="pt-product-table">
             <colgroup>
               <col className="sr-col" />
               <col className="product-col" />
@@ -694,11 +738,11 @@ const PurchaseInvoice = () => {
             <tbody>
               {doc.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="pi-sr-num">{idx + 1}</td>
+                  <td className="pt-sr-num">{idx + 1}</td>
                   <td>
                     <div className="flex gap-2 items-center">
                       <select
-                        className="pi-cell-select"
+                        className="pt-cell-select"
                         style={{ flex: 1 }}
                         value={item.productId}
                         onChange={e => handleItemChange(idx, 'productId', e.target.value)}
@@ -710,8 +754,7 @@ const PurchaseInvoice = () => {
                       </select>
                       <button
                         type="button"
-                        className="pi-ms-add-btn"
-                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="pt-cell-add-btn"
                         onClick={() => {
                           setActiveItemIdx(idx);
                           setShowAddProduct(true);
@@ -721,7 +764,7 @@ const PurchaseInvoice = () => {
                       </button>
                     </div>
                     <textarea
-                      className="pi-cell-note"
+                      className="pt-cell-note"
                       rows={2}
                       placeholder="Item Note..."
                       value={item.note}
@@ -730,7 +773,7 @@ const PurchaseInvoice = () => {
                   </td>
                   <td>
                     <input
-                      className="pi-cell-input"
+                      className="pt-cell-input"
                       placeholder="Barcode No."
                       value={item.barcodeNo}
                       onChange={e => handleItemChange(idx, 'barcodeNo', e.target.value)}
@@ -738,7 +781,7 @@ const PurchaseInvoice = () => {
                   </td>
                   <td>
                     <input
-                      className="pi-cell-input"
+                      className="pt-cell-input"
                       placeholder="HSN/SAC"
                       value={item.hsn}
                       onChange={e => handleItemChange(idx, 'hsn', e.target.value)}
@@ -747,7 +790,7 @@ const PurchaseInvoice = () => {
                   <td>
                     <input
                       type="number"
-                      className="pi-cell-input"
+                      className="pt-cell-input"
                       style={{ textAlign: 'center' }}
                       placeholder="Qty."
                       value={item.quantity}
@@ -757,7 +800,7 @@ const PurchaseInvoice = () => {
                   </td>
                   <td>
                     <input
-                      className="pi-cell-input"
+                      className="pt-cell-input"
                       style={{ textAlign: 'center' }}
                       placeholder="UOM"
                       value={item.unit}
@@ -767,7 +810,7 @@ const PurchaseInvoice = () => {
                   <td>
                     <input
                       type="number"
-                      className="pi-cell-input"
+                      className="pt-cell-input"
                       style={{ textAlign: 'right' }}
                       placeholder="Price"
                       value={item.rate}
@@ -777,7 +820,7 @@ const PurchaseInvoice = () => {
                   </td>
                   <td>
                     <select
-                      className="pi-cell-select"
+                      className="pt-cell-select"
                       value={item.taxRate}
                       onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}
                     >
@@ -786,15 +829,15 @@ const PurchaseInvoice = () => {
                         <option key={r} value={r}>{r}%</option>
                       ))}
                     </select>
-                    <div className="pi-tax-display">{(item.taxAmount || 0).toFixed(2)}</div>
+                    <div className="pt-tax-display">{(item.taxAmount || 0).toFixed(2)}</div>
                   </td>
                   <td>
-                    <div className="pi-total-value">
+                    <div className="pt-total-value">
                       {((item.amount || 0) + (item.taxAmount || 0)).toFixed(2)}
                     </div>
                   </td>
                   <td>
-                    <button className="pi-remove-btn" onClick={() => removeItem(idx)} title="Remove item">
+                    <button className="pt-remove-btn" onClick={() => removeItem(idx)} title="Remove item">
                       ×
                     </button>
                   </td>
@@ -802,25 +845,28 @@ const PurchaseInvoice = () => {
               ))}
 
               {/* Summary row */}
-              <tr className="pi-summary-row">
-                <td colSpan={2} className="pi-summary-label">Total Inv. Val</td>
+              <tr className="pt-total-inv-row">
+                <td colSpan={2} style={{ paddingLeft: '0.5rem', paddingRight: '1rem', borderLeft: 'none' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <button type="button" className="pt-add-item-btn" onClick={addItem_}>
+                      <span>+</span> Add Row
+                    </button>
+                    <span style={{ fontWeight: 800, color: '#92400e', fontSize: '0.95rem' }}>Total Inv. Val</span>
+                  </div>
+                </td>
                 <td></td>
                 <td></td>
-                <td style={{ textAlign: 'center', fontWeight: 700 }}>{totalQty}</td>
+                <td style={{ textAlign: 'center', fontWeight: 800, fontSize: '0.9rem' }}>{totalQty}</td>
                 <td></td>
-                <td style={{ textAlign: 'right', fontWeight: 700 }}>{totalPrice.toFixed(2)}</td>
-                <td style={{ textAlign: 'center', fontWeight: 700 }}>{totalTaxSum.toFixed(2)}</td>
-                <td style={{ textAlign: 'right', fontWeight: 700, color: '#059669' }}>{totalInvVal.toFixed(2)}</td>
+                <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '0.9rem' }}>{totalPrice.toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: 800, fontSize: '0.9rem' }}>{totalTaxSum.toFixed(2)}</td>
+                <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '0.95rem', color: '#059669' }}>{totalInvVal.toFixed(2)}</td>
                 <td></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Horizontal scroll hint */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', color: '#cbd5e1', fontSize: '0.7rem' }}>
-          ← scroll →
-        </div>
       </div>
 
       {/* ── Bottom Grid: Left (Meta/Terms) + Right (Totals) ── */}
@@ -845,6 +891,8 @@ const PurchaseInvoice = () => {
           {/* Terms & Condition */}
           <div className="pi-terms-section">
             <div className="pi-section-title">Terms &amp; Condition / Additional Note</div>
+
+            {/* Default Title */}
             <div className="pi-terms-row">
               <label className="pi-label">Title</label>
               <input
@@ -853,17 +901,65 @@ const PurchaseInvoice = () => {
                 onChange={e => setDoc(prev => ({ ...prev, termsTitle: e.target.value }))}
               />
             </div>
+
+            {/* Default Detail */}
             <div className="pi-terms-row align-top">
               <label className="pi-label">Detail</label>
-              <textarea
-                className="pi-textarea"
-                rows={3}
-                placeholder="Enter terms &amp; condition"
-                value={doc.termsDetail}
-                onChange={e => setDoc(prev => ({ ...prev, termsDetail: e.target.value }))}
-              />
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <textarea
+                  className="pi-textarea"
+                  rows={3}
+                  placeholder="Enter terms & condition"
+                  value={doc.termsDetail}
+                  onChange={e => setDoc(prev => ({ ...prev, termsDetail: e.target.value }))}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  className="pi-delete-btn"
+                  onClick={() => setDoc(prev => ({ ...prev, termsDetail: '' }))}
+                  title="Delete Terms"
+                >
+                  <i className="bi bi-trash3-fill"></i>
+                </button>
+              </div>
             </div>
-            <button className="pi-add-notes-btn" onClick={() => { }}>
+
+            {/* Dynamic Notes */}
+            {notes.map(note => (
+              <div key={note.id}>
+                <div className="pi-terms-row">
+                  <label className="pi-label">Title</label>
+                  <input
+                    className="pi-input"
+                    placeholder="Note Title"
+                    value={note.title}
+                    onChange={(e) => updateNote(note.id, 'title', e.target.value)}
+                  />
+                </div>
+                <div className="pi-terms-row align-top">
+                  <label className="pi-label">Detail</label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <textarea
+                      className="pi-textarea"
+                      rows={2}
+                      placeholder="Note Detail..."
+                      value={note.detail}
+                      onChange={(e) => updateNote(note.id, 'detail', e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      onClick={() => deleteNote(note.id)}
+                      className="pi-delete-btn"
+                      title="Delete Note"
+                    >
+                      <i className="bi bi-trash3-fill"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button className="pi-add-notes-btn" onClick={addNote}>
               + Add Notes
             </button>
           </div>

@@ -43,6 +43,13 @@ import DailyExpenses from './pages/DailyExpenses';
 import AddDailyExpense from './pages/AddDailyExpense';
 import OtherIncome from './pages/OtherIncome';
 import AddOtherIncome from './pages/AddOtherIncome';
+import LoanManager from './pages/LoanManager';
+import LoanDetails from './pages/LoanDetails';
+import AddLoan from './pages/AddLoan';
+import LoanTransactions from './pages/LoanTransactions';
+import PaymentDetails from './pages/PaymentDetails';
+import CreditReport from './pages/CreditReport';
+import AdvancedLoanCalculator from './pages/AdvancedLoanCalculator';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 
@@ -399,8 +406,57 @@ function App() {
             </ProtectedRoute>
           } />
 
+          <Route path="/loans" element={
+            <ProtectedRoute>
+              <Layout>
+                <LoanManager />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/loan-calculator" element={
+            <ProtectedRoute>
+              <Layout>
+                <AdvancedLoanCalculator />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/loans/new" element={
+            <ProtectedRoute>
+              <Layout>
+                <AddLoan />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/loans/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <LoanDetails />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/loans/:id/transactions" element={
+            <ProtectedRoute>
+              <Layout>
+                <LoanTransactions />
+              </Layout>
+            </ProtectedRoute>
+          } />
+
           {/* Catch all - Redirect to dashboard */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/loans/:id/transactions/:txId" element={
+            <ProtectedRoute>
+              <Layout>
+                <PaymentDetails />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/credit-report" element={
+            <ProtectedRoute>
+              <Layout>
+                <CreditReport />
+              </Layout>
+            </ProtectedRoute>
+          } />
         </Routes>
         </LanguageProvider>
       </AuthProvider>

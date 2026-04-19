@@ -1,0 +1,350 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+.alc-page {
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.alc-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header */
+.alc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.alc-title h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.alc-title p {
+  color: #64748b;
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+}
+
+.alc-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Input Groups & Base UI continued */
+.alc-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+/* Main Layout Grid */
+.alc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* Inputs Section */
+.alc-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.alc-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alc-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alc-label {
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.alc-value-display {
+  display: flex;
+  align-items: center;
+}
+
+.alc-input-group input[type="number"],
+.alc-input-group select {
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.alc-input-group input[type="number"]:focus,
+.alc-input-group select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  background: white;
+}
+
+/* Sliders */
+.alc-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e2e8f0;
+  outline: none;
+}
+
+.alc-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #6366f1;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.alc-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #6366f1;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Result Cards Section */
+.alc-results-wrapper {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.alc-main-result {
+  text-align: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px dashed rgba(21, 128, 61, 0.2);
+}
+
+.alc-main-result h3 {
+  font-size: 1rem;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 0.5rem;
+}
+
+.alc-main-result .alc-emi-value {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #15803d;
+  line-height: 1;
+  margin: 0;
+  letter-spacing: -2px;
+}
+
+.alc-sub-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.alc-stat-box {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.alc-stat-box span {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.alc-stat-box strong {
+  display: block;
+  font-size: 1.25rem;
+  color: #0f172a;
+}
+
+/* Chart Container */
+.alc-chart-container {
+  height: 300px;
+  width: 100%;
+  margin-top: 2rem;
+}
+
+/* Amortization Table */
+.alc-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.alc-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.alc-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: right;
+  font-weight: 700;
+  color: #334155;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.alc-table th:first-child { text-align: left; }
+
+.alc-table td {
+  padding: 0.85rem 1rem;
+  text-align: right;
+  border-bottom: 1px solid #f1f5f9;
+  color: #475569;
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+}
+
+.alc-table td:first-child { 
+  text-align: left; 
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+.alc-table tr:hover {
+  background: #f8fafc;
+}
+
+/* Buttons */
+.alc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.alc-btn-primary {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2);
+}
+
+.alc-btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.alc-btn-outline {
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+.alc-btn-outline:hover {
+  background: #f8fafc;
+}
+
+/* Prepayment & Compare */
+.alc-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.alc-compare-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.alc-compare-card.winner {
+  border: 2px solid #10b981;
+  background: #f0fdf4;
+}
+
+/* Print Styles */
+@media print {
+  body { background: white; }
+  .alc-page { padding: 0; background: white; }
+  .alc-container { max-width: 100%; }
+  .alc-header .alc-actions,
+  .alc-tabs,
+  .alc-input-section,
+  .alc-slider,
+  .alc-btn {
+    display: none !important;
+  }
+  
+  .alc-card {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .alc-grid {
+    display: block;
+  }
+  
+  .alc-results-wrapper {
+    background: transparent;
+    border: 1px solid #ccc;
+    color: black;
+    page-break-inside: avoid;
+  }
+  
+  .alc-main-result h3,
+  .alc-main-result .alc-emi-value,
+  .alc-stat-box strong,
+  .alc-stat-box span {
+    color: black !important;
+  }
+  
+  .alc-table-wrapper {
+    border: 1px solid #000;
+  }
+  
+  .alc-table th {
+    background: #eee;
+    color: black;
+  }
+  
+  .alc-chart-container {
+    page-break-inside: avoid;
+  }
+}

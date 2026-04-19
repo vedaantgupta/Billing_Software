@@ -1,0 +1,230 @@
+.al-container {
+  display: flex;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: calc(100vh - 100px);
+}
+
+/* Sidebar Navigation */
+.al-sidebar {
+  width: 280px;
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1.5rem;
+}
+
+.al-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 1rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.al-nav-item:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--primary-color);
+}
+
+.al-nav-item.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.al-nav-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Form Content Area */
+.al-form-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding-bottom: 5rem;
+}
+
+.al-section {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border-color);
+  animation: slideUp 0.4s ease-out backwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.al-section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.al-section-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.al-header-icon {
+  color: var(--primary-color);
+  background: rgba(99, 102, 241, 0.1);
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+}
+
+/* Grid Layouts */
+.al-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.al-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.al-field.full {
+  grid-column: 1 / -1;
+}
+
+.al-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.al-field input, .al-field select, .al-field textarea {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: #f8fafc;
+  outline: none;
+  transition: all 0.2s;
+  font-size: 0.9375rem;
+}
+
+.al-field input:focus, .al-field select:focus, .al-field textarea:focus {
+  border-color: var(--primary-color);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+/* Loan Type Toggle */
+.al-type-toggle {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.al-toggle-btn {
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.al-toggle-btn.active {
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  color: var(--primary-color);
+}
+
+.al-toggle-btn.active.lend { color: #059669; }
+.al-toggle-btn.active.borrow { color: #d97706; }
+
+/* Checklist & Documents */
+.al-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.al-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.al-check-item:hover {
+  background: #f1f5f9;
+}
+
+.al-check-item input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--primary-color);
+}
+
+.al-upload-zone {
+  border: 2px dashed #e2e8f0;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  text-align: center;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.al-upload-zone:hover {
+  border-color: var(--primary-color);
+}
+
+/* Footer Actions */
+.al-footer {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  left: 280px; /* Sidebar width */
+  padding: 1.5rem 2.5rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  z-index: 100;
+}
+
+@media (max-width: 1024px) {
+  .al-sidebar { display: none; }
+  .al-footer { left: 0; }
+}
