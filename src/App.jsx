@@ -50,6 +50,8 @@ import LoanTransactions from './pages/LoanTransactions';
 import PaymentDetails from './pages/PaymentDetails';
 import CreditReport from './pages/CreditReport';
 import AdvancedLoanCalculator from './pages/AdvancedLoanCalculator';
+import BankManager from './pages/BankManager';
+import AddEditBank from './pages/AddEditBank';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 
@@ -450,6 +452,29 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
+
+          <Route path="/banks" element={
+            <ProtectedRoute>
+              <Layout>
+                <BankManager />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/banks/new" element={
+            <ProtectedRoute>
+              <Layout>
+                <AddEditBank />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/banks/edit/:id" element={
+            <ProtectedRoute>
+              <Layout>
+                <AddEditBank />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
           <Route path="/credit-report" element={
             <ProtectedRoute>
               <Layout>

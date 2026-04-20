@@ -53,6 +53,23 @@
   flex-direction: column;
   padding: 1.5rem 0;
   gap: 0.25rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Sidebar Scrollbar Styling */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 .nav-item {

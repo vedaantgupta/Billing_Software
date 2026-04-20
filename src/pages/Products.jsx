@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getItems, addItem, updateItem, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink } from 'lucide-react';
+import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink, Search } from 'lucide-react';
 import Barcode from 'react-barcode';
 
 const UNITS = ['Pieces (PCS)', 'Numbers (NOS)', 'Kilograms (KGS)', 'Grams (GMS)', 'Meters (MTR)', 'Centimeters (CMS)', 'Liters (LTR)', 'Milliliters (MLT)', 'Boxes (BOX)', 'Packets (PAC)', 'Dozens (DZN)', 'Rolls (ROL)', 'Tons (TON)'];
@@ -15,6 +15,7 @@ const Products = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const [formData, setFormData] = useState({
     itemType: 'product',
@@ -184,6 +185,34 @@ const Products = () => {
         </button>
       </div>
 
+      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '1.5rem', marginTop: '1rem' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', zIndex: 1 }} />
+          <input 
+            type="text" 
+            placeholder="Search by product name, group, or HSN Code..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '0.75rem 1rem 0.75rem 2.8rem', 
+              border: '1px solid var(--border-color)', 
+              borderRadius: '8px', 
+              fontSize: '0.95rem', 
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+              transition: 'all 0.2s',
+              outline: 'none',
+              color: 'var(--text-main)',
+              position: 'relative'
+            }}
+            onFocus={(e) => { e.target.style.borderColor = 'var(--primary-color)'; e.target.style.background = 'white'; e.target.style.boxShadow = '0 0 0 3px rgba(13, 138, 188, 0.1)'; }}
+            onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.background = 'rgba(255, 255, 255, 0.9)'; e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)'; }}
+          />
+        </div>
+      </div>
+
       <div className="glass" style={{ padding: '1.5rem', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
           <thead>
@@ -197,7 +226,13 @@ const Products = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map(p => (
+            {products
+              .filter(p => 
+                (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (p.productGroup && p.productGroup.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (p.hsn && p.hsn.toLowerCase().includes(searchQuery.toLowerCase()))
+              )
+              .map(p => (
               <tr key={p._dbId} style={{ borderBottom: '1px solid var(--border-color)', background: p.itemType === 'product' && p.stock <= (Number(p.lowStockAlert) || 5) ? 'rgba(254, 226, 226, 0.3)' : 'transparent' }}>
                 <td style={{ padding: '1rem' }}>
                   <div className="flex items-center gap-3">

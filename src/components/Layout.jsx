@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark } from 'lucide-react';
 import './Layout.css';
 import { getDB } from '../utils/db';
 
@@ -58,6 +58,9 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           </NavLink>
           <NavLink to="/loans" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <Banknote size={20} /> Loan Manager
+          </NavLink>
+          <NavLink to="/banks" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+            <Landmark size={20} /> Bank Accounts
           </NavLink>
 
 
