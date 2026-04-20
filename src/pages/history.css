@@ -1,0 +1,421 @@
+.history-page {
+    display: flex;
+    height: calc(100vh - 80px);
+    overflow: hidden;
+    position: relative;
+    background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at bottom right, rgba(244, 63, 94, 0.05) 0%, transparent 40%);
+}
+
+/* Gmail Sidebar Style */
+.history-sidebar {
+    width: 280px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-right: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.compose-btn-container {
+    padding: 1rem 0 1.5rem 0;
+}
+
+.btn-compose {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-compose:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    background: #f8fafc;
+    transform: translateY(-2px);
+}
+
+.nav-link-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0 24px 24px 0;
+    margin-right: -1rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.nav-link-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--primary-color);
+}
+
+.nav-link-item.active {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* History Content */
+.history-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.history-header {
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+.search-wrapper {
+    flex: 1;
+    max-width: 600px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-secondary);
+}
+
+.history-search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    border: none;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.history-search-input:focus {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    outline: none;
+}
+
+.view-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.view-btn {
+    padding: 0.5rem;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-btn.active {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
+}
+
+/* Notes Area */
+.notes-container {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.notes-scroll-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    align-content: start;
+}
+
+.list-view .notes-scroll-container {
+    grid-template-columns: 1fr;
+}
+
+/* Sticky Note Card */
+.sticky-note {
+    position: relative;
+    padding: 1.5rem;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.sticky-note:hover {
+    transform: rotate(1deg) translateY(-8px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-note.pinned::before {
+    content: '📌';
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.note-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: rgba(0, 0, 0, 0.8);
+}
+
+.note-preview {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(0, 0, 0, 0.7);
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+}
+
+.note-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.note-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.sticky-note:hover .note-actions {
+    opacity: 1;
+}
+
+.action-icon {
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.action-icon:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Color Themes */
+.color-white {
+    background-color: #ffffff;
+}
+
+.color-yellow {
+    background-color: #fff9c4;
+    border-color: #f9f0a0;
+}
+
+.color-blue {
+    background-color: #e3f2fd;
+    border-color: #bbdefb;
+}
+
+.color-green {
+    background-color: #e8f5e9;
+    border-color: #c8e6c9;
+}
+
+.color-pink {
+    background-color: #fce4ec;
+    border-color: #f8bbd0;
+}
+
+.color-purple {
+    background-color: #f3e5f5;
+    border-color: #e1bee7;
+}
+
+/* Word Editor Modal */
+.editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 2rem;
+}
+
+.editor-modal {
+    background: white;
+    width: 100%;
+    max-width: 900px;
+    height: 90vh;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.editor-header {
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.editor-toolbar {
+    padding: 0.5rem 1.5rem;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.toolbar-btn {
+    padding: 0.5rem;
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 0.5rem;
+}
+
+.editor-body {
+    flex: 1;
+    padding: 2rem 3rem;
+    overflow-y: auto;
+}
+
+.editor-title-input {
+    width: 100%;
+    font-size: 2.5rem;
+    font-weight: 800;
+    border: none;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    background: transparent;
+}
+
+.editor-title-input:focus {
+    outline: none;
+}
+
+.rich-editor-content {
+    width: 100%;
+    min-height: 400px;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    border: none;
+}
+
+.rich-editor-content:focus {
+    outline: none;
+}
+
+.editor-footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.color-dots {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s;
+}
+
+.color-dot:hover {
+    transform: scale(1.2);
+}
+
+.color-dot.active {
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.trash-warning {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    background: rgba(244, 63, 94, 0.05);
+    color: var(--secondary-color);
+    border-bottom: 1px solid rgba(244, 63, 94, 0.1);
+}

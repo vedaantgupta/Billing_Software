@@ -4,11 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import PrintViewModal from '../components/PrintViewModal';
 import ProductModal from '../components/ProductModal';
 import ContactModal from '../components/ContactModal';
+import { getItems, addItem, updateItem } from '../utils/db';
 import {
   ArrowLeft, Trash2, Printer, Save, Plus,
-  MoreVertical, RotateCcw, Truck
+  MoreVertical, RotateCcw, Truck, Landmark
 } from 'lucide-react';
 import './DeliveryChallan.css';
+import './product-table.css';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -32,6 +34,7 @@ const BLANK_ITEM = () => ({
   productId: '',
   name: '',
   hsn: '',
+  barcodeNo: '', // Added barcode for consistency
   quantity: 1,
   unit: 'PCS',
   rate: 0,
@@ -75,7 +78,7 @@ const DeliveryChallan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [products, setProducts] = useState([]);
-  const [banks, setBanks] = useState(['CASH', 'CANARA BANK', 'HDFC BANK', 'SBI']);
+  const [banks, setBanks] = useState([]);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [activeItemIdx, setActiveItemIdx] = useState(null);
@@ -97,7 +100,7 @@ const DeliveryChallan = () => {
       gstinPan: '',
       revCharge: 'No',
       shipTo: '--',
-      placeOfSupply: 'Madhya Pradesh', // Match with state initial value
+      placeOfSupply: 'Madhya Pradesh',
     },
     dcDetail: {
       type: 'Standard',
@@ -106,10 +109,11 @@ const DeliveryChallan = () => {
       lrNo: '',
       ewayNo: '',
       reasonForEway: '',
-      deliveryMode: 'Select Delivery Mode',
+      deliveryMode: 'Hand Delivery',
     },
     items: [BLANK_ITEM()],
-    bank: 'CANARA BANK',
+    bankId: '',
+    bank: '',
     terms: [
       { title: 'Goods Receipt', detail: 'Goods received in good condition and order.' },
       { title: 'Jurisdiction', detail: 'Subject to our home Jurisdiction.' }
@@ -130,12 +134,14 @@ const DeliveryChallan = () => {
   const loadMasterData = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const [contactList, productList] = await Promise.all([
+      const [contactList, productList, bankList] = await Promise.all([
         getItems('contacts', user.id),
         getItems('products', user.id),
+        getItems('banks', user.id),
       ]);
       setContacts(contactList);
       setProducts(productList);
+      setBanks(bankList || []);
     } catch (err) {
       console.error('Failed to load master data:', err);
     }
@@ -307,11 +313,18 @@ const DeliveryChallan = () => {
     setDoc(prev => ({ ...prev, terms }));
   };
 
-  if (loading) return <div className="dc-page"><div className="pi-loading-spinner" />Loading Delivery Challan...</div>;
+  if (loading) return (
+    <div className="dc-page">
+      <div className="pi-loading">
+        <div className="pi-loading-spinner" />
+        Loading Delivery Challan...
+      </div>
+    </div>
+  );
 
   return (
     <div className="dc-page">
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────────────── */}
       <div className="dc-header">
         <div className="dc-header-left">
           <div className="dc-badge">
@@ -324,24 +337,30 @@ const DeliveryChallan = () => {
             </div>
           </div>
         </div>
-        <div className="dc-actions" style={{ margin: 0, padding: 0, border: 'none' }}>
-          <button className="dc-btn dc-btn-secondary" onClick={() => navigate('/documents/select')}>
+        <div className="dc-actions">
+          <button className="dc-btn dc-btn-secondary" onClick={() => navigate('/documents')}>
             <ArrowLeft size={18} /> Back
+          </button>
+          <button className="dc-btn dc-btn-primary" onClick={() => handleSave(false)} disabled={isSubmitting}>
+            <Save size={18} /> {isSubmitting ? 'Saving...' : 'Save Challan'}
           </button>
         </div>
       </div>
 
+      {/* ── Top Grid: Customer Info + Challan Detail ─────── */}
       <div className="dc-top-grid">
         {/* Customer Information */}
         <div className="dc-card">
           <div className="dc-card-header">
             <div className="dc-card-header-left">
-              <div className="dc-card-title">Customer Information</div>
+              <div className="dc-card-icon customer">🏪</div>
+              <div>
+                <div className="dc-card-title">Customer Information</div>
+                <div className="dc-card-subtitle">Dispatch destination</div>
+              </div>
             </div>
-            <MoreVertical size={18} color="#94a3b8" />
           </div>
           <div className="dc-card-body">
-
             <div className="dc-field-row radio-group-row">
               <label className="dc-label">Supply Type</label>
               <div className="dc-radio-group">
@@ -386,7 +405,6 @@ const DeliveryChallan = () => {
               <textarea
                 className="dc-textarea"
                 rows={3}
-                style={{ backgroundColor: '#f1f5f9' }}
                 value={doc.customerInfo.address}
                 onChange={e => handleNested('customerInfo', 'address', e.target.value)}
               />
@@ -396,7 +414,7 @@ const DeliveryChallan = () => {
               <label className="dc-label">Contact Person</label>
               <input
                 className="dc-input"
-                placeholder="Contact Person"
+                placeholder="Name"
                 value={doc.customerInfo.contactPerson}
                 onChange={e => handleNested('customerInfo', 'contactPerson', e.target.value)}
               />
@@ -423,18 +441,6 @@ const DeliveryChallan = () => {
             </div>
 
             <div className="dc-field-row">
-              <label className="dc-label">Rev. Charge</label>
-              <select
-                className="dc-select"
-                value={doc.customerInfo.revCharge}
-                onChange={e => handleNested('customerInfo', 'revCharge', e.target.value)}
-              >
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-              </select>
-            </div>
-
-            <div className="dc-field-row">
               <label className="dc-label">Ship To</label>
               <select
                 className="dc-select"
@@ -443,6 +449,9 @@ const DeliveryChallan = () => {
               >
                 <option value="--">--</option>
                 <option value="Same as Billing">Same as Billing</option>
+                {contacts.map(c => (
+                  <option key={c.id} value={c.id}>{c.companyName || c.customerName}</option>
+                ))}
               </select>
             </div>
 
@@ -456,22 +465,24 @@ const DeliveryChallan = () => {
                 {Object.keys(STATE_CODES).sort().map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-
           </div>
         </div>
 
-        {/* Delivery Challan Detail */}
+        {/* Delivery Challan Detail (1 Column) */}
         <div className="dc-card">
           <div className="dc-card-header">
             <div className="dc-card-header-left">
-              <div className="dc-card-title">Delivery Challan Detail</div>
+              <div className="dc-card-icon detail">📋</div>
+              <div>
+                <div className="dc-card-title">Delivery Challan Detail</div>
+                <div className="dc-card-subtitle">Dispatch metadata</div>
+              </div>
             </div>
-            <RotateCcw size={18} color="#94a3b8" style={{ cursor: 'pointer' }} />
+            <RotateCcw size={18} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => navigate(0)} />
           </div>
           <div className="dc-card-body">
-
             <div className="dc-field-row">
-              <label className="dc-label">Type</label>
+              <label className="dc-label">Challan Type</label>
               <select
                 className="dc-select"
                 value={doc.dcDetail.type}
@@ -481,137 +492,135 @@ const DeliveryChallan = () => {
               </select>
             </div>
 
-            <div className="dc-two-col-grid">
-              <div className="dc-field-row">
-                <label className="dc-label">Delivery Challan No.<span className="req">*</span></label>
-                <div className="dc-no-row">
-                  <input
-                    className="dc-input dc-prefix-input"
-                    placeholder="Prefi"
-                    value={doc.docPrefix}
-                    onChange={e => setDoc({ ...doc, docPrefix: e.target.value })}
-                  />
-                  <input
-                    className="dc-input dc-number-input"
-                    value={doc.dcDetail.challanNo}
-                    onChange={e => handleNested('dcDetail', 'challanNo', e.target.value)}
-                  />
-                  <input
-                    className="dc-input dc-postfix-input"
-                    placeholder="Post"
-                    value={doc.docPostfix}
-                    onChange={e => setDoc({ ...doc, docPostfix: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="dc-field-row">
-                <label className="dc-label">Delivery Challan DATE<span className="req">*</span></label>
+            <div className="dc-field-row">
+              <label className="dc-label">Challan No.<span className="req">*</span></label>
+              <div className="dc-no-row">
                 <input
-                  type="date"
-                  className="dc-input"
-                  value={doc.dcDetail.date}
-                  onChange={e => handleNested('dcDetail', 'date', e.target.value)}
+                  className="dc-input dc-prefix-input"
+                  placeholder="Pre"
+                  value={doc.docPrefix}
+                  onChange={e => setDoc({ ...doc, docPrefix: e.target.value })}
                 />
-              </div>
-            </div>
-
-            <div className="dc-two-col-grid">
-              <div className="dc-field-row">
-                <label className="dc-label">L.R. No.</label>
                 <input
-                  className="dc-input"
-                  placeholder="L.R. No."
-                  value={doc.dcDetail.lrNo}
-                  onChange={e => handleNested('dcDetail', 'lrNo', e.target.value)}
+                  className="dc-input dc-number-input"
+                  value={doc.dcDetail.challanNo}
+                  onChange={e => handleNested('dcDetail', 'challanNo', e.target.value)}
                 />
-              </div>
-
-              <div className="dc-field-row">
-                <label className="dc-label">E-Way No.</label>
                 <input
-                  className="dc-input"
-                  placeholder="E-Way No."
-                  value={doc.dcDetail.ewayNo}
-                  onChange={e => handleNested('dcDetail', 'ewayNo', e.target.value)}
+                  className="dc-input dc-postfix-input"
+                  placeholder="Post"
+                  value={doc.docPostfix}
+                  onChange={e => setDoc({ ...doc, docPostfix: e.target.value })}
                 />
               </div>
             </div>
 
             <div className="dc-field-row">
-              <label className="dc-label">Reason For Eway</label>
+              <label className="dc-label">Challan Date<span className="req">*</span></label>
               <input
+                type="date"
                 className="dc-input"
-                value={doc.dcDetail.reasonForEway}
-                onChange={e => handleNested('dcDetail', 'reasonForEway', e.target.value)}
+                value={doc.dcDetail.date}
+                onChange={e => handleNested('dcDetail', 'date', e.target.value)}
               />
             </div>
 
             <div className="dc-divider" />
 
             <div className="dc-field-row">
-              <label className="dc-label">Delivery</label>
+              <label className="dc-label">L.R. No.</label>
+              <input
+                className="dc-input"
+                placeholder="L.R. No."
+                value={doc.dcDetail.lrNo}
+                onChange={e => handleNested('dcDetail', 'lrNo', e.target.value)}
+              />
+            </div>
+
+            <div className="dc-field-row">
+              <label className="dc-label">E-Way Bill No.</label>
+              <input
+                className="dc-input"
+                placeholder="E-Way No."
+                value={doc.dcDetail.ewayNo}
+                onChange={e => handleNested('dcDetail', 'ewayNo', e.target.value)}
+              />
+            </div>
+
+            <div className="dc-field-row">
+              <label className="dc-label">Eway Reason</label>
+              <input
+                className="dc-input"
+                placeholder="Reason"
+                value={doc.dcDetail.reasonForEway}
+                onChange={e => handleNested('dcDetail', 'reasonForEway', e.target.value)}
+              />
+            </div>
+
+            <div className="dc-field-row">
+              <label className="dc-label">Delivery Mode</label>
               <select
                 className="dc-select"
                 value={doc.dcDetail.deliveryMode}
                 onChange={e => handleNested('dcDetail', 'deliveryMode', e.target.value)}
               >
-                <option disabled>Select Delivery Mode</option>
                 {DELIVERY_MODES.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* Items Table */}
-      <div className="dc-card">
-        <div className="dc-card-header">
+      {/* ── Product Items Table ──────────────────────────────── */}
+      <div className="pt-table-card">
+        <div className="pt-table-header">
           <div className="dc-card-header-left">
-            <div className="dc-card-title">Product Items</div>
+            <div className="dc-card-icon items">📦</div>
+            <div>
+              <div className="dc-card-title">Product Items</div>
+              <div className="dc-card-subtitle">{doc.items.length} item{doc.items.length !== 1 ? 's' : ''} listed</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span className="dc-label" style={{ alignSelf: 'center' }}>Discount: </span>
-            <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+          <div className="pt-table-actions">
+            <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: '20px', overflow: 'hidden', background: '#f8fafc', padding: '2px' }}>
               <button
-                className={`dc-btn-secondary ${doc.discount.unit === 'Rs' ? 'active-tab' : ''}`}
-                style={{ padding: '4px 12px', border: 'none', background: doc.discount.unit === 'Rs' ? 'var(--dc-primary)' : 'transparent', color: doc.discount.unit === 'Rs' ? 'white' : '#64748b' }}
+                className={`dc-btn`}
+                style={{ padding: '4px 12px', fontSize: '0.7rem', border: 'none', background: doc.discount.unit === 'Rs' ? 'var(--dc-primary, #6366f1)' : 'transparent', color: doc.discount.unit === 'Rs' ? 'white' : '#64748b' }}
                 onClick={() => handleNested('discount', 'unit', 'Rs')}
               >Rs</button>
               <button
-                className={`dc-btn-secondary ${doc.discount.unit === '%' ? 'active-tab' : ''}`}
-                style={{ padding: '4px 12px', border: 'none', background: doc.discount.unit === '%' ? 'var(--dc-primary)' : 'transparent', color: doc.discount.unit === '%' ? 'white' : '#64748b' }}
+                className={`dc-btn`}
+                style={{ padding: '4px 12px', fontSize: '0.7rem', border: 'none', background: doc.discount.unit === '%' ? 'var(--dc-primary, #6366f1)' : 'transparent', color: doc.discount.unit === '%' ? 'white' : '#64748b' }}
                 onClick={() => handleNested('discount', 'unit', '%')}
               >%</button>
             </div>
-            <MoreVertical size={18} color="#94a3b8" />
           </div>
         </div>
-        <div className="dc-table-scroll">
-          <table className="dc-product-table">
+        <div className="pt-table-scroll">
+          <table className="pt-product-table">
             <thead>
               <tr>
-                <th style={{ width: '50px' }}>SR.</th>
-                <th>PRODUCT / OTHER CHARGES</th>
-                <th style={{ width: '150px' }}>HSN/SAC CODE</th>
-                <th style={{ width: '100px' }}>QTY.</th>
-                <th style={{ width: '100px' }}>UOM</th>
-                <th style={{ width: '150px' }}>PRICE</th>
-                <th style={{ width: '150px' }}>IGST</th>
-                <th style={{ width: '150px' }}>TOTAL</th>
-                <th style={{ width: '50px' }}></th>
+                <th className="sr-col">SR.</th>
+                <th className="product-col">PRODUCT / OTHER CHARGES</th>
+                <th className="barcode-col">BARCODE</th>
+                <th className="hsn-col">HSN/SAC</th>
+                <th className="qty-col">QTY.</th>
+                <th className="uom-col">UOM</th>
+                <th className="price-col">PRICE (RS)</th>
+                <th className="igst-col">IGST</th>
+                <th className="total-col">TOTAL</th>
+                <th className="action-col"></th>
               </tr>
             </thead>
             <tbody>
               {doc.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="dc-sr-num">{idx + 1}</td>
+                  <td className="pt-sr-num">{idx + 1}</td>
                   <td>
-                    <div className="flex gap-2 items-center">
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <select
-                        className="dc-cell-select"
-                        style={{ flex: 1 }}
+                        className="pt-cell-select"
+                        style={{ flex: 1, textAlign: 'left' }}
                         value={item.productId}
                         onChange={e => handleItemChange(idx, 'productId', e.target.value)}
                       >
@@ -620,18 +629,12 @@ const DeliveryChallan = () => {
                       </select>
                       <button
                         type="button"
-                        className="pi-ms-add-btn"
-                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        onClick={() => {
-                          setActiveItemIdx(idx);
-                          setShowAddProduct(true);
-                        }}
-                      >
-                        +
-                      </button>
+                        className="pt-cell-add-btn"
+                        onClick={() => { setActiveItemIdx(idx); setShowAddProduct(true); }}
+                      >+</button>
                     </div>
                     <textarea
-                      className="dc-cell-note"
+                      className="pt-cell-note"
                       placeholder="Item Note..."
                       rows={2}
                       value={item.note}
@@ -639,269 +642,183 @@ const DeliveryChallan = () => {
                     />
                   </td>
                   <td>
-                    <input
-                      className="dc-cell-input"
-                      placeholder="HSN/SAC"
-                      value={item.hsn}
-                      onChange={e => handleItemChange(idx, 'hsn', e.target.value)}
-                    />
+                    <input className="pt-cell-input" placeholder="Barcode" value={item.barcodeNo || ''} onChange={e => handleItemChange(idx, 'barcodeNo', e.target.value)} />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      className="dc-cell-input"
-                      placeholder="Qty."
-                      style={{ textAlign: 'center' }}
-                      value={item.quantity}
-                      onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
-                    />
+                    <input className="pt-cell-input" placeholder="HSN/SAC" value={item.hsn} onChange={e => handleItemChange(idx, 'hsn', e.target.value)} />
                   </td>
                   <td>
-                    <input
-                      className="dc-cell-input"
-                      placeholder="UOM"
-                      style={{ textAlign: 'center' }}
-                      value={item.unit}
-                      onChange={e => handleItemChange(idx, 'unit', e.target.value)}
-                    />
+                    <input type="number" className="pt-cell-input" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      className="dc-cell-input"
-                      placeholder="Price"
-                      style={{ textAlign: 'right' }}
-                      value={item.rate}
-                      onChange={e => handleItemChange(idx, 'rate', e.target.value)}
-                    />
+                    <input className="pt-cell-input" placeholder="UOM" value={item.unit} onChange={e => handleItemChange(idx, 'unit', e.target.value)} />
                   </td>
                   <td>
-                    <select
-                      className="dc-cell-select"
-                      value={item.taxRate}
-                      onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}
-                    >
-                      <option value="0">--</option>
-                      <option value="5">5%</option>
-                      <option value="12">12%</option>
-                      <option value="18">18%</option>
-                      <option value="28">28%</option>
+                    <input type="number" className="pt-cell-input" style={{ textAlign: 'right' }} value={item.rate} onChange={e => handleItemChange(idx, 'rate', e.target.value)} />
+                  </td>
+                  <td>
+                    <select className="pt-cell-select" value={item.taxRate} onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}>
+                      {[0, 5, 12, 18, 28].map(r => <option key={r} value={r}>{r}%</option>)}
                     </select>
-                    <div className="dc-tax-display">{item.taxAmount.toFixed(2)}</div>
+                    <div className="pt-tax-display">{item.taxAmount.toFixed(2)}</div>
                   </td>
                   <td>
-                    <div className="dc-total-value">{(item.amount + item.taxAmount).toFixed(2)}</div>
+                    <div className="pt-total-value">{(item.amount + item.taxAmount).toFixed(2)}</div>
                   </td>
                   <td>
-                    <button className="dc-remove-btn" onClick={() => removeItem(idx)}>×</button>
+                    <button className="pt-remove-btn" onClick={() => removeItem(idx)}>×</button>
                   </td>
                 </tr>
               ))}
-              <tr className="dc-summary-row">
-                <td colSpan={2} className="dc-summary-label">Total Inv. Val</td>
+              <tr className="pt-total-inv-row">
+                <td colSpan={2} style={{ textAlign: 'right', fontWeight: '800', color: '#6366f1' }}>Total Summary</td>
                 <td></td>
-                <td style={{ textAlign: 'center' }}>{doc.items.reduce((a, i) => a + Number(i.quantity), 0)}</td>
                 <td></td>
-                <td style={{ textAlign: 'right' }}>{doc.items.reduce((a, i) => a + (Number(i.quantity) * Number(i.rate)), 0).toFixed(2)}</td>
-                <td style={{ textAlign: 'center' }}>{doc.totalTax.toFixed(2)}</td>
-                <td style={{ textAlign: 'right' }}>{(doc.taxable + doc.totalTax).toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: '800' }}>{doc.items.reduce((a, i) => a + Number(i.quantity), 0)}</td>
+                <td></td>
+                <td style={{ textAlign: 'right', fontWeight: '800' }}>{doc.items.reduce((a, i) => a + (Number(i.quantity) * Number(i.rate)), 0).toFixed(2)}</td>
+                <td style={{ textAlign: 'center', fontWeight: '800' }}>{doc.totalTax.toFixed(2)}</td>
+                <td style={{ textAlign: 'right', fontWeight: '800', color: '#059669' }}>{(doc.taxable + doc.totalTax).toFixed(2)}</td>
                 <td></td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9' }}>
-          <button className="dc-btn dc-btn-secondary" style={{ color: 'var(--dc-primary)' }} onClick={addItem_}>
-            <Plus size={16} /> Add Product
+        <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9', background: '#fcfcfd' }}>
+          <button className="dc-btn dc-btn-secondary" style={{ color: '#6366f1' }} onClick={addItem_}>
+            <Plus size={16} /> Add Product Row
           </button>
         </div>
       </div>
 
-      {/* Footer Grid */}
+      {/* ── Footer Grid ────────────────────────────────────────── */}
       <div className="dc-footer-grid">
         <div className="dc-notes-section">
-          {/* Bank */}
-          <div className="dc-card" style={{ padding: '1.25rem' }}>
-            <div className="dc-field-row">
-              <label className="dc-label">Bank</label>
-              <select className="dc-select" value={doc.bank} onChange={e => setDoc({ ...doc, bank: e.target.value })}>
-                {banks.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
+          {/* Bank Selection */}
+          <div className="dc-card">
+            <div className="dc-card-header">
+              <div className="dc-card-header-left">
+                <div className="dc-card-icon totals"><Landmark size={18} /></div>
+                <div className="dc-card-title">Bank Selection</div>
+              </div>
+            </div>
+            <div className="dc-card-body">
+              <div className="dc-field-row">
+                <label className="dc-label">Select Bank</label>
+                <select className="dc-select" value={doc.bankId} onChange={e => {
+                  const b = banks.find(x => x.id === e.target.value);
+                  setDoc({ ...doc, bankId: e.target.value, bank: b ? b.bankName : '' });
+                }}>
+                  <option value="">-- Choose Account --</option>
+                  {banks.map(b => <option key={b.id} value={b.id}>{b.bankName} - {b.accountNumber.slice(-4)}</option>)}
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Terms */}
-          <div className="dc-card" style={{ padding: '1.25rem' }}>
-            <div className="dc-card-title" style={{ marginBottom: '1rem' }}>Terms & Condition / Additional Note</div>
-            {doc.terms.map((term, idx) => (
-              <div key={idx} className="dc-terms-card" style={{ marginBottom: '0.75rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
-                  <label className="dc-label" style={{ width: '60px' }}>Title</label>
-                  <input
-                    className="dc-input"
-                    value={term.title}
-                    onChange={e => updateTerm(idx, 'title', e.target.value)}
-                  />
-                  <Trash2 size={18} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => {
-                    const t = [...doc.terms]; t.splice(idx, 1); setDoc({ ...doc, terms: t });
-                  }} />
+          {/* Terms & Conditions */}
+          <div className="dc-card">
+            <div className="dc-card-header">
+              <div className="dc-card-title">Terms & Conditions</div>
+            </div>
+            <div className="dc-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {doc.terms.map((term, idx) => (
+                <div key={idx} className="dc-terms-card">
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+                    <input className="dc-input" placeholder="Title" value={term.title} onChange={e => updateTerm(idx, 'title', e.target.value)} />
+                    <button className="dc-btn" style={{ padding: '0.4rem', background: '#fee2e2', color: '#ef4444' }} onClick={() => {
+                      const t = [...doc.terms]; t.splice(idx, 1); setDoc({ ...doc, terms: t });
+                    }}><Trash2 size={16} /></button>
+                  </div>
+                  <textarea className="dc-textarea" rows={2} placeholder="Detail" value={term.detail} onChange={e => updateTerm(idx, 'detail', e.target.value)} />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <label className="dc-label" style={{ width: '60px' }}>Detail</label>
-                  <textarea
-                    className="dc-textarea"
-                    rows={2}
-                    value={term.detail}
-                    onChange={e => updateTerm(idx, 'detail', e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
-            <button className="dc-add-notes-btn" onClick={addTerm}><Plus size={16} /> Add Notes</button>
+              ))}
+              <button className="dc-add-notes-btn" onClick={addTerm}><Plus size={16} /> Add Term</button>
+            </div>
           </div>
 
-          <div className="dc-card" style={{ padding: '1.25rem' }}>
-            <label className="dc-label">Document Note / Remarks</label>
-            <textarea
-              className="dc-textarea"
-              placeholder="Internal remarks..."
-              value={doc.documentNote}
-              onChange={e => setDoc({ ...doc, documentNote: e.target.value })}
-            />
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.25rem', fontStyle: 'italic' }}>Not Visible on Print</div>
+          <div className="dc-card">
+            <div className="dc-card-body">
+              <label className="dc-label" style={{ marginBottom: '0.5rem', display: 'block' }}>Challan Remarks (Internal)</label>
+              <textarea
+                className="dc-textarea"
+                placeholder="Internal notes..."
+                value={doc.documentNote}
+                onChange={e => setDoc({ ...doc, documentNote: e.target.value })}
+              />
+            </div>
           </div>
         </div>
 
+        {/* Summary / Calculator */}
         <div className="dc-summary-section">
+          <div className="dc-card-title" style={{ marginBottom: '1.25rem', paddingBottom: '0.5rem', borderBottom: '1.5px solid #f1f5f9' }}>Calculation Summary</div>
           <div className="dc-calc-table">
             <div className="dc-calc-row">
-              <span className="dc-calc-label">Taxable</span>
-              <span className="dc-calc-val">{doc.taxable.toFixed(2)}</span>
-            </div>
-            <div className="dc-add-additional" onClick={() => setDoc({ ...doc, additionalCharge: doc.additionalCharge ? 0 : 500 })}>
-              + Add Additional Charge
-            </div>
-            {doc.additionalCharge > 0 && (
-              <div className="dc-calc-row">
-                <input className="dc-input" style={{ width: '100px', padding: '2px 4px' }} value={doc.additionalChargeName} onChange={e => setDoc({ ...doc, additionalChargeName: e.target.value })} />
-                <input className="dc-input" style={{ width: '80px', padding: '2px 4px', textAlign: 'right' }} type="number" value={doc.additionalCharge} onChange={e => setDoc({ ...doc, additionalCharge: Number(e.target.value) })} />
-              </div>
-            )}
-            <div className="dc-calc-row bordered">
               <span className="dc-calc-label">Total Taxable</span>
-              <span className="dc-calc-val">{doc.totalTaxable.toFixed(2)}</span>
-            </div>
-            <div className="dc-calc-row">
-              <span className="dc-calc-label">Total Tax</span>
-              <span className="dc-calc-val">{doc.totalTax.toFixed(2)}</span>
+              <span className="dc-calc-val">₹ {doc.taxable.toFixed(2)}</span>
             </div>
 
-            <div className="dc-calc-row">
-              <div className="dc-modifier-row">
-                <span>TCS</span>
-                <select className="dc-mod-select" value={doc.tcs.mode} onChange={e => handleNested('tcs', 'mode', e.target.value)}>
-                  <option value="+">+</option>
-                  <option value="-">-</option>
-                </select>
-                <input className="dc-mod-input" type="number" value={doc.tcs.value} onChange={e => handleNested('tcs', 'value', e.target.value)} />
-                <select className="dc-mod-select" value={doc.tcs.unit} onChange={e => handleNested('tcs', 'unit', e.target.value)}>
-                  <option value="%">%</option>
-                  <option value="Rs">Rs</option>
-                </select>
+            <div className="dc-modifier-row">
+              <div className="dc-modifier-label" style={{ flex: '1', textAlign: 'left' }}>
+                <input className="dc-input" style={{ border: 'none', background: 'transparent', padding: 0 }} value={doc.additionalChargeName} onChange={e => setDoc({ ...doc, additionalChargeName: e.target.value })} />
               </div>
-              <span className="dc-calc-val">
-                {((Number(doc.tcs.unit === '%' ? doc.totalTaxable * (Number(doc.tcs.value) / 100) : doc.tcs.value)) || 0).toFixed(2)}
-              </span>
-            </div>
-
-            <div className="dc-calc-row">
-              <div className="dc-modifier-row">
-                <span>Discount</span>
-                <select className="dc-mod-select" value={doc.discount.mode} onChange={e => handleNested('discount', 'mode', e.target.value)}>
-                  <option value="+">+</option>
-                  <option value="-">-</option>
-                </select>
-                <input className="dc-mod-input" type="number" value={doc.discount.value} onChange={e => handleNested('discount', 'value', e.target.value)} />
-                <select className="dc-mod-select" value={doc.discount.unit} onChange={e => handleNested('discount', 'unit', e.target.value)}>
-                  <option value="%">%</option>
-                  <option value="Rs">Rs</option>
-                </select>
-              </div>
-              <span className="dc-calc-val" style={{ color: '#ef4444' }}>
-                -{((Number(doc.discount.unit === '%' ? doc.totalTaxable * (Number(doc.discount.value) / 100) : doc.discount.value)) || 0).toFixed(2)}
-              </span>
+              <input type="number" className="dc-modifier-input" style={{ width: '80px', textAlign: 'right' }} value={doc.additionalCharge} onChange={e => setDoc({ ...doc, additionalCharge: Number(e.target.value) })} />
             </div>
 
             <div className="dc-calc-row bordered">
-              <span className="dc-calc-label">Round Off</span>
-              <label className="dc-switch">
-                <input type="checkbox" checked={doc.roundOff} onChange={e => setDoc({ ...doc, roundOff: e.target.checked })} />
-                <span className="dc-slider"></span>
-              </label>
-              <span className="dc-calc-val">
-                {doc.roundOff ? (Math.round(doc.grandTotal) - doc.grandTotal).toFixed(2) : '0.00'}
-              </span>
+              <span className="dc-calc-label">Sub Total</span>
+              <span className="dc-calc-val">₹ {doc.totalTaxable.toFixed(2)}</span>
             </div>
 
-            <div className="dc-grand-total-box">
-              <span className="dc-grand-total-label">Grand Total</span>
-              <span className="dc-grand-total-val">{doc.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <div className="dc-calc-row">
+              <span className="dc-calc-label">Total Tax (GST)</span>
+              <span className="dc-calc-val">₹ {doc.totalTax.toFixed(2)}</span>
             </div>
 
-            <div className="dc-in-words">
-              Total in words: <br />
-              <strong>{numberToWords(doc.grandTotal)}</strong>
+            <div className="dc-modifier-row">
+              <div className="dc-modifier-label">TCS</div>
+              <select className="dc-modifier-select" value={doc.tcs.mode} onChange={e => handleNested('tcs', 'mode', e.target.value)}>
+                <option value="+">+</option><option value="-">-</option>
+              </select>
+              <input className="dc-modifier-input" type="number" value={doc.tcs.value} onChange={e => handleNested('tcs', 'value', e.target.value)} />
+              <select className="dc-modifier-unit" value={doc.tcs.unit} onChange={e => handleNested('tcs', 'unit', e.target.value)}>
+                <option value="%">%</option><option value="Rs">Rs</option>
+              </select>
             </div>
 
-            <div className="dc-smart-suggestion">
-              <div>Smart Suggestion</div>
-              <div className="dc-plus-circle">+</div>
+            <div className="dc-modifier-row">
+              <div className="dc-modifier-label">Discount</div>
+              <input className="dc-modifier-input" type="number" value={doc.discount.value} onChange={e => handleNested('discount', 'value', e.target.value)} />
+              <div className="dc-modifier-unit">{doc.discount.unit}</div>
             </div>
 
-            {/* Actions */}
-            <div className="dc-actions">
-              <button className="dc-btn dc-btn-secondary" onClick={() => navigate('/documents/select')}>
-                Back
+            <div className="dc-grand-total">
+              <span className="dc-grand-label">GRAND TOTAL</span>
+              <span className="dc-grand-value">₹ {doc.grandTotal.toFixed(2)}</span>
+            </div>
+
+            <div className="dc-words-row">
+              <div className="dc-words-label">Amount in Words</div>
+              <div className="dc-words-value">{numberToWords(doc.grandTotal)}</div>
+            </div>
+
+            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button className="dc-btn dc-btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => handleSave(true)}>
+                <Printer size={18} /> Save &amp; Print
               </button>
-              <button className="dc-btn dc-btn-danger" onClick={() => navigate('/documents/select')}>
-                <Trash2 size={18} /> Discard
-              </button>
-              <button className="dc-btn dc-btn-primary" onClick={() => handleSave(true)} disabled={isSubmitting}>
-                <Printer size={18} /> Save & Print
-              </button>
-              <button className="dc-btn dc-btn-primary" onClick={() => handleSave(false)} disabled={isSubmitting}>
-                <Save size={18} /> Save
+              <button className="dc-btn dc-btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => handleSave(false)}>
+                <Save size={18} /> Save Only
               </button>
             </div>
-
           </div>
         </div>
       </div>
 
-      {showPrintModal && (
-        <PrintViewModal
-          document={savedDoc}
-          onClose={() => {
-            setShowPrintModal(false);
-            navigate('/documents');
-          }}
-        />
-      )}
-      <ProductModal
-        isOpen={showAddProduct}
-        onClose={() => setShowAddProduct(false)}
-        onSave={(newP) => {
-          setProducts(prev => [...prev, newP]);
-          if (activeItemIdx !== null) {
-            handleItemChange(activeItemIdx, 'productId', newP.id);
-          }
-        }}
-      />
-      <ContactModal
-        isOpen={showContactModal}
-        onClose={() => setShowContactModal(false)}
-        onSave={handleContactSaved}
-      />
+      {/* Modals */}
+      {showContactModal && <ContactModal isOpen={showContactModal} onClose={() => setShowContactModal(false)} onSave={handleContactSaved} type="customer" />}
+      {showAddProduct && <ProductModal isOpen={showAddProduct} onClose={() => setShowAddProduct(false)} onSave={(p) => { handleItemChange(activeItemIdx, 'productId', p.id); loadMasterData(); }} />}
+      {showPrintModal && <PrintViewModal isOpen={showPrintModal} onClose={() => { setShowPrintModal(false); navigate('/documents'); }} documentData={savedDoc} />}
     </div>
   );
 };

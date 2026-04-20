@@ -7,6 +7,7 @@ import { ArrowLeft, Trash2, Printer, Save, Plus, MoreVertical, RotateCcw, X } fr
 import ProductModal from '../components/ProductModal';
 import ContactModal from '../components/ContactModal';
 import './JobWork.css';
+import './product-table.css';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const JW_TYPES = ['Outward Job Work', 'Inward Job Work', 'Standard Challan', 'Sub-Contracting'];
@@ -390,69 +391,73 @@ const JobWork = () => {
       </div>
 
       {/* Items Table */}
-      <div className="jw-table-card">
-        <div className="jw-table-header">
-          <div className="jw-card-header-left">
-            <div className="jw-card-icon items">📦</div>
+      <div className="pt-table-card">
+        <div className="pt-table-header">
+          <div className="pi-card-header-left">
+            <div className="pi-card-icon items">📦</div>
             <div>
-              <div className="jw-card-title">Product Items</div>
-              <div className="jw-card-subtitle">{doc.items.length} row(s)</div>
+              <div className="pt-card-title">Product Items</div>
+              <div className="pt-card-subtitle">{doc.items.length} row(s) active</div>
             </div>
           </div>
-          <div className="jw-table-actions">
+          <div className="pi-table-actions">
             <div className="jw-discount-toggle">
               <span className="jw-toggle-label">Discount :</span>
               <span className={`jw-toggle-chip ${doc.discount.unit === 'Rs' ? 'active' : ''}`} onClick={() => handleNested('discount', 'unit', 'Rs')}>Rs</span>
               <span className={`jw-toggle-chip ${doc.discount.unit === '%' ? 'active' : ''}`} onClick={() => handleNested('discount', 'unit', '%')}>%</span>
             </div>
-            <button className="jw-add-item-btn" onClick={addRow}><Plus size={14} /> Add Row</button>
           </div>
         </div>
-        <div className="jw-table-scroll">
-          <table className="jw-product-table">
+        <div className="pt-table-scroll">
+          <table className="pt-product-table">
             <thead>
               <tr>
-                <th style={{ width: '45px' }}>SR.</th>
-                <th>PRODUCT / OTHER CHARGES</th>
-                <th style={{ width: '110px' }}>HSN/SAC</th>
-                <th style={{ width: '80px' }}>QTY.</th>
-                <th style={{ width: '75px' }}>UOM</th>
-                <th style={{ width: '100px' }}>PRICE (RS)</th>
-                <th style={{ width: '100px' }}>IGST %</th>
-                <th style={{ width: '110px' }}>TOTAL</th>
-                <th style={{ width: '36px' }}></th>
+                <th className="sr-col">SR.</th>
+                <th className="product-col">PRODUCT / OTHER CHARGES</th>
+                <th className="hsn-col">HSN/SAC</th>
+                <th className="qty-col">QTY.</th>
+                <th className="uom-col">UOM</th>
+                <th className="price-col">PRICE (RS)</th>
+                <th className="igst-col">IGST %</th>
+                <th className="total-col">TOTAL</th>
+                <th className="action-col"></th>
               </tr>
             </thead>
             <tbody>
               {doc.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="jw-sr-num">{idx + 1}</td>
+                  <td className="pt-sr-num">{idx + 1}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginBottom: '0.4rem' }}>
-                      <select className="jw-cell-select" value={item.productId} onChange={e => handleItemChange(idx, 'productId', e.target.value)}>
+                      <select className="pt-cell-select" style={{ flex: 1 }} value={item.productId} onChange={e => handleItemChange(idx, 'productId', e.target.value)}>
                         <option value="">-- Select --</option>
                         {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
-                      <button type="button" className="jw-ms-add-btn" style={{ width: '28px', height: '28px', fontSize: '0.9rem' }} onClick={() => { setActiveItemIdx(idx); setShowAddProduct(true); }}>+</button>
+                      <button type="button" className="pt-cell-add-btn" onClick={() => { setActiveItemIdx(idx); setShowAddProduct(true); }}>+</button>
                     </div>
-                    <textarea className="jw-cell-note" placeholder="Item note..." rows={1} value={item.note} onChange={e => handleItemChange(idx, 'note', e.target.value)} />
+                    <textarea className="pt-cell-note" placeholder="Item note..." rows={1} value={item.note} onChange={e => handleItemChange(idx, 'note', e.target.value)} />
                   </td>
-                  <td><input className="jw-cell-input" value={item.hsn} onChange={e => handleItemChange(idx, 'hsn', e.target.value)} /></td>
-                  <td><input type="number" className="jw-cell-input" style={{ textAlign: 'center' }} value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} /></td>
-                  <td><input className="jw-cell-input" style={{ textAlign: 'center' }} value={item.unit} onChange={e => handleItemChange(idx, 'unit', e.target.value)} /></td>
-                  <td><input type="number" className="jw-cell-input" style={{ textAlign: 'right' }} value={item.rate} onChange={e => handleItemChange(idx, 'rate', e.target.value)} /></td>
+                  <td><input className="pt-cell-input" value={item.hsn} onChange={e => handleItemChange(idx, 'hsn', e.target.value)} /></td>
+                  <td><input type="number" className="pt-cell-input" style={{ textAlign: 'center' }} value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} /></td>
+                  <td><input className="pt-cell-input" style={{ textAlign: 'center' }} value={item.unit} onChange={e => handleItemChange(idx, 'unit', e.target.value)} /></td>
+                  <td><input type="number" className="pt-cell-input" style={{ textAlign: 'right' }} value={item.rate} onChange={e => handleItemChange(idx, 'rate', e.target.value)} /></td>
                   <td>
-                    <select className="jw-cell-select" value={item.taxRate} onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}>
+                    <select className="pt-cell-select" value={item.taxRate} onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}>
                       {[0, 5, 12, 18, 28].map(r => <option key={r} value={r}>{r}%</option>)}
                     </select>
-                    <div className="jw-tax-display">₹{item.taxAmount.toFixed(0)}</div>
+                    <div className="pt-tax-display">₹{item.taxAmount.toFixed(0)}</div>
                   </td>
-                  <td><div className="jw-total-value">{(item.amount + item.taxAmount).toFixed(2)}</div></td>
-                  <td><button className="jw-remove-btn" onClick={() => removeRow(idx)}>×</button></td>
+                  <td><div className="pt-total-value">{(item.amount + item.taxAmount).toFixed(2)}</div></td>
+                  <td><button className="pt-remove-btn" onClick={() => removeRow(idx)}>×</button></td>
                 </tr>
               ))}
-              <tr className="jw-summary-row">
-                <td colSpan={2} className="jw-summary-label">Total Job Work Val.</td>
+              <tr className="pt-total-inv-row">
+                <td colSpan={2}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.8rem' }}>Total Job Work Val.</span>
+                    <button className="pt-add-item-btn" onClick={addRow}>+ Add Row</button>
+                  </div>
+                </td>
                 <td></td>
                 <td style={{ textAlign: 'center', fontWeight: 700 }}>{doc.items.reduce((a, i) => a + (Number(i.quantity) || 0), 0)}</td>
                 <td></td>

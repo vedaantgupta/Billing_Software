@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History } from 'lucide-react';
 import './Layout.css';
 import { getDB } from '../utils/db';
 
@@ -103,6 +103,12 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
           <NavLink to="/reports" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <BarChart3 size={20} /> Reports
+          </NavLink>
+          <NavLink
+            to="/history"
+            className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
+          >
+            <History size={20} /> History
           </NavLink>
           <NavLink to="/compliance" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FileText size={20} /> Compliance

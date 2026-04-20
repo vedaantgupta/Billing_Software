@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import './PurchaseInvoice.css';
 import './DebitNote.css';
+import './product-table.css';
 
 
 
@@ -489,13 +490,13 @@ const DebitNote = () => {
       </div>
 
       {/* ── Section 2: Product Items Table ────────────────────── */}
-      <div className="pi-table-card">
-        <div className="pi-table-header" style={{ background: '#fffbf0' }}>
+      <div className="pt-table-card">
+        <div className="pt-table-header">
           <div className="pi-card-header-left">
             <div className="pi-card-icon items">📦</div>
             <div>
-              <div className="pi-card-title">Product Items</div>
-              <div className="pi-card-subtitle">{doc.items.length} row(s) active</div>
+              <div className="pt-card-title">Product Items</div>
+              <div className="pt-card-subtitle">{doc.items.length} row(s) active</div>
             </div>
           </div>
           <div className="pi-table-actions">
@@ -505,12 +506,11 @@ const DebitNote = () => {
               <span className={`pi-toggle-chip ${doc.discount.unit === '%' ? 'dn-active-chip' : ''}`} onClick={() => handleNested('discount', 'unit', '%')}>%</span>
               <button className="pi-menu-btn" style={{ marginLeft: '10px' }}><MoreVertical size={16} /></button>
             </div>
-            <button className="pi-add-item-btn dn-add-item-btn" onClick={addItem_}>+ Add Row</button>
           </div>
         </div>
 
-        <div className="pi-table-scroll">
-          <table className="pi-product-table">
+        <div className="pt-table-scroll">
+          <table className="pt-product-table">
             <thead>
               <tr>
                 <th className="sr-col">SR.</th>
@@ -527,17 +527,16 @@ const DebitNote = () => {
             <tbody>
               {doc.items.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="pi-sr-num">{idx + 1}</td>
+                  <td className="pt-sr-num">{idx + 1}</td>
                   <td>
                     <div className="flex gap-2 items-center">
-                      <select className="pi-cell-select" style={{ flex: 1 }} value={item.productId} onChange={e => handleItemChange(idx, 'productId', e.target.value)}>
+                      <select className="pt-cell-select" style={{ flex: 1 }} value={item.productId} onChange={e => handleItemChange(idx, 'productId', e.target.value)}>
                         <option value="">Enter Product name</option>
                         {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
                       <button
                         type="button"
-                        className="pi-add-item-btn"
-                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="pt-cell-add-btn"
                         onClick={() => {
                           setActiveItemIdx(idx);
                           setShowAddProduct(true);
@@ -546,28 +545,33 @@ const DebitNote = () => {
                         +
                       </button>
                     </div>
-                    <textarea className="pi-cell-note" placeholder="Item Note..." rows={1} value={item.note} onChange={e => handleItemChange(idx, 'note', e.target.value)} />
+                    <textarea className="pt-cell-note" placeholder="Item Note..." rows={1} value={item.note} onChange={e => handleItemChange(idx, 'note', e.target.value)} />
                   </td>
-                  <td><input className="pi-cell-input" placeholder="HSN/SAC" value={item.hsn} onChange={e => handleItemChange(idx, 'hsn', e.target.value)} /></td>
-                  <td><input type="number" className="pi-cell-input" style={{ textAlign: 'center' }} placeholder="Qty." value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} /></td>
-                  <td><input className="pi-cell-input" style={{ textAlign: 'center' }} placeholder="UOM" value={item.unit} onChange={e => handleItemChange(idx, 'unit', e.target.value)} /></td>
-                  <td><input type="number" className="pi-cell-input" style={{ textAlign: 'right' }} placeholder="Price" value={item.rate} onChange={e => handleItemChange(idx, 'rate', e.target.value)} /></td>
+                  <td><input className="pt-cell-input" placeholder="HSN/SAC" value={item.hsn} onChange={e => handleItemChange(idx, 'hsn', e.target.value)} /></td>
+                  <td><input type="number" className="pt-cell-input" style={{ textAlign: 'center' }} placeholder="Qty." value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} /></td>
+                  <td><input className="pt-cell-input" style={{ textAlign: 'center' }} placeholder="UOM" value={item.unit} onChange={e => handleItemChange(idx, 'unit', e.target.value)} /></td>
+                  <td><input type="number" className="pt-cell-input" style={{ textAlign: 'right' }} placeholder="Price" value={item.rate} onChange={e => handleItemChange(idx, 'rate', e.target.value)} /></td>
                   <td>
                     <div className="pi-tax-group">
-                      <select className="pi-cell-select" value={item.taxRate} onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}>
+                      <select className="pt-cell-select" value={item.taxRate} onChange={e => handleItemChange(idx, 'taxRate', e.target.value)}>
                         {[0, 5, 12, 18, 28].map(r => <option key={r} value={r}>{r === 0 ? '--' : `${r}%`}</option>)}
                       </select>
-                      <div className="pi-tax-display">{item.taxAmount.toFixed(0)}</div>
+                      <div className="pt-tax-display">{item.taxAmount.toFixed(0)}</div>
                     </div>
                   </td>
-                  <td><div className="pi-total-value dn-total-value">₹ {(item.amount + item.taxAmount).toFixed(2)}</div></td>
-                  <td><button className="pi-remove-btn" onClick={() => removeItem(idx)}>×</button></td>
+                  <td><div className="pt-total-value dn-total-value">₹ {(item.amount + item.taxAmount).toFixed(2)}</div></td>
+                  <td><button className="pt-remove-btn" onClick={() => removeItem(idx)}>×</button></td>
                 </tr>
               ))}
 
               {/* Summary row */}
-              <tr className="pi-summary-row">
-                <td colSpan={2} className="pi-summary-label" style={{ color: '#92400e' }}>Total Debit. Val</td>
+              <tr className="pt-total-inv-row">
+                <td colSpan={2}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 700, color: '#92400e', fontSize: '0.8rem' }}>Total Debit. Val</span>
+                    <button className="pt-add-item-btn dn-add-item-btn" onClick={addItem_}>+ Add Row</button>
+                  </div>
+                </td>
                 <td></td>
                 <td style={{ textAlign: 'center', fontWeight: 700 }}>{totalQty}</td>
                 <td></td>
