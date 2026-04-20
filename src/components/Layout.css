@@ -61,13 +61,16 @@
 .sidebar-nav::-webkit-scrollbar {
   width: 6px;
 }
+
 .sidebar-nav::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .sidebar-nav::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 10px;
 }
+
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.25);
 }
@@ -157,23 +160,31 @@
 /* Search Bar Container */
 .search-bar {
   flex: 1;
-  /* full width */
-  max-width: 700px;
   display: flex;
   align-items: center;
-  background: #f1f5f9;
-  /* light grey like image */
-  border: 1px solid var(--border-color);
-  border-radius: 999px;
-  /* pill shape */
-  padding: 0 12px;
-  height: 44px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  /* Modern slightly rounded corners instead of pill */
+  padding: 0 16px;
+  height: 48px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Icon */
 .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--text-secondary);
-  margin-right: 8px;
+  opacity: 0.7;
+  pointer-events: none;
+  /* Let clicks pass through to the input */
+  z-index: 2;
 }
 
 /* Input */
@@ -182,14 +193,137 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: 14px;
+  padding: 0 45px 0 40px;
+  /* 40px left padding for icon, 45px right for badge */
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  height: 100%;
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
 }
 
 /* Focus effect */
 .search-bar:focus-within {
   border-color: var(--primary-color);
   background: white;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Search Dropdown */
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 0.5rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+.search-status {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.search-results-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-result-item:hover {
+  background-color: var(--primary-light);
+  color: white;
+}
+
+.result-icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+}
+
+.search-result-item:hover .result-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+}
+
+.search-result-item:hover .result-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.result-type {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 2px 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.search-result-item:hover .result-type {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user-profile {

@@ -59,7 +59,10 @@ export default function HistorySection() {
     };
 
     const handleSave = async () => {
-        if (!title && !contentRef.current.innerHTML) {
+        const rawContent = contentRef.current.innerHTML;
+        const textOnly = rawContent.replace(/<[^>]*>/g, '').trim();
+
+        if (!title.trim() && !textOnly) {
             setIsEditorOpen(false);
             return;
         }
@@ -108,13 +111,22 @@ export default function HistorySection() {
     }, [isEditorOpen]);
 
     const handleFormat = (command, value = null) => {
+        if (!contentRef.current) return;
+
+        contentRef.current.focus(); // ensures command applies
         document.execCommand(command, false, value);
     };
 
     const togglePin = async (e, note) => {
         e.stopPropagation();
-        await updateItem("historyNotes", note.id, { pinned: !note.pinned }, user.id);
-        loadNotes();
+
+        const updated = { ...note, pinned: !note.pinned };
+
+        setNotes(prev =>
+            prev.map(n => n.id === note.id ? updated : n)
+        );
+
+        await updateItem("historyNotes", note.id, { pinned: updated.pinned }, user.id);
     };
 
     const moveToTrash = async (e, note) => {
@@ -275,6 +287,7 @@ export default function HistorySection() {
                         </div>
 
                         <div className="editor-toolbar">
+                            {/* Basic Formatting */}
                             <button className="toolbar-btn" title="Bold" onClick={() => handleFormat('bold')}>
                                 <Bold size={18} />
                             </button>
@@ -284,17 +297,86 @@ export default function HistorySection() {
                             <button className="toolbar-btn" title="Underline" onClick={() => handleFormat('underline')}>
                                 <Underline size={18} />
                             </button>
+                            <button className="toolbar-btn" title="Strikethrough" onClick={() => handleFormat('strikeThrough')}>
+                                S̶
+                            </button>
+
                             <div className="toolbar-divider"></div>
+
+                            {/* Lists */}
                             <button className="toolbar-btn" title="Bullets" onClick={() => handleFormat('insertUnorderedList')}>
                                 <BulletList size={18} />
                             </button>
                             <button className="toolbar-btn" title="Numbered List" onClick={() => handleFormat('insertOrderedList')}>
                                 <ListIcon size={18} />
                             </button>
+
                             <div className="toolbar-divider"></div>
-                            <button className="toolbar-btn" title="Headers" onClick={() => handleFormat('formatBlock', 'H2')}>
+
+                            {/* Alignment */}
+                            <button className="toolbar-btn" title="Align Left" onClick={() => handleFormat('justifyLeft')}>
+                                <i className="bi bi-text-left"></i>
+                            </button>
+                            <button className="toolbar-btn" title="Align Center" onClick={() => handleFormat('justifyCenter')}>
+                                <i className="bi bi-text-center"></i>
+                            </button>
+                            <button className="toolbar-btn" title="Align Right" onClick={() => handleFormat('justifyRight')}>
+                                <i className="bi bi-text-right"></i>
+                            </button>
+                            <button className="toolbar-btn" title="Justify" onClick={() => handleFormat('justifyFull')}>
+                                <i className="bi bi-justify"></i>
+                            </button>
+
+                            <div className="toolbar-divider"></div>
+
+                            {/* Headers */}
+                            <button className="toolbar-btn" title="Header" onClick={() => handleFormat('formatBlock', 'H2')}>
                                 <Type size={18} />
                             </button>
+
+                            <div className="toolbar-divider"></div>
+
+                            {/* Font Family */}
+                            <select
+                                className="toolbar-select"
+                                title="Font Family"
+                                onChange={(e) => handleFormat('fontName', e.target.value)}
+                            >
+                                <option value="Arial">Arial</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Courier New">Courier</option>
+                                <option value="Times New Roman">Times</option>
+                            </select>
+
+                            {/* Font Size */}
+                            <select
+                                className="toolbar-select"
+                                title="Font Size"
+                                onChange={(e) => handleFormat('fontSize', e.target.value)}
+                            >
+                                <option value="1">Small</option>
+                                <option value="3">Normal</option>
+                                <option value="5">Large</option>
+                                <option value="7">Huge</option>
+                            </select>
+
+                            <div className="toolbar-divider"></div>
+
+                            {/* Text Color */}
+                            <input
+                                type="color"
+                                className="toolbar-color"
+                                title="Text Color"
+                                onChange={(e) => handleFormat('foreColor', e.target.value)}
+                            />
+
+                            {/* Highlight Color */}
+                            <input
+                                type="color"
+                                className="toolbar-color"
+                                title="Highlight Color"
+                                onChange={(e) => handleFormat('hiliteColor', e.target.value)}
+                            />
                         </div>
 
                         <div className="editor-body">
@@ -311,6 +393,11 @@ export default function HistorySection() {
                                 contentEditable
                                 data-placeholder="Start writing your history here..."
                                 suppressContentEditableWarning={true}
+                                onInput={() => {
+                                    if (contentRef.current) {
+                                        // keeps content synced for saving reliability
+                                    }
+                                }}
                             />
                         </div>
 

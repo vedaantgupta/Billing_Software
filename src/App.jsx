@@ -54,6 +54,7 @@ import BankManager from './pages/BankManager';
 import AddEditBank from './pages/AddEditBank';
 import { LanguageProvider } from './contexts/LanguageContext';
 import HistorySection from './pages/HistorySection';
+import SearchResults from './pages/SearchResults';
 
 
 function App() {
@@ -490,6 +491,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <CreditReport />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/search" element={
+              <ProtectedRoute>
+                <Layout noWrapper>
+                  <SearchResults />
                 </Layout>
               </ProtectedRoute>
             } />
