@@ -22,7 +22,6 @@
   font-family: 'Roboto', 'Segoe UI', sans-serif;
   font-size: 9.5px;
   box-sizing: border-box;
-  page-break-after: always;
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
 }
@@ -709,73 +708,127 @@
 }
 
 /* ════════════════════════
-   PRINT MEDIA RULES
+   PRINT MEDIA RULES (FINAL - SINGLE PAGE FIXED)
    ════════════════════════ */
 @media print {
+
   @page {
     size: A4;
     margin: 0;
   }
 
-  body,
-  html {
+  html,
+  body {
     margin: 0;
     padding: 0;
-    background: white;
+    background: #fff;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* 🔥 prevents extra blank pages */
   }
 
   .lpt-multi-page-container {
-    background: white;
+    width: 100%;
+    margin: 0;
     padding: 0;
+    display: flex;
+    justify-content: center;
+    background: #fff;
   }
 
   .lpt-print-container {
-    width: 210mm !important;
-    height: 297mm !important;
-    padding: 8mm !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    page-break-after: always !important;
+    width: 210mm;
+    height: 297mm;
+    /* 🔥 FIXED A4 HEIGHT */
+
+    transform: scale(0.64);
+    /* 🔥 KEY: shrink to fit */
+    transform-origin: top left;
+
+    overflow: hidden;
+    /* 🔥 cuts overflow causing blank page */
+
+    margin: 0 auto;
+    padding: 5mm;
+    box-sizing: border-box;
+
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+    page-break-inside: avoid !important;
+
     box-shadow: none !important;
   }
 
+  .lpt-page-border {
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  /* Compact layout */
+  .lpt-header {
+    margin-bottom: 5px;
+  }
+
+  .lpt-title-bar {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .lpt-party-section {
+    margin-bottom: 5px;
+  }
+
+  .lpt-summary-bar {
+    margin-bottom: 5px;
+    gap: 5px;
+  }
+
+  .lpt-summary-card {
+    padding: 5px;
+  }
+
+  .lpt-main-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5px;
+    /* tighter fit */
+  }
+
+  .lpt-main-table th,
+  .lpt-main-table td {
+    padding: 2px 3px;
+  }
+
+  table,
+  tr,
+  td {
+    page-break-inside: avoid !important;
+  }
+
+  .lpt-footer {
+    margin-top: 6px;
+    page-break-inside: avoid !important;
+  }
+
+  /* Preserve colors */
   .lpt-title-bar,
-  .lpt-totals-row td {
+  .lpt-totals-row td,
+  .lpt-main-table thead th {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    background-color: #1e3a8a !important;
-    color: white !important;
   }
 
   .lpt-card-debit,
   .lpt-card-credit,
   .lpt-card-balance,
   .lpt-card-balance-dr,
-  .lpt-card-balance-cr {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
+  .lpt-card-balance-cr,
   .lpt-pos-dr,
-  .lpt-pos-cr {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .lpt-summary-bar {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .lpt-main-table thead th {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    background-color: #dbeafe !important;
-  }
-
+  .lpt-pos-cr,
+  .lpt-summary-bar,
   .lpt-header {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    background: #ffffff !important;
   }
 }
