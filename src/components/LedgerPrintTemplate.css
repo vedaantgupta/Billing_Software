@@ -1,0 +1,781 @@
+/* =============================================
+   LEDGER PRINT TEMPLATE - PROFESSIONAL A4 STYLE
+   Theme: Deep Navy / Steel Blue
+   ============================================= */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
+/* ── Multi-page wrapper ── */
+.lpt-multi-page-container {
+  background: #e8ecf0;
+  padding: 20px 0;
+}
+
+/* ── Single A4 Page ── */
+.lpt-print-container {
+  width: 210mm;
+  height: 297mm;
+  padding: 8mm;
+  overflow: hidden;
+  margin: 0 auto 20px auto;
+  background: #ffffff;
+  color: #1a1a2e;
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-size: 9.5px;
+  box-sizing: border-box;
+  page-break-after: always;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+}
+
+.lpt-print-container * {
+  box-sizing: border-box;
+}
+
+/* ── Page Border (Blue) ── */
+.lpt-page-border {
+  border: 2px solid #1e3a8a;
+  width: 100%;
+  height: calc(297mm - 16mm);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ════════════════════════
+   1. HEADER
+   ════════════════════════ */
+.lpt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 12px 8px;
+  border-bottom: 2px solid #1e3a8a;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.lpt-company-logo {
+  max-height: 55px;
+  max-width: 200px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.lpt-company-name-text {
+  font-size: 18px;
+  font-weight: 900;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.lpt-company-address {
+  font-size: 8.5px;
+  color: #475569;
+  line-height: 1.4;
+  max-width: 280px;
+}
+
+.lpt-company-gstin {
+  font-size: 8.5px;
+  color: #334155;
+  margin-top: 3px;
+  font-weight: 600;
+}
+
+.lpt-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.lpt-header-meta-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.lpt-header-meta-item {
+  font-size: 8.5px;
+  color: #334155;
+  margin-bottom: 2px;
+}
+
+.lpt-label {
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+/* ════════════════════════
+   2. TITLE BAR
+   ════════════════════════ */
+.lpt-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e3a8a;
+  color: #ffffff;
+  padding: 6px 14px;
+  flex-shrink: 0;
+}
+
+.lpt-title-left {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.lpt-title-right {
+  font-size: 9px;
+  font-weight: 600;
+  opacity: 0.85;
+  letter-spacing: 1px;
+}
+
+/* ════════════════════════
+   3. PARTY INFO SECTION
+   ════════════════════════ */
+.lpt-party-section {
+  display: flex;
+  border-bottom: 1.5px solid #1e3a8a;
+  flex-shrink: 0;
+}
+
+.lpt-party-left {
+  width: 55%;
+  border-right: 1.5px solid #1e3a8a;
+}
+
+.lpt-party-right {
+  width: 45%;
+}
+
+.lpt-section-heading {
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #1e3a8a;
+  padding: 3px 8px;
+}
+
+.lpt-party-table {
+  width: 100%;
+  border-collapse: collapse;
+  padding: 4px 0;
+}
+
+.lpt-party-table th,
+.lpt-party-table td {
+  padding: 2.5px 8px;
+  font-size: 9px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.lpt-party-table th {
+  width: 65px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.lpt-party-table td {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.lpt-party-table td strong {
+  font-size: 10px;
+  color: #1e3a8a;
+  font-weight: 900;
+}
+
+.lpt-type-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+}
+
+/* ════════════════════════
+   4. SUMMARY CARDS
+   ════════════════════════ */
+.lpt-summary-bar {
+  display: flex;
+  border-bottom: 1.5px solid #1e3a8a;
+  flex-shrink: 0;
+}
+
+.lpt-summary-card {
+  flex: 1;
+  padding: 7px 10px;
+  text-align: center;
+  border-right: 1px solid #cbd5e1;
+}
+
+.lpt-summary-card:last-child {
+  border-right: none;
+}
+
+.lpt-summary-card-label {
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+  opacity: 0.75;
+}
+
+.lpt-summary-card-value {
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 1px;
+}
+
+.lpt-summary-card-sub {
+  font-size: 7px;
+  opacity: 0.65;
+}
+
+.lpt-card-debit {
+  background: #fff5f5;
+  color: #b91c1c;
+  border-right-color: #fecaca;
+}
+
+.lpt-card-credit {
+  background: #f0fdf4;
+  color: #15803d;
+  border-right-color: #bbf7d0;
+}
+
+.lpt-card-balance {
+  background: #f0f4ff;
+  color: #1e3a8a;
+}
+
+.lpt-card-balance-dr {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+.lpt-card-balance-cr {
+  background: #ecfdf5;
+  color: #064e3b;
+}
+
+/* ════════════════════════
+   5. TRANSACTIONS TABLE
+   ════════════════════════ */
+.lpt-table-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.lpt-main-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Column widths */
+.lpt-th-sr {
+  width: 28px;
+}
+
+.lpt-th-date {
+  width: 62px;
+}
+
+.lpt-th-desc {
+  width: auto;
+}
+
+.lpt-th-ref {
+  width: 80px;
+}
+
+.lpt-th-dr {
+  width: 78px;
+}
+
+.lpt-th-cr {
+  width: 78px;
+}
+
+.lpt-th-balance {
+  width: 80px;
+}
+
+.lpt-th-pos {
+  width: 32px;
+}
+
+.lpt-main-table thead th {
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-size: 8.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 5px 4px;
+  border-bottom: 1.5px solid #1e3a8a;
+  border-right: 1px solid #93c5fd;
+  text-align: center;
+}
+
+.lpt-main-table thead th:last-child {
+  border-right: none;
+}
+
+/* All table cells */
+.lpt-main-table td {
+  padding: 3.5px 4px;
+  font-size: 9px;
+  border-bottom: 0.5px solid #e2e8f0;
+  border-right: 0.5px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.lpt-main-table td:last-child {
+  border-right: none;
+}
+
+/* Row hover alternating */
+.lpt-row:nth-child(even) {
+  background: #f8faff;
+}
+
+.lpt-row-dr {
+  border-left: 2px solid #fca5a5;
+}
+
+.lpt-row-cr {
+  border-left: 2px solid #86efac;
+}
+
+/* Cell alignments */
+.lpt-td-center {
+  text-align: center;
+}
+
+.lpt-td-left {
+  text-align: left;
+}
+
+.lpt-td-right {
+  text-align: right;
+  padding-right: 6px !important;
+}
+
+/* Cell-specific styles */
+.lpt-td-sr {
+  color: #64748b;
+  font-size: 8.5px;
+  font-weight: 600;
+}
+
+.lpt-td-date {
+  color: #334155;
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 8.5px;
+}
+
+.lpt-desc-main {
+  font-weight: 500;
+  color: #1e293b;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lpt-td-ref {
+  color: #64748b;
+  font-size: 8px;
+  word-break: break-word;
+}
+
+.lpt-amount-dr {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.lpt-amount-cr {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.lpt-empty-cell {
+  color: #cbd5e1;
+}
+
+.lpt-td-balance {
+  color: #1e293b;
+  font-size: 9px;
+}
+
+.lpt-td-pos {
+  font-size: 9px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.lpt-pos-dr {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.lpt-pos-cr {
+  color: #15803d;
+  background: #f0fdf4;
+}
+
+/* Spacer row — expands to push Grand Total to bottom */
+.lpt-main-table tbody {
+  height: 100%;
+}
+
+.lpt-spacer-row {
+  height: 100%;
+}
+
+.lpt-spacer-row td {
+  height: 100%;
+  border-bottom: none;
+  padding: 0;
+  /* Keeps the column border-right from .lpt-main-table td — shows column lines */
+}
+
+/* Empty state */
+.lpt-empty-state {
+  text-align: center;
+  padding: 30px !important;
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 10px;
+}
+
+/* ── TFOOT Totals Row ── */
+.lpt-totals-row td {
+  background: #1e3a8a;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 9.5px;
+  padding: 5px 4px;
+  border-top: 1.5px solid #1e3a8a;
+}
+
+.lpt-totals-label {
+  text-align: left !important;
+  padding-left: 8px !important;
+  letter-spacing: 0.5px;
+}
+
+.lpt-totals-dr {
+  color: #fca5a5 !important;
+}
+
+.lpt-totals-cr {
+  color: #86efac !important;
+}
+
+.lpt-totals-balance {
+  color: #fde68a !important;
+}
+
+.lpt-totals-pos {
+  font-size: 9.5px !important;
+  text-align: center;
+}
+
+/* ════════════════════════
+   6. FOOTER SECTION
+   ════════════════════════ */
+.lpt-footer {
+  display: flex;
+  border-top: 1.5px solid #1e3a8a;
+  flex-shrink: 0;
+  min-height: 100px;
+}
+
+.lpt-footer-left {
+  flex: 1;
+  border-right: 1.5px solid #1e3a8a;
+  display: flex;
+  flex-direction: column;
+}
+
+.lpt-footer-right {
+  width: 268px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+}
+
+/* Balance Summary Box */
+.lpt-balance-summary-box {
+  padding: 7px 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.lpt-balance-summary-title {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #1e3a8a;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #bfdbfe;
+  padding-bottom: 2px;
+}
+
+.lpt-balance-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  padding: 2px 0;
+  color: #334155;
+}
+
+.lpt-balance-summary-divider {
+  border-top: 1px dashed #94a3b8;
+  margin: 4px 0;
+}
+
+.lpt-balance-net-row {
+  font-weight: 800;
+  font-size: 10px;
+}
+
+.lpt-dr-text {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.lpt-cr-text {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.lpt-balance-status {
+  font-size: 8px;
+  color: #475569;
+  font-style: italic;
+  margin-top: 4px;
+  padding: 3px 6px;
+  background: #f8fafc;
+  border-radius: 3px;
+  border-left: 3px solid #1e3a8a;
+}
+
+/* Declaration Box */
+.lpt-declaration-box {
+  flex: 1;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.lpt-declaration-title {
+  font-size: 8px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.lpt-declaration-text {
+  font-size: 7.5px;
+  color: #94a3b8;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* QR Code Box */
+.lpt-qr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.lpt-qr-label {
+  font-size: 7px;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing: 0.8px;
+}
+
+.lpt-qr-upi {
+  font-size: 7px;
+  color: #64748b;
+  word-break: break-all;
+  text-align: center;
+}
+
+/* Signature Box */
+.lpt-signature-box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.lpt-sig-certified {
+  font-size: 7px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.lpt-sig-for {
+  font-size: 9px;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin-bottom: 2px;
+}
+
+.lpt-sig-image-wrap {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lpt-sig-image {
+  max-height: 38px;
+  mix-blend-mode: multiply;
+}
+
+.lpt-sig-space {
+  height: 38px;
+}
+
+.lpt-sig-line {
+  border-top: 1.5px solid #1e3a8a;
+  width: 100%;
+  margin: 3px 0 2px;
+}
+
+.lpt-sig-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.lpt-sig-name {
+  font-size: 7.5px;
+  color: #64748b;
+}
+
+/* ════════════════════════
+   7. BOTTOM STRIP
+   ════════════════════════ */
+.lpt-bottom-strip {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 10px;
+  font-size: 7px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════
+   PRINT MEDIA RULES
+   ════════════════════════ */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body,
+  html {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .lpt-multi-page-container {
+    background: white;
+    padding: 0;
+  }
+
+  .lpt-print-container {
+    width: 210mm !important;
+    height: 297mm !important;
+    padding: 8mm !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    page-break-after: always !important;
+    box-shadow: none !important;
+  }
+
+  .lpt-title-bar,
+  .lpt-totals-row td {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: #1e3a8a !important;
+    color: white !important;
+  }
+
+  .lpt-card-debit,
+  .lpt-card-credit,
+  .lpt-card-balance,
+  .lpt-card-balance-dr,
+  .lpt-card-balance-cr {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .lpt-pos-dr,
+  .lpt-pos-cr {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .lpt-summary-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .lpt-main-table thead th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: #dbeafe !important;
+  }
+
+  .lpt-header {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #ffffff !important;
+  }
+}

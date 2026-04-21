@@ -15,8 +15,10 @@ import {
   Calendar,
   X,
   CreditCard,
-  FileText
+  FileText,
+  Printer
 } from 'lucide-react';
+import LedgerPrintModal from '../components/LedgerPrintModal';
 import './ContactLedger.css'; // Import the new premium UI CSS
 
 const ContactLedger = () => {
@@ -29,6 +31,7 @@ const ContactLedger = () => {
   const [balanceInfo, setBalanceInfo] = useState({ balance: 0, position: 'Dr', transactions: [], debit: 0, credit: 0 });
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [newTx, setNewTx] = useState({ type: 'dr', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -129,8 +132,11 @@ const ContactLedger = () => {
           </div>
         </div>
         <div className="cl-header-actions">
-           <button className="cl-btn cl-btn-secondary" onClick={handleReminder}>
+           <button className="cl-btn cl-btn-ghost" onClick={handleReminder}>
               <Share2 size={16} /> Send Reminder
+           </button>
+           <button className="cl-btn cl-btn-print" onClick={() => setIsPrintModalOpen(true)}>
+              <Printer size={16} /> Print Ledger
            </button>
            <button className="cl-btn cl-btn-primary" onClick={() => setIsModalOpen(true)}>
               <Plus size={16} /> Record Entry
@@ -327,6 +333,15 @@ const ContactLedger = () => {
               </div>
            </div>
         </div>
+      )}
+
+      {/* Print Ledger Modal */}
+      {isPrintModalOpen && (
+        <LedgerPrintModal
+          contact={contact}
+          balanceInfo={balanceInfo}
+          onClose={() => setIsPrintModalOpen(false)}
+        />
       )}
 
     </div>
