@@ -1,3 +1,5 @@
+/* ===================== BASE LAYOUT ===================== */
+
 .al-container {
   display: flex;
   gap: 2rem;
@@ -7,7 +9,8 @@
   min-height: calc(100vh - 100px);
 }
 
-/* Sidebar Navigation */
+/* ===================== SIDEBAR ===================== */
+
 .al-sidebar {
   width: 280px;
   position: sticky;
@@ -33,7 +36,6 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid transparent;
 }
 
 .al-nav-item:hover {
@@ -43,16 +45,12 @@
 
 .al-nav-item.active {
   background: var(--primary-color);
-  color: white;
+  color: #fff;
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
 }
 
-.al-nav-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
+/* ===================== FORM ===================== */
 
-/* Form Content Area */
 .al-form-content {
   flex: 1;
   display: flex;
@@ -62,17 +60,23 @@
 }
 
 .al-section {
-  background: white;
+  background: #fff;
   border-radius: 1.5rem;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   border: 1px solid var(--border-color);
-  animation: slideUp 0.4s ease-out backwards;
+  animation: slideUp 0.4s ease-out;
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .al-section-header {
@@ -84,21 +88,6 @@
   border-bottom: 1px solid #f1f5f9;
 }
 
-.al-section-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-main);
-}
-
-.al-header-icon {
-  color: var(--primary-color);
-  background: rgba(99, 102, 241, 0.1);
-  padding: 0.5rem;
-  border-radius: 0.75rem;
-}
-
-/* Grid Layouts */
 .al-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -111,66 +100,44 @@
   gap: 0.5rem;
 }
 
-.al-field.full {
-  grid-column: 1 / -1;
-}
-
-.al-field label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.al-field input, .al-field select, .al-field textarea {
+.al-field input,
+.al-field select,
+.al-field textarea {
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
   border: 1px solid var(--border-color);
   background: #f8fafc;
-  outline: none;
-  transition: all 0.2s;
-  font-size: 0.9375rem;
 }
 
-.al-field input:focus, .al-field select:focus, .al-field textarea:focus {
+.al-field input:focus,
+.al-field select:focus {
   border-color: var(--primary-color);
-  background: white;
+  background: #fff;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-/* Loan Type Toggle */
+/* ===================== TOGGLE ===================== */
+
 .al-type-toggle {
   display: flex;
   background: #f1f5f9;
   padding: 4px;
   border-radius: 12px;
-  width: fit-content;
 }
 
 .al-toggle-btn {
-  padding: 0.75rem 2rem;
+  padding: 0.6rem 1.5rem;
   border-radius: 10px;
   border: none;
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
 }
 
 .al-toggle-btn.active {
-  background: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  background: #fff;
   color: var(--primary-color);
 }
 
-.al-toggle-btn.active.lend { color: #059669; }
-.al-toggle-btn.active.borrow { color: #d97706; }
-
-/* Checklist & Documents */
-.al-checklist {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
+/* ===================== CHECKLIST ===================== */
 
 .al-check-item {
   display: flex;
@@ -179,52 +146,213 @@
   padding: 1rem;
   background: #f8fafc;
   border-radius: 1rem;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.al-check-item:hover {
-  background: #f1f5f9;
-}
+/* ===================== FOOTER ===================== */
 
-.al-check-item input[type="checkbox"] {
-  width: 1.2rem;
-  height: 1.2rem;
-  accent-color: var(--primary-color);
-}
-
-.al-upload-zone {
-  border: 2px dashed #e2e8f0;
-  padding: 2rem;
-  border-radius: 1.5rem;
-  text-align: center;
-  background: #f8fafc;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.al-upload-zone:hover {
-  border-color: var(--primary-color);
-}
-
-/* Footer Actions */
 .al-footer {
   position: fixed;
   bottom: 0;
+  left: 280px;
   right: 0;
-  left: 280px; /* Sidebar width */
-  padding: 1.5rem 2.5rem;
+  padding: 1.5rem;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
-  gap: 1.5rem;
-  z-index: 100;
 }
 
+/* ===================== LOAN MODAL ===================== */
+
+.loan-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  padding-left: 250px;
+}
+
+.loan-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 1200px;
+  max-width: 96vw;
+  height: 650px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+/* HEADER */
+.loan-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.loan-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.loan-modal-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.loan-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* BODY LAYOUT */
+.loan-modal-container {
+  display: flex;
+  flex: 1;
+}
+
+/* SIDEBAR */
+.loan-modal-sidebar {
+  width: 220px;
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.loan-modal-sidebar button {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #475569;
+  text-align: left;
+}
+
+.loan-modal-sidebar button.active {
+  background: #fff;
+  color: var(--primary-color);
+}
+
+/* MAIN */
+.loan-modal-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.loan-modal-main .tab {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.loan-modal-main .tab h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.loan-modal-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* INPUTS */
+.loan-modal-main input,
+.loan-modal-main select {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: #fff;
+}
+
+.loan-modal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.loan-modal-checkbox input {
+  width: auto;
+  margin: 0;
+}
+
+/* EMI BOX */
+.loan-emi-box {
+  background: var(--primary-color);
+  color: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* FOOTER */
+.loan-modal-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.loan-modal-footer button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.loan-modal-footer button[type="submit"] {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+/* ===================== RESPONSIVE ===================== */
+
 @media (max-width: 1024px) {
-  .al-sidebar { display: none; }
-  .al-footer { left: 0; }
+  .al-sidebar {
+    display: none;
+  }
+
+  .al-footer {
+    left: 0;
+  }
+
+  .loan-modal-overlay {
+    padding-left: 1rem;
+  }
 }
