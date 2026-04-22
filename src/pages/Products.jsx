@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getItems, addItem, updateItem, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink, Search } from 'lucide-react';
+import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink, Search, Upload, Download } from 'lucide-react';
 import Barcode from 'react-barcode';
 
 const UNITS = ['Pieces (PCS)', 'Numbers (NOS)', 'Kilograms (KGS)', 'Grams (GMS)', 'Meters (MTR)', 'Centimeters (CMS)', 'Liters (LTR)', 'Milliliters (MLT)', 'Boxes (BOX)', 'Packets (PAC)', 'Dozens (DZN)', 'Rolls (ROL)', 'Tons (TON)'];
@@ -42,6 +42,8 @@ const Products = () => {
 
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   const loadProducts = useCallback(async () => {
     if (user?.id) {
@@ -167,6 +169,87 @@ const Products = () => {
     }
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const csvContent = event.target.result;
+        const lines = csvContent.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        
+        const importedItems = [];
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          
+          const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+          const values = lines[i].split(regex).map(v => v.trim().replace(/^"|"$/g, ''));
+          
+          const item = {};
+          headers.forEach((h, index) => {
+            item[h] = values[index] || '';
+          });
+          
+          if (item.Name) {
+            importedItems.push({
+              itemType: item.Type?.toLowerCase() === 'service' ? 'service' : 'product',
+              name: item.Name,
+              description: item.Description || '',
+              hsn: item.HSN || '',
+              unit: item.Unit || 'Pieces (PCS)',
+              purchasePrice: Number(item.PurchasePrice) || 0,
+              sellingPrice: Number(item.SellingPrice) || 0,
+              taxRate: Number(item.TaxRate) || 18,
+              cessPercent: 0,
+              cessAmount: 0,
+              saleDiscount: 0,
+              inventoryType: 'Normal',
+              mrp: Number(item.MRP) || 0,
+              stock: Number(item.OpeningStock) || 0,
+              lowStockAlert: Number(item.LowStockAlert) || 5,
+              productGroup: item.Group || 'Others',
+              barcodeStr: item.Barcode || '',
+            });
+          }
+        }
+
+        let successCount = 0;
+        for (const item of importedItems) {
+           item.barcodeStr = item.barcodeStr || (item.itemType === 'product' ? Date.now().toString().slice(-10) + Math.floor(Math.random()*1000) : '');
+           const result = await addItem('products', item, user?.id);
+           if (result) successCount++;
+        }
+        
+        alert(`Successfully imported ${successCount} out of ${importedItems.length} items.`);
+        await loadProducts();
+      } catch (error) {
+        console.error('Import error:', error);
+        alert('Failed to parse and import CSV file. Please check the format.');
+      } finally {
+        setIsImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const downloadTemplate = () => {
+    const headers = ['Type', 'Name', 'Description', 'HSN', 'Unit', 'PurchasePrice', 'SellingPrice', 'TaxRate', 'MRP', 'OpeningStock', 'LowStockAlert', 'Group', 'Barcode'];
+    const sampleData = ['Product', 'Sample Item', 'Sample Description', '1234', 'Pieces (PCS)', '100', '150', '18', '200', '50', '10', 'Electronics', '1234567890'];
+    
+    const csvContent = headers.join(',') + '\\n' + sampleData.join(',');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inventory_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const lowStockCount = products.filter(p => p.itemType === 'product' && p.stock <= (Number(p.lowStockAlert) || 5)).length;
 
   return (
@@ -180,9 +263,37 @@ const Products = () => {
             </p>
           )}
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingId(null); setIsModalOpen(true); }}>
-          <Plus size={18} /> Add Product
-        </button>
+        <div className="flex gap-3">
+          <input 
+             type="file" 
+             accept=".csv" 
+             style={{ display: 'none' }} 
+             ref={fileInputRef} 
+             onChange={handleFileUpload} 
+          />
+          <div className="flex gap-2">
+             <button 
+                title="Download CSV Template"
+                className="btn" 
+                style={{ background: 'white', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }} 
+                onClick={downloadTemplate}
+             >
+                <Download size={18} /> <span className="hidden sm:inline">Template</span>
+             </button>
+             <button 
+                title="Upload CSV"
+                className="btn" 
+                style={{ background: 'white', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }} 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isImporting}
+             >
+                <Upload size={18} /> <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Bulk Import'}</span>
+             </button>
+          </div>
+          <button className="btn btn-primary flex items-center gap-2 px-4" onClick={() => { setEditingId(null); setIsModalOpen(true); }}>
+            <Plus size={18} /> Add Product
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '1.5rem', marginTop: '1rem' }}>
