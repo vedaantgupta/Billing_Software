@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap');
+
 .ld-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -6,19 +8,64 @@
 
 /* Hero Section */
 .ld-hero {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background:
+    linear-gradient(90deg,
+      rgba(15, 23, 42, 0.6) 0%,
+      rgba(15, 23, 42, 0.2) 15%,
+      rgba(15, 23, 42, 0) 30%,
+      rgba(15, 23, 42, 0) 70%,
+      rgba(15, 23, 42, 0.2) 85%,
+      rgba(15, 23, 42, 0.6) 100%),
+    linear-gradient(135deg,
+      #6366f1,
+      #8b5cf6,
+      #a855f7,
+      #3b82f6,
+      #38bdf8);
+
+  background-size: 200% 200%;
+  animation: gradientMove 14s ease infinite;
+  /* slow smooth */
+
   border-radius: 2rem;
   padding: 2.5rem;
-  color: white;
+  color: #ffffff;
+
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.25);
+
   position: relative;
   overflow: hidden;
+
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
+/* Hover (subtle lift only) */
+.ld-hero:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 20px 50px rgba(99, 102, 241, 0.4);
+}
+
+/* Gradient animation */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Glow blob */
 .ld-hero::after {
   content: '';
   position: absolute;
@@ -26,28 +73,104 @@
   right: -10%;
   width: 300px;
   height: 300px;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   filter: blur(80px);
   border-radius: 50%;
+  animation: floatGlow 10s ease-in-out infinite;
 }
 
+@keyframes floatGlow {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(20px);
+  }
+}
+
+/* Heading */
 .ld-hero-info h1 {
+  font-family: 'Poppins', sans-serif;
   font-size: 2rem;
   font-weight: 800;
   margin: 0 0 0.5rem;
   letter-spacing: -0.02em;
+  color: #ffffff;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 6px 12px rgba(0, 0, 0, 0.2),
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(99, 102, 241, 0.5);
 }
 
+/* Button Fix (FINAL – no stretching ever) */
+.ld-fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  flex: none;
+
+  width: 170px;
+  /* fixed equal width */
+  height: 42px;
+
+  text-align: center;
+  white-space: nowrap;
+
+  padding: 0 1rem;
+  border-radius: 999px;
+
+  border: none;
+  background: var(--primary-color);
+  color: #ffffff;
+
+  font-weight: 600;
+  font-size: 0.9rem;
+
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.ld-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(99, 102, 241, 0.45);
+}
+
+/* Badge */
 .ld-type-badge {
-  padding: 0.35rem 1rem;
-  border-radius: 2rem;
+  display: inline-flex;
+  /* IMPORTANT FIX */
+  align-items: center;
+  justify-content: center;
+
+  min-width: 170px;
+  /* same width for both texts */
+  height: 32px;
+
+  padding: 0 1rem;
+  border-radius: 999px;
+
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Stats */
 .ld-hero-stats {
   display: flex;
   gap: 3rem;
