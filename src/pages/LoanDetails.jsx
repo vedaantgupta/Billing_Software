@@ -11,6 +11,7 @@ import { getItems, updateItem, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
 import { calculateCreditScore } from '../utils/creditScore';
 import CreditScoreGauge from '../components/CreditScoreGauge';
+import LoanPrintModal from '../components/LoanPrintModal';
 import './LoanDetails.css';
 import '../components/CreditScoreGauge.css';
 
@@ -24,6 +25,7 @@ const LoanDetails = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [paymentData, setPaymentData] = useState({
     amount: '',
     date: new Date().toISOString().split('T')[0],
@@ -298,7 +300,7 @@ const LoanDetails = () => {
       {/* Floating Action Buttons */}
       <div className="ld-actions">
         <button className="ld-fab secondary" onClick={() => navigate('/loans')}><ArrowLeft size={18} /> Back</button>
-        <button className="ld-fab secondary" onClick={() => window.print()}><Printer size={18} /> Print</button>
+        <button className="ld-fab secondary" onClick={() => setShowPrintModal(true)}><Printer size={18} /> Print</button>
         <button className="ld-fab" onClick={() => setShowPaymentModal(true)}><Plus size={18} /> Record Repayment</button>
       </div>
 
@@ -393,6 +395,15 @@ const LoanDetails = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Print Modal */}
+      {showPrintModal && (
+        <LoanPrintModal 
+          loan={loan} 
+          contact={contact} 
+          onClose={() => setShowPrintModal(false)} 
+        />
       )}
     </div>
   );

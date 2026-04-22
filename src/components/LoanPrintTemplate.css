@@ -1,0 +1,495 @@
+/* LoanPrintTemplate.css - Professional A4 Print Styling */
+
+.loanpt-multi-page-container {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+  width: 100%;
+}
+
+.loanpt-print-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.loanpt-page-border {
+  background: white;
+  padding: 15mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+}
+
+/* Header Section */
+.loanpt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #0f172a;
+}
+
+.loanpt-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.loanpt-company-name-text {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.loanpt-company-address {
+  font-size: 11px;
+  color: #475569;
+  max-width: 300px;
+  line-height: 1.4;
+}
+
+.loanpt-company-gstin {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.loanpt-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.loanpt-company-logo {
+  max-width: 120px;
+  max-height: 60px;
+  object-fit: contain;
+}
+
+.loanpt-header-meta-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 11px;
+  color: #475569;
+}
+
+.loanpt-label {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Title Bar */
+.loanpt-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6; /* Blue highlight */
+  border-radius: 4px;
+}
+
+.loanpt-title-left {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 1px;
+}
+
+.loanpt-title-right {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+/* Party & Statement Details Grid */
+.loanpt-party-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.loanpt-party-left, .loanpt-party-right {
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 6px;
+  border-top: 3px solid #0f172a;
+}
+
+.loanpt-section-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 4px;
+}
+
+.loanpt-party-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.loanpt-party-table th {
+  text-align: left;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  padding: 3px 0;
+  width: 90px;
+  vertical-align: top;
+}
+
+.loanpt-party-table td {
+  font-size: 11px;
+  color: #1e293b;
+  padding: 3px 0;
+  font-weight: 500;
+}
+
+/* Summary Bar */
+.loanpt-summary-bar {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.loanpt-summary-card {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.loanpt-summary-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.loanpt-summary-card-value {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.loanpt-summary-card-sub {
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+.loanpt-card-principal { border-left: 3px solid #3b82f6; }
+.loanpt-card-principal .loanpt-summary-card-value { color: #3b82f6; }
+
+.loanpt-card-payable { border-left: 3px solid #a855f7; }
+.loanpt-card-payable .loanpt-summary-card-value { color: #a855f7; }
+
+.loanpt-card-balance { border-left: 3px solid #f59e0b; }
+.loanpt-card-balance .loanpt-summary-card-value { color: #f59e0b; }
+
+/* Main Transactions Table */
+.loanpt-table-container {
+  flex-grow: 1;
+  min-height: 250px;
+}
+
+.loanpt-main-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  border: 1px solid #cbd5e1;
+}
+
+.loanpt-main-table thead {
+  background: #f1f5f9;
+}
+
+.loanpt-main-table th {
+  padding: 8px 6px;
+  font-weight: 600;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  text-align: center;
+}
+
+.loanpt-main-table td {
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-left: 1px solid #cbd5e1;
+  border-right: 1px solid #cbd5e1;
+  vertical-align: top;
+}
+
+.loanpt-th-sr { width: 30px; }
+.loanpt-th-date { width: 65px; }
+.loanpt-th-ref { width: 70px; }
+.loanpt-th-dr, .loanpt-th-cr, .loanpt-th-balance { width: 75px; }
+.loanpt-th-pos { width: 35px; }
+
+/* Table Alignments */
+.loanpt-td-center { text-align: center; }
+.loanpt-td-right { text-align: right; }
+.loanpt-td-left { text-align: left; }
+
+.loanpt-row-dr { background-color: #f0fdf4 !important; } /* Light green hint */
+.loanpt-row-cr { background-color: #fff1f2 !important; } /* Light red hint */
+
+.loanpt-desc-main {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.loanpt-amount-dr { color: #16a34a; font-weight: 600; }
+.loanpt-amount-cr { color: #dc2626; font-weight: 600; }
+.loanpt-empty-cell { color: #cbd5e1; }
+
+.loanpt-pos-dr { color: #16a34a; font-weight: 700; background: #dcfce7; padding: 2px; border-radius: 2px;}
+.loanpt-pos-cr { color: #dc2626; font-weight: 700; background: #fee2e2; padding: 2px; border-radius: 2px;}
+
+/* Empty State */
+.loanpt-empty-state {
+  text-align: center;
+  padding: 30px !important;
+  color: #64748b;
+  font-style: italic;
+  background: #f8fafc;
+}
+
+/* Spacer Row to fill page height if needed */
+.loanpt-spacer-row td {
+  height: auto;
+  border-bottom: 0;
+  border-top: 0;
+}
+
+/* Table Footer Totals */
+.loanpt-totals-row {
+  background: #f8fafc;
+  font-weight: 700;
+  border-top: 2px solid #94a3b8;
+}
+
+.loanpt-totals-row td {
+  padding: 8px 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.loanpt-totals-label {
+  text-align: right;
+  padding-right: 10px !important;
+  color: #0f172a;
+}
+
+.loanpt-totals-dr { color: #16a34a; }
+.loanpt-totals-cr { color: #dc2626; }
+
+/* Footer Section */
+.loanpt-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 20px;
+  page-break-inside: avoid;
+}
+
+.loanpt-footer-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loanpt-balance-summary-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.loanpt-balance-summary-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 4px;
+}
+
+.loanpt-balance-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #475569;
+  padding: 3px 0;
+}
+
+.loanpt-balance-summary-divider {
+  border-top: 1px dashed #cbd5e1;
+  margin: 4px 0;
+}
+
+.loanpt-balance-net-row {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  padding-top: 4px;
+}
+
+.loanpt-dr-text { color: #16a34a; }
+.loanpt-cr-text { color: #dc2626; }
+
+.loanpt-balance-status {
+  font-size: 10px;
+  font-style: italic;
+  color: #3b82f6;
+  margin-top: 4px;
+  background: #eff6ff;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.loanpt-declaration-box {
+  margin-top: auto;
+}
+
+.loanpt-declaration-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 2px;
+}
+
+.loanpt-declaration-text {
+  font-size: 9px;
+  color: #64748b;
+  text-align: justify;
+  line-height: 1.3;
+}
+
+.loanpt-footer-right {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+/* QR Code Optional */
+.loanpt-qr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  border-radius: 6px;
+  background: white;
+}
+
+.loanpt-qr-label {
+  font-size: 9px;
+  font-weight: 700;
+  margin-top: 4px;
+  color: #0f172a;
+}
+.loanpt-qr-upi {
+  font-size: 8px;
+  color: #64748b;
+}
+
+/* Signature */
+.loanpt-signature-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 180px;
+  height: 120px;
+}
+
+.loanpt-sig-certified {
+  font-size: 8px;
+  color: #64748b;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.loanpt-sig-for {
+  font-size: 10px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+  width: 100%;
+}
+
+.loanpt-sig-space {
+  height: 40px;
+}
+
+.loanpt-sig-image-wrap {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loanpt-sig-image {
+  max-width: 140px;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+.loanpt-sig-line {
+  width: 140px;
+  border-bottom: 1px dashed #94a3b8;
+  margin-bottom: 4px;
+}
+
+.loanpt-sig-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.loanpt-sig-name {
+  font-size: 9px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+/* Bottom Strip */
+.loanpt-bottom-strip {
+  position: absolute;
+  bottom: 5px;
+  left: 15mm;
+  right: 15mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: #94a3b8;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 4px;
+}
+
+/* Printing Specific Overrides */
+@media print {
+  .loanpt-multi-page-container {
+    width: 210mm !important;
+  }
+}

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getItems } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
+import LoanPrintModal from '../components/LoanPrintModal';
 import './LoanTransactions.css';
 
 const LoanTransactions = () => {
@@ -17,6 +18,7 @@ const LoanTransactions = () => {
   const [loan, setLoan] = useState(null);
   const [contact, setContact] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user?.id || !id) return;
@@ -75,7 +77,7 @@ const LoanTransactions = () => {
           </div>
         </div>
         <div className="lt-header-actions">
-           <button className="lt-btn lt-btn-secondary" onClick={() => window.print()}>
+           <button className="lt-btn lt-btn-secondary" onClick={() => setShowPrintModal(true)}>
               <Printer size={16} /> Print History
            </button>
            <button className="lt-btn lt-btn-primary" onClick={() => navigate(`/loans/${id}`)}>
@@ -183,6 +185,15 @@ const LoanTransactions = () => {
           </table>
         </div>
       </div>
+
+      {/* Print Modal */}
+      {showPrintModal && (
+        <LoanPrintModal 
+          loan={loan} 
+          contact={contact} 
+          onClose={() => setShowPrintModal(false)} 
+        />
+      )}
     </div>
   );
 };
