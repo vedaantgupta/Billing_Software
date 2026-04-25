@@ -207,7 +207,7 @@ const ProfitLossOverview = () => {
 
   // Original metric card
   const MetricCard = ({ title, value, subtitle, icon: Icon, color, percentage }) => (
-    <div className="glass" style={{ padding: '1.5rem', background: 'white', position: 'relative', overflow: 'hidden' }}>
+    <div className="glass" style={{ padding: '1.5rem', background: 'var(--card-bg)', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: 0, right: 0, width: '4px', height: '100%', background: color }}></div>
       <div className="flex justify-between items-start mb-4">
         <div style={{ background: `${color}15`, color: color, padding: '0.75rem', borderRadius: '12px' }}>
@@ -221,7 +221,7 @@ const ProfitLossOverview = () => {
         )}
       </div>
       <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{title}</p>
-      <h2 style={{ margin: '0.25rem 0', fontSize: '1.75rem', fontWeight: 700 }}>₹{Number(value).toLocaleString()}</h2>
+      <h2 style={{ margin: '0.25rem 0', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>₹{Number(value).toLocaleString()}</h2>
       <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{subtitle}</p>
     </div>
   );
@@ -230,7 +230,7 @@ const ProfitLossOverview = () => {
   const InsightCard = ({ title, value, unit = '', trend, icon: Icon, isDark = false, iconBg = '#fef2f2', iconColor = '#ef4444' }) => (
     <div className={`glass ${isDark ? 'dark-card' : ''}`} style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '155px' }}>
       <div className="flex justify-between items-start">
-        <div style={{ background: isDark ? 'rgba(255,255,255,0.12)' : iconBg, color: isDark ? 'white' : iconColor, padding: '0.75rem', borderRadius: '12px' }}>
+        <div style={{ background: isDark ? 'rgba(99, 102, 241, 0.2)' : iconBg, color: isDark ? '#818cf8' : iconColor, padding: '0.75rem', borderRadius: '12px' }}>
           <Icon size={22} />
         </div>
         {trend !== undefined && (
@@ -247,8 +247,8 @@ const ProfitLossOverview = () => {
         )}
       </div>
       <div>
-        <p style={{ margin: '1rem 0 0.25rem', fontSize: '0.72rem', fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.55)' : '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{title}</p>
-        <h2 style={{ margin: 0, fontSize: '1.65rem', fontWeight: 800, color: isDark ? 'white' : '#1e293b' }}>
+        <p style={{ margin: '1rem 0 0.25rem', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{title}</p>
+        <h2 style={{ margin: 0, fontSize: '1.65rem', fontWeight: 800, color: 'var(--text-primary)' }}>
           {title !== 'COLLECTION CYCLE' && '₹'}{Number(value).toLocaleString(undefined, { maximumFractionDigits: 1 })}{unit && <span style={{ fontSize: '1rem', fontWeight: 600, marginLeft: '4px' }}>{unit}</span>}
         </h2>
       </div>
@@ -321,11 +321,11 @@ const ProfitLossOverview = () => {
             <div style={{ display: 'flex', gap: '18px', fontSize: '0.85rem', fontWeight: 600 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                 <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#f97316' }}></div>
-                <span style={{ color: '#475569' }}>Revenue</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Revenue</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#94a3b8' }}></div>
-                <span style={{ color: '#475569' }}>Expenses</span>
+                <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--text-secondary)' }}></div>
+                <span style={{ color: 'var(--text-secondary)' }}>Expenses</span>
               </div>
             </div>
           </div>
@@ -338,11 +338,11 @@ const ProfitLossOverview = () => {
                     <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={60} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--chart-text)', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--chart-text)', fontSize: 12 }} width={60} />
+                <Tooltip contentStyle={{ background: 'var(--panel-bg)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', color: 'var(--text-primary)' }} />
                 <Area type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} fillOpacity={1} fill="url(#gradRev)" />
-                <Line type="monotone" dataKey="expenses" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                <Line type="monotone" dataKey="expenses" stroke="var(--text-secondary)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -381,8 +381,8 @@ const ProfitLossOverview = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
         <div className="glass" style={{ padding: '2rem' }}>
           <div className="flex justify-between items-center mb-6">
-            <h3 style={{ margin: 0 }}>Horizontal Analysis (Tendency)</h3>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', background: '#f1f5f9', padding: '0.25rem 0.75rem', borderRadius: '12px' }}>Last 3 Months</span>
+            <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Horizontal Analysis (Tendency)</h3>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'var(--table-header-bg)', padding: '0.25rem 0.75rem', borderRadius: '12px' }}>Last 3 Months</span>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
@@ -434,7 +434,7 @@ const ProfitLossOverview = () => {
             <p style={{ fontSize: '0.875rem', margin: 0, opacity: 0.9 }}>Based on current P&amp;L trends, your projected revenue for next month is ₹{(periodMetrics.totalInward * 1.1).toLocaleString()}.</p>
           </div>
 
-          <div className="glass" style={{ padding: '1.5rem', background: '#f8fafc' }}>
+          <div className="glass" style={{ padding: '1.5rem', background: 'var(--table-header-bg)' }}>
             <h4 className="flex items-center gap-2 mb-3" style={{ margin: 0, fontSize: '1rem' }}>
               <Info size={16} color="var(--primary-color)" /> Cost Saving Opportunities
             </h4>
@@ -481,8 +481,8 @@ const ProfitLossOverview = () => {
 
       <style>{`
         .dark-card {
-          background: #1A1C2C !important;
-          border: none !important;
+          background: var(--panel-bg) !important;
+          border: 1px solid var(--border-color) !important;
         }
         .flex { display: flex; }
         .justify-between { justify-content: space-between; }

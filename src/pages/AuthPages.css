@@ -356,3 +356,126 @@
     font-size: 1.25rem;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   FORCE LIGHT MODE — Form elements inside auth
+   Counters global dark-mode overrides from
+   dark-index.css so inputs/labels stay light.
+═══════════════════════════════════════════════ */
+body.dark-mode .auth-container .form-input,
+body.dark-mode .auth-container .form-input:focus {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+body.dark-mode .auth-container .form-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .auth-container .form-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+body.dark-mode .auth-container .form-label {
+  color: #374151 !important;
+}
+
+body.dark-mode .auth-container .checkbox-container {
+  color: #64748b !important;
+}
+
+body.dark-mode .auth-container .checkmark {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+body.dark-mode .auth-container .checkbox-container input:checked ~ .checkmark {
+  background-color: #6366f1 !important;
+  border-color: #6366f1 !important;
+}
+
+body.dark-mode .auth-container .auth-error-alert {
+  background-color: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  color: #b91c1c !important;
+}
+
+body.dark-mode .auth-container .auth-success-alert {
+  background-color: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+}
+
+body.dark-mode .auth-container .auth-footer-text {
+  color: #64748b !important;
+}
+
+body.dark-mode .auth-container .password-toggle {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .auth-container .password-toggle:hover {
+  color: #64748b !important;
+}
+
+body.dark-mode .auth-container .auth-divider {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .auth-container .auth-divider::before,
+body.dark-mode .auth-container .auth-divider::after {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+body.dark-mode .auth-container .otp-digit {
+  background: white !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+body.dark-mode .auth-container .otp-digit:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+}
+
+body.dark-mode .auth-container .resend-otp {
+  color: #64748b !important;
+}
+
+body.dark-mode .auth-container .mock-email-notification {
+  background: white !important;
+}
+
+body.dark-mode .auth-container .mock-email-header {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+body.dark-mode .auth-container .mock-email-body {
+  color: #1e293b !important;
+}
+
+body.dark-mode .auth-container .password-suggestion-popup {
+  background: white !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.dark-mode .auth-container .suggestion-title {
+  color: #64748b !important;
+}
+
+body.dark-mode .auth-container .suggested-value {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+body.dark-mode .auth-container .suggested-value code {
+  color: #4f46e5 !important;
+}
+
+body.dark-mode .auth-container .strength-meter-bar {
+  background-color: #e2e8f0 !important;
+}

@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Moon, Sun } from 'lucide-react';
 import './Layout.css';
+import AIAssistant from './AIAssistant';
 import { getDB, getItems } from '../utils/db';
+import { useTheme } from '../contexts/ThemeContext';
 
 import { useAuth } from '../hooks/useAuth';
 
 const Layout = ({ children, noWrapper = false, extended = false }) => {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isExpensesOpen, setIsExpensesOpen] = useState(false);
@@ -207,10 +210,10 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               onKeyDown={handleSearch}
               onFocus={() => searchQuery.length >= 1 && setShowSearchDropdown(true)}
             />
-            <div className="search-shortcut" style={{ padding: '4px 8px', borderRadius: '6px', background: '#f1f5f9', fontSize: '11px', fontWeight: '700', color: '#64748b', display: 'flex', gap: '2px', opacity: 0.8 }}>
-              <kbd style={{ fontFamily: 'inherit' }}>Ctrl</kbd>
+            <div className="search-shortcut">
+              <kbd>Ctrl</kbd>
               <span>+</span>
-              <kbd style={{ fontFamily: 'inherit' }}>K</kbd>
+              <kbd>K</kbd>
             </div>
 
             {showSearchDropdown && (
@@ -245,6 +248,25 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
             )}
           </div>
           <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-secondary)',
+                padding: '8px',
+                borderRadius: '50%',
+                transition: 'background 0.2s'
+              }}
+              className="theme-toggle"
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
             <Bell size={20} style={{ color: 'var(--text-secondary)', cursor: 'pointer' }} />
 
             <div className="user-profile" style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => setShowDropdown(!showDropdown)}>
@@ -252,16 +274,16 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               <span style={{ fontWeight: 600 }}>{companyInfo.name}</span>
 
               {showDropdown && (
-                <div style={{ position: 'absolute', top: '100%', right: '0', marginTop: '10px', background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', minWidth: '220px', zIndex: 1000, overflow: 'hidden' }}>
-                  <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: '#f8fafc' }}>
-                    <p style={{ margin: 0, fontWeight: 600 }}>{user?.firstName ? `${user.firstName} ${user.lastName}` : (companyInfo.name || 'Admin User')}</p>
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{user?.email || 'Super Admin'}</p>
+                <div className="user-dropdown-menu">
+                  <div className="user-dropdown-header">
+                    <p className="user-name">{user?.firstName ? `${user.firstName} ${user.lastName}` : (companyInfo.name || 'Admin User')}</p>
+                    <p className="user-email">{user?.email || 'Super Admin'}</p>
                   </div>
-                  <div style={{ padding: '0.5rem' }}>
-                    <button className="btn" style={{ width: '100%', textAlign: 'left', display: 'flex', gap: '8px', color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none' }} onClick={() => navigate('/settings')}>
+                  <div className="user-dropdown-body">
+                    <button className="dropdown-item" onClick={() => navigate('/settings')}>
                       <SettingsIcon size={16} /> Edit Profile & Settings
                     </button>
-                    <button onClick={handleLogout} className="btn btn-danger" style={{ width: '100%', textAlign: 'left', display: 'flex', gap: '8px', marginTop: '0.25rem', padding: '0.5rem', background: '#fef2f2', color: '#dc2626', border: 'none' }}>
+                    <button onClick={handleLogout} className="dropdown-item logout">
                       <LogOut size={16} /> Secure Logout
                     </button>
                   </div>
@@ -281,6 +303,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           )}
         </main>
       </div>
+      <AIAssistant />
     </div>
   );
 };

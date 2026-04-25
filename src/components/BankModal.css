@@ -1,0 +1,376 @@
+.bm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: bmOverlayFade 0.3s ease-out;
+}
+
+.bm-modal {
+  width: 900px;
+  max-width: 95vw;
+  max-height: 90vh;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: bmModalSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bm-modal-header {
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.bm-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bm-modal-icon {
+  width: 40px;
+  height: 40px;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bm-modal-title h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.bm-modal-close {
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bm-modal-close:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  transform: rotate(90deg);
+}
+
+.bm-modal-content {
+  flex: 1;
+  display: flex;
+  min-height: 0; /* Important for flex child scrolling */
+}
+
+.bm-modal-sidebar {
+  width: 260px;
+  background: #f8fafc;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-right: 1px solid #f1f5f9;
+}
+
+.bm-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.bm-sidebar-item:hover {
+  background: #f1f5f9;
+}
+
+.bm-sidebar-item.active {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  color: #3b82f6;
+}
+
+.bm-sidebar-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.bm-sidebar-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: inherit;
+}
+
+.bm-sidebar-desc {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.bm-modal-main {
+  flex: 1;
+  padding: 2.5rem;
+  overflow-y: auto;
+}
+
+.bm-section-header {
+  margin-bottom: 2rem;
+}
+
+.bm-section-header h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.bm-section-header p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.bm-input-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bm-input-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.bm-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bm-field-icon {
+  position: absolute;
+  left: 1rem;
+  color: #94a3b8;
+}
+
+.bm-input-wrapper input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 3rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: all 0.2s;
+}
+
+.bm-input-wrapper input:focus {
+  outline: none;
+  background: white;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.bm-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.bm-toggle-card {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bm-toggle-card:hover {
+  background: #f1f7ff;
+  border-color: #3b82f6;
+}
+
+.bm-toggle-switch {
+  width: 48px;
+  height: 24px;
+  background: #cbd5e1;
+  border-radius: 20px;
+  padding: 2px;
+  transition: all 0.3s;
+}
+
+.bm-toggle-switch.active {
+  background: #3b82f6;
+}
+
+.bm-toggle-knob {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.bm-toggle-switch.active .bm-toggle-knob {
+  transform: translateX(24px);
+}
+
+.bm-toggle-info {
+  flex: 1;
+}
+
+.bm-toggle-info strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.bm-toggle-info p {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.bm-check-icon {
+  color: #10b981;
+}
+
+.bm-security-note {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f0fdf4;
+  color: #166534;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.bm-form-error {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #fff1f2;
+  color: #e11d48;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #fecdd3;
+}
+
+.bm-modal-footer {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f9;
+}
+
+.bm-required-note {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.bm-footer-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.bm-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bm-btn-ghost {
+  background: transparent;
+  color: #64748b;
+  border: none;
+}
+
+.bm-btn-ghost:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.bm-btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.bm-btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.bm-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes bmOverlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bmModalSlide {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 768px) {
+  .bm-modal-sidebar {
+    display: none;
+  }
+}

@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Landmark, Plus, Search, Building2, CreditCard, Star, MoreVertical, Edit2, Trash2, Copy, CheckCircle2 } from 'lucide-react';
+import { 
+  Landmark, Plus, Search, Building2, CreditCard, 
+  Star, Edit2, Trash2, Copy, CheckCircle2, 
+  ExternalLink, ShieldCheck, ChevronRight
+} from 'lucide-react';
 import { getItems, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
+import BankModal from '../components/BankModal';
 import './BankManager.css';
 
 const BankManager = () => {
@@ -12,19 +17,28 @@ const BankManager = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBankId, setEditingBankId] = useState(null);
+
+  const fetchBanks = useCallback(async () => {
+    if (user?.id) {
+      setLoading(true);
+      try {
+        const data = await getItems('banks', user.id);
+        setBanks(data || []);
+      } catch (err) {
+        console.error('Failed to fetch banks:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     fetchBanks();
-  }, [user]);
-
-  const fetchBanks = async () => {
-    if (user?.id) {
-      setLoading(true);
-      const data = await getItems('banks', user.id);
-      setBanks(data || []);
-      setLoading(false);
-    }
-  };
+  }, [fetchBanks]);
 
   const handleDelete = async (e, dbId) => {
     e.stopPropagation();
@@ -38,10 +52,17 @@ const BankManager = () => {
 
   const handleEdit = (e, dbId) => {
     e.stopPropagation();
-    navigate(`/banks/edit/${dbId}`);
+    setEditingBankId(dbId);
+    setIsModalOpen(true);
   };
 
-  const copyToClipboard = (text, id) => {
+  const handleAddNew = () => {
+    setEditingBankId(null);
+    setIsModalOpen(true);
+  };
+
+  const copyToClipboard = (e, text, id) => {
+    e.stopPropagation();
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -50,148 +71,171 @@ const BankManager = () => {
   const filteredBanks = banks.filter(b => 
     b.bankName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.accountName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.accountNumber?.includes(searchQuery)
+    b.accountNumber?.includes(searchQuery) ||
+    b.ifscCode?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const defaultBankCount = banks.filter(b => b.isDefault).length;
 
+  if (loading) {
+    return (
+      <div className="bm-container">
+        <div className="flex flex-col items-center justify-center h-64">
+          <div className="text-blue-500 font-bold text-lg animate-pulse">Initializing Bank Manager...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bank-manager-wrapper">
-      <div className="bank-header">
-        <div className="bank-header-left">
-          <h1><Landmark size={28} className="text-primary" /> Bank Management</h1>
-          <p>Organize and manage your company bank accounts</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => navigate('/banks/new')}>
-          <Plus size={18} /> Add Bank Account
-        </button>
-      </div>
-
-      <div className="bank-stats-row">
-        <div className="bank-stat-card">
-          <div className="bank-stat-icon primary">
-            <Building2 size={24} />
-          </div>
-          <div className="bank-stat-details">
-            <h3>Total Accounts</h3>
-            <p>{banks.length}</p>
-          </div>
-        </div>
-        <div className="bank-stat-card">
-          <div className="bank-stat-icon success">
-            <Star size={24} />
-          </div>
-          <div className="bank-stat-details">
-            <h3>Default Accounts</h3>
-            <p>{defaultBankCount}</p>
-          </div>
-        </div>
-        <div className="bank-stat-card">
-          <div className="bank-stat-icon warning">
-            <CreditCard size={24} />
-          </div>
-          <div className="bank-stat-details">
-            <h3>Active Connections</h3>
-            <p>Secured</p>
-          </div>
+    <div className="bm-container">
+      {/* Page Header */}
+      <div className="bm-header">
+        <h1 className="bm-title">
+          <div className="bm-title-icon"><Landmark size={24} /></div>
+          Bank Manager
+        </h1>
+        <div className="bm-header-actions">
+          <button className="bm-btn-outline" onClick={() => navigate('/banking-report')}>
+            <ExternalLink size={16} /> Banking Reports
+          </button>
+          <button className="bm-btn-primary" onClick={handleAddNew}>
+            <Plus size={18} /> Add New Bank
+          </button>
         </div>
       </div>
 
-      <div className="bank-control-bar">
-        <div className="bank-search">
-          <Search size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by bank name, ac name or number..." 
+      {/* Summary Dashboard */}
+      <div className="bm-dashboard">
+        <div className="bm-card total">
+          <div className="bm-card-header">
+            <span className="bm-card-label">Total Accounts</span>
+            <div className="bm-card-icon"><Building2 size={24} /></div>
+          </div>
+          <div className="bm-card-value">{banks.length}</div>
+          <div className="bm-card-subtext">Active bank connections in your workspace</div>
+        </div>
+
+        <div className="bm-card default">
+          <div className="bm-card-header">
+            <span className="bm-card-label">Default Set</span>
+            <div className="bm-card-icon"><Star size={24} /></div>
+          </div>
+          <div className="bm-card-value">{defaultBankCount}</div>
+          <div className="bm-card-subtext">Accounts prioritized for billing and payments</div>
+        </div>
+
+        <div className="bm-card secured">
+          <div className="bm-card-header">
+            <span className="bm-card-label">Security Status</span>
+            <div className="bm-card-icon"><ShieldCheck size={24} /></div>
+          </div>
+          <div className="bm-card-value">Secured</div>
+          <div className="bm-card-subtext">All banking data is encrypted and stored locally</div>
+        </div>
+      </div>
+
+      {/* Control Bar */}
+      <div className="bm-control-bar">
+        <div className="bm-search-box">
+          <Search className="bm-search-icon" size={20} />
+          <input
+            className="bm-search-input"
+            placeholder="Search by bank name, A/C name, number or IFSC..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-          <div className="spinner"></div>
-          <p style={{ marginTop: '1rem' }}>Loading bank accounts...</p>
-        </div>
-      ) : filteredBanks.length === 0 ? (
-        <div className="bank-empty-state">
-          <div className="bank-empty-icon">
-            <Landmark size={40} />
-          </div>
-          <h3>No Bank Accounts Found</h3>
-          <p>You haven't added any bank accounts yet, or none match your search.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/banks/new')}>
-            <Plus size={18} /> Add Your First Bank
-          </button>
-        </div>
-      ) : (
-        <div className="bank-grid">
-          {filteredBanks.map(bank => (
-            <div key={bank._dbId || bank.id} className="bank-card">
-              <div className="bank-card-highlight"></div>
-              
-              <div className="bank-card-header">
-                <div className="bank-logo-placeholder">
-                  {bank.bankName ? bank.bankName.substring(0, 1).toUpperCase() : 'B'}
+      {/* Bank Accounts List */}
+      <div className="bm-accounts-list">
+        {filteredBanks.map(bank => {
+          const bankId = bank._dbId || bank.id;
+          const initial = bank.bankName?.charAt(0).toUpperCase() || 'B';
+          
+          return (
+            <div
+              key={bankId}
+              className="bm-account-row"
+              onClick={() => navigate(`/banks/${bankId}`)}
+            >
+              <div className="bm-account-left">
+                <div className={`bm-avatar ${bank.isDefault ? 'is-default' : ''}`}>
+                  {initial}
                 </div>
-                <div className="bank-title-area">
-                  <h3>{bank.bankName}</h3>
-                  <p>{bank.branchName || 'Main Branch'}</p>
-                </div>
-                <div className="bank-card-actions" style={{ display: 'flex', gap: '0.25rem' }}>
-                  <button onClick={(e) => handleEdit(e, bank._dbId || bank.id)} title="Edit">
-                    <Edit2 size={16} />
-                  </button>
-                  <button onClick={(e) => handleDelete(e, bank._dbId || bank.id)} title="Delete" className="text-danger">
-                    <Trash2 size={16} />
-                  </button>
+                <div className="bm-account-info">
+                  <h3 className="bm-account-name">
+                    {bank.bankName}
+                    {bank.isDefault && <span className="bm-status-badge">Default</span>}
+                  </h3>
+                  <div className="bm-account-meta">
+                    <span className="bm-account-type">Secure Account</span>
+                    <span className="bm-account-sub">{bank.branchName || 'Main Branch'}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="bank-card-body">
-                <div className="bank-detail-row">
-                  <span className="detail-label">A/C Name</span>
-                  <span className="detail-value">{bank.accountName}</span>
+              {/* Central Details Block */}
+              <div className="bm-account-middle">
+                <div className="bm-detail-item">
+                  <span className="bm-detail-label">Account Name</span>
+                  <span className="bm-detail-value">{bank.accountName}</span>
                 </div>
-                <div className="bank-detail-row">
-                  <span className="detail-label">A/C Number</span>
-                  <span className="detail-value">
+                <div className="bm-detail-item">
+                  <span className="bm-detail-label">Account Number</span>
+                  <span className="bm-detail-value">
                     {bank.accountNumber}
-                    <button className="copy-btn" onClick={() => copyToClipboard(bank.accountNumber, `ac_${bank.id}`)}>
-                      {copiedId === `ac_${bank.id}` ? <CheckCircle2 size={14} color="#16a34a" /> : <Copy size={14} />}
+                    <button className="bm-copy-btn" onClick={(e) => copyToClipboard(e, bank.accountNumber, `ac_${bankId}`)}>
+                      {copiedId === `ac_${bankId}` ? <CheckCircle2 size={14} color="#16a34a" /> : <Copy size={14} />}
                     </button>
                   </span>
                 </div>
-                <div className="bank-detail-row">
-                  <span className="detail-label">IFSC Code</span>
-                  <span className="detail-value">
+                <div className="bm-detail-item">
+                  <span className="bm-detail-label">IFSC Code</span>
+                  <span className="bm-detail-value">
                     {bank.ifscCode}
-                    <button className="copy-btn" onClick={() => copyToClipboard(bank.ifscCode, `ifsc_${bank.id}`)}>
-                      {copiedId === `ifsc_${bank.id}` ? <CheckCircle2 size={14} color="#16a34a" /> : <Copy size={14} />}
+                    <button className="bm-copy-btn" onClick={(e) => copyToClipboard(e, bank.ifscCode, `ifsc_${bankId}`)}>
+                      {copiedId === `ifsc_${bankId}` ? <CheckCircle2 size={14} color="#16a34a" /> : <Copy size={14} />}
                     </button>
                   </span>
                 </div>
-                {bank.swiftCode && (
-                  <div className="bank-detail-row">
-                    <span className="detail-label">SWIFT</span>
-                    <span className="detail-value">{bank.swiftCode}</span>
-                  </div>
-                )}
               </div>
 
-              {bank.isDefault && (
-                <div className="bank-card-footer">
-                  <div className="default-badge">
-                    <CheckCircle2 size={14} />
-                    Default Account
-                  </div>
+              <div className="bm-account-right">
+                <button 
+                  className="bm-action-btn" 
+                  onClick={(e) => handleEdit(e, bankId)}
+                  title="Edit Account"
+                >
+                  <Edit2 size={18} />
+                </button>
+                <div className="bm-action-btn" style={{ background: '#f8fafc' }}>
+                   <ChevronRight size={20} color="#cbd5e1" />
                 </div>
-              )}
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+
+        {filteredBanks.length === 0 && (
+          <div className="bm-empty-state">
+            <Landmark className="bm-empty-icon" size={64} />
+            <div className="bm-empty-text">No bank accounts found matching your criteria.</div>
+            <button className="bm-btn-primary" onClick={handleAddNew}>
+              Add Your First Bank
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Bank Modal */}
+      <BankModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={fetchBanks} 
+        editBankId={editingBankId}
+      />
     </div>
   );
 };

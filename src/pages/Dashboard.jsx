@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { getItems } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
-import { TrendingUp, Users, Package, FileText, ArrowRight, Filter } from 'lucide-react';
+import { TrendingUp, Users, Package, FileText, ArrowRight, Filter, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import IndiaMap from './IndiaMap';
+import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+import DateRangePicker from '../components/DateRangePicker';
+
+dayjs.extend(isBetween);
 
 const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
   const tot = aging.total > 0 ? aging.total : 1;
@@ -95,6 +100,11 @@ const Dashboard = () => {
   const [agingSales, setAgingSales] = useState({ current: 0, days1_15: 0, days16_30: 0, days30plus: 0, total: 0 });
   const [agingPurchases, setAgingPurchases] = useState({ current: 0, days1_15: 0, days16_30: 0, days30plus: 0, total: 0 });
 
+  const [dateRange, setDateRange] = useState({
+    start: dayjs().startOf('month').toDate(),
+    end: dayjs().endOf('day').toDate()
+  });
+
   useEffect(() => {
     const loadDashboardData = async () => {
       if (!user?.id) return;
@@ -116,15 +126,20 @@ const Dashboard = () => {
           }
         });
 
-        // Only count sale invoices for sales logic (including legacy 'Invoice' type)
         const saleInvoices = allDocs.filter(d => (d.docType || 'Invoice') === 'Invoice' || d.docType === 'Sale Invoice');
-        const sortedInvoices = saleInvoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // Filter by Date Range
+        const filteredSaleInvoices = saleInvoices.filter(inv => {
+          const invDate = dayjs(inv.date || inv.invoiceDetail?.date);
+          return invDate.isBetween(dayjs(dateRange.start), dayjs(dateRange.end), 'day', '[]');
+        });
+
+        const sortedInvoices = filteredSaleInvoices.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         const customers = contacts.filter(c => c.type === 'customer');
 
-        // Aggregate sales by state
-        const salesByState = saleInvoices.reduce((acc, inv) => {
-          // Try to get state from customer record first, then placeOfSupply
+        // Aggregate sales by state for filtered invoices
+        const salesByState = filteredSaleInvoices.reduce((acc, inv) => {
           const customer = contacts.find(c => c.id === inv.customerId || c.name === inv.customerName);
           const state = customer?.state || inv.placeOfSupply || 'Other';
 
@@ -141,10 +156,10 @@ const Dashboard = () => {
         setStateWiseSales(formattedStateSales);
 
         setStats({
-          sales: saleInvoices.reduce((acc, inv) => acc + (Number(inv.total) || 0), 0),
+          sales: filteredSaleInvoices.reduce((acc, inv) => acc + (Number(inv.total) || 0), 0),
           customers: customers.length,
           products: products.length,
-          invoices: saleInvoices.length
+          invoices: filteredSaleInvoices.length
         });
         setRecentInvoices(sortedInvoices.slice(0, 5));
 
@@ -224,7 +239,7 @@ const Dashboard = () => {
     };
 
     loadDashboardData();
-  }, [user]);
+  }, [user, dateRange.start, dateRange.end]);
 
   if (loading && user) {
     return (
@@ -236,12 +251,35 @@ const Dashboard = () => {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">Dashboard Overview</h1>
-        <button className="btn btn-primary" onClick={() => navigate('/documents/select')}>
-          + Create Document
-        </button>
+      <div className="page-header" style={{ alignItems: 'center' }}>
+        <div>
+          <h1 className="page-title">Dashboard Overview</h1>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+            Monitoring business performance from <span style={{ color: 'var(--primary-color)', fontWeight: 600 }}>{dayjs(dateRange.start).format('DD MMM YYYY')}</span> to <span style={{ color: 'var(--primary-color)', fontWeight: 600 }}>{dayjs(dateRange.end).format('DD MMM YYYY')}</span>
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => window.location.reload()}
+            style={{ padding: '0.6rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            title="Refresh Dashboard"
+          >
+            <RefreshCw size={18} />
+          </button>
+
+          <DateRangePicker
+            initialRange={dateRange}
+            onChange={(range) => setDateRange(range)}
+          />
+
+          <button className="btn btn-primary" onClick={() => navigate('/documents/select')}>
+            + Create Document
+          </button>
+        </div>
       </div>
+
 
       <div className="flex gap-4 mb-4">
         <div className="glass w-full" style={{ padding: '1.5rem', borderTop: '4px solid var(--primary-color)' }}>
