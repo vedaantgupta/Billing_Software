@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase } from 'lucide-react';
 import './Layout.css';
 import AIAssistant from './AIAssistant';
 import { getDB, getItems } from '../utils/db';
@@ -38,10 +38,11 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
       setShowSearchDropdown(true);
 
       try {
-        const [docs, prods, cons] = await Promise.all([
+        const [docs, prods, cons, projs] = await Promise.all([
           getItems('documents', user.id),
           getItems('products', user.id),
-          getItems('contacts', user.id)
+          getItems('contacts', user.id),
+          getItems('projects', user.id)
         ]);
 
         const query = searchQuery.toLowerCase();
@@ -58,6 +59,10 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
         // Search Contacts
         cons.filter(c => c.name?.toLowerCase().includes(query) || c.phone?.toLowerCase().includes(query))
           .slice(0, 3).forEach(c => results.push({ type: 'Contact', title: c.name, subtitle: c.phone, path: `/contacts/${c.id}`, icon: <Users size={16} /> }));
+
+        // Search Projects
+        projs.filter(p => p.name?.toLowerCase().includes(query) || p.clientName?.toLowerCase().includes(query))
+          .slice(0, 3).forEach(p => results.push({ type: 'Project', title: p.name, subtitle: p.clientName || 'No Client', path: `/projects/${p._dbId || p.id}`, icon: <Briefcase size={16} /> }));
 
         setSearchResults(results);
       } catch (err) {
@@ -137,6 +142,9 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           <NavLink to="/banks" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <Landmark size={20} /> Bank Accounts
           </NavLink>
+          <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+            <Briefcase size={20} /> Projects
+          </NavLink>
 
 
           <div className="nav-group">
@@ -202,7 +210,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               ref={inputRef}
               type="text"
               className="search-input"
-              placeholder="Search documents, products, contacts, loans, banks, staff..."
+              placeholder="Search documents, products, contacts, loans, banks, staff, projects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}

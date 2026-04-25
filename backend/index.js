@@ -20,10 +20,22 @@ for (const envPath of envPaths) {
 }
 
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
+const multer = require('multer');
 const { getAIResponse } = require('./aiService');
+
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 const port = process.env.PORT || 5000;
 
 // Start of application logic
@@ -39,6 +51,29 @@ const client = new MongoClient(uri);
 
 app.use(cors());
 app.use(express.json());
+
+// Configure Multer for File Uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
+
+// Serve static files from uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Collections initialization
 let db, usersCollection, workCollection, salesCollection;
@@ -305,6 +340,173 @@ app.delete('/api/work/:userId/:id', async (req, res) => {
   }
 });
 
+// Global Project Chat
+app.get('/api/chat/:projectId', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const { projectId } = req.params;
+    const chatCollection = db.collection('project_messages');
+    const messages = await chatCollection.find({ projectId }).sort({ timestamp: 1 }).toArray();
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching chat' });
+  }
+});
+
+app.post('/api/chat', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const msgData = req.body;
+    const chatCollection = db.collection('project_messages');
+    await chatCollection.insertOne({
+      ...msgData,
+      timestamp: new Date()
+    });
+    res.status(201).json({ message: 'Sent' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error sending message' });
+  }
+});
+
+// Global Project Members
+app.get('/api/project-members/:projectId', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const { projectId } = req.params;
+    const membersCollection = db.collection('project_members');
+    const members = await membersCollection.find({ projectId }).toArray();
+    res.json(members);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching members' });
+  }
+});
+
+app.post('/api/project-members/join', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const { projectId, userId, name } = req.body;
+    const membersCollection = db.collection('project_members');
+    
+    // Check if user is already a member
+    const existing = await membersCollection.findOne({ projectId, userId });
+    if (existing) return res.json(existing);
+
+    // Check if this is the first member (Admin)
+    const count = await membersCollection.countDocuments({ projectId });
+    const isOriginalAdmin = count === 0;
+    const role = isOriginalAdmin ? 'Admin' : 'Member';
+
+    const newMember = {
+      projectId,
+      userId,
+      name,
+      role,
+      isOriginalAdmin,
+      joinedAt: new Date()
+    };
+
+    await membersCollection.insertOne(newMember);
+    res.status(201).json(newMember);
+  } catch (err) {
+    res.status(500).json({ message: 'Error joining project' });
+  }
+});
+
+app.patch('/api/project-members/role', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const { projectId, userId, newRole } = req.body;
+    const membersCollection = db.collection('project_members');
+    await membersCollection.updateOne(
+      { projectId, userId },
+      { $set: { role: newRole } }
+    );
+    res.json({ message: 'Role updated' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating role' });
+  }
+});
+
+// File Upload Endpoint
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  
+  const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+  res.json({
+    url: fileUrl,
+    filename: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  });
+});
+
+// We'll use a separate collection to track 'kicked' status so we can show the message
+app.delete('/api/project-members/:projectId/:userId', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const { projectId, userId } = req.params;
+    const { removedBy } = req.query; // Admin who is doing the removal
+    const membersCollection = db.collection('project_members');
+    const kickedCollection = db.collection('project_kicked');
+
+    // Prevent deleting original admin
+    const member = await membersCollection.findOne({ projectId, userId });
+    if (member && member.isOriginalAdmin) {
+      return res.status(403).json({ message: 'Cannot remove the original project admin' });
+    }
+
+    await kickedCollection.insertOne({
+      projectId,
+      userId,
+      removedBy,
+      type: req.query.type || 'full', // 'full' or 'chat'
+      timestamp: new Date()
+    });
+
+    if (req.query.type === 'chat') {
+      await membersCollection.updateOne(
+        { projectId, userId },
+        { $set: { chatBlocked: true, removedByChat: removedBy } }
+      );
+    } else {
+      await membersCollection.updateOne(
+        { projectId, userId },
+        { $set: { accessBlocked: true, removedByFull: removedBy } }
+      );
+    }
+    res.json({ message: 'Member blocked' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error blocking member' });
+  }
+});
+
+app.post('/api/project-members/unblock', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const { projectId, userId } = req.body;
+    const membersCollection = db.collection('project_members');
+    await membersCollection.updateOne(
+      { projectId, userId },
+      { $set: { chatBlocked: false, accessBlocked: false }, $unset: { removedByChat: "", removedByFull: "" } }
+    );
+    res.json({ message: 'Member restored' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error restoring member' });
+  }
+});
+
+app.get('/api/project-kicked/:projectId/:userId', async (req, res) => {
+  if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
+  try {
+    const { projectId, userId } = req.params;
+    const kickedCollection = db.collection('project_kicked');
+    const record = await kickedCollection.findOne({ projectId, userId });
+    res.json(record);
+  } catch (err) {
+    res.status(500).json({ message: 'Error' });
+  }
+});
+
 // Sales Analytics: Get Top States by Sale
 app.get('/api/analytics/top-states', async (req, res) => {
   if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
@@ -455,8 +657,32 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
+// Socket.io Logic
+io.on('connection', (socket) => {
+  console.log('⚡ User connected:', socket.id);
+
+  socket.on('join_project', (projectId) => {
+    socket.join(projectId);
+    console.log(`👤 User ${socket.id} joined project: ${projectId}`);
+  });
+
+  socket.on('send_message', (data) => {
+    // Broadcast to everyone in the project room including sender (for real-time update)
+    io.to(data.projectId).emit('receive_message', data);
+  });
+
+  socket.on('project_update', (data) => {
+    // Broadcast to everyone in the room to refresh their data
+    io.to(data.projectId).emit('project_data_refreshed', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ User disconnected:', socket.id);
+  });
+});
+
 // Start the server immediately, then try to connect to DB
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running on port ${port}`);
   tryConnect();
 });

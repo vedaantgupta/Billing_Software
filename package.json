@@ -23,6 +23,7 @@
     "lucide-react": "^1.7.0",
     "mongodb": "^7.1.1",
     "mongoose": "^9.4.1",
+    "multer": "^2.1.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
     "react-barcode": "^1.6.1",
@@ -35,6 +36,8 @@
     "react-signature-canvas": "^1.1.0-alpha.2",
     "recharts": "^3.8.1",
     "remark-gfm": "^4.0.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {

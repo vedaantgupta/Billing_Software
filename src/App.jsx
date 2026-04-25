@@ -56,6 +56,8 @@ import BankingReport from './pages/BankingReport';
 import { LanguageProvider } from './contexts/LanguageContext';
 import HistorySection from './pages/HistorySection';
 import SearchResults from './pages/SearchResults';
+import Projects from './pages/Projects';
+import ProjectDetails from './pages/ProjectDetails';
 
 
 function App() {
@@ -492,6 +494,21 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <CreditReport />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/projects" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Projects />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/projects/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProjectDetails />
                 </Layout>
               </ProtectedRoute>
             } />

@@ -162,12 +162,12 @@
   flex: 1;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.4);
+  background: #ffffff;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  /* Modern slightly rounded corners instead of pill */
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  /* Sharp edges */
   padding: 0 16px;
   height: 48px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -209,7 +209,7 @@
 /* Focus effect */
 .search-bar:focus-within {
   border-color: var(--primary-color);
-  background: white;
+  background: #ffffff;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
@@ -220,9 +220,10 @@
   top: calc(100% + 10px);
   left: 0;
   right: 0;
-  background: white;
+  background: #ffffff;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 0;
+  /* Sharp edges */
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-height: 400px;
   overflow-y: auto;
