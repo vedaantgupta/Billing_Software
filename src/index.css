@@ -21,18 +21,6 @@
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
   --glass-border: 1px solid rgba(255, 255, 255, 0.5);
   --glass-blur: blur(12px);
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --panel-bg: #ffffff;
-  --table-header-bg: #f8fafc;
-  --row-low-stock-bg: rgba(254, 226, 226, 0.3);
-  --search-bg: rgba(255, 255, 255, 0.9);
-  --btn-ghost-bg: #ffffff;
-  --btn-ghost-text: var(--primary-color);
-  --btn-ghost-border: var(--primary-color);
-  --chart-grid: #e2e8f0;
-  --chart-text: #64748b;
-  --trend-up: #10b981;
-  --trend-down: #ef4444;
 }
 
 * {

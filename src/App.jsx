@@ -54,7 +54,6 @@ import BankManager from './pages/BankManager';
 import BankDetails from './pages/BankDetails';
 import BankingReport from './pages/BankingReport';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { ThemeProvider } from './contexts/ThemeContext';
 import HistorySection from './pages/HistorySection';
 import SearchResults from './pages/SearchResults';
 
@@ -63,451 +62,449 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <ThemeProvider>
-          <LanguageProvider>
-            <Routes>
+        <LanguageProvider>
+          <Routes>
 
-              {/* Public Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-              {/* Protected Routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Layout extended={true}>
-                    <Dashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/contacts" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Contacts />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/contacts/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ContactProfile />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/products" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Products />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/products/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ProductProfile />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DocumentList />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/select" element={
-                <ProtectedRoute>
-                  <Layout noWrapper={true}>
-                    <DocumentTypeSelection />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/sale/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <SaleInvoice />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/sale/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <SaleInvoice />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/purchase/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PurchaseInvoice />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/purchase/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PurchaseInvoice />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/quotation/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Quotation />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/quotation/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Quotation />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/purchase-order/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PurchaseOrder />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/purchase-order/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PurchaseOrder />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/sale-order/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <SaleOrder />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/sale-order/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <SaleOrder />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/delivery-challan/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DeliveryChallan />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/delivery-challan/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DeliveryChallan />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/job-work/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <JobWork />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/job-work/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <JobWork />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/credit-note/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreditNote />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/credit-note/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreditNote />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/debit-note/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DebitNote />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/debit-note/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DebitNote />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/proforma/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ProformaInvoice />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/documents/proforma/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ProformaInvoice />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/payments/inward" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <InwardPayment />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/payments/inward/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreateInwardPayment />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/payments/outward" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <OutwardPayment />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/payments/outward/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreateOutwardPayment />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/payments/profit-loss" element={
-                <ProtectedRoute>
-                  <Layout extended={true}>
-                    <ProfitLossOverview />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/reports" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Reports />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route
-                path="/history"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <HistorySection />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/compliance" element={
+            {/* Protected Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Layout extended={true}>
+                  <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/contacts" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Contacts />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/contacts/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ContactProfile />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/products" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Products />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/products/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProductProfile />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DocumentList />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/select" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <DocumentTypeSelection />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/sale/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SaleInvoice />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/sale/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SaleInvoice />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/purchase/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseInvoice />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/purchase/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseInvoice />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/quotation/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Quotation />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/quotation/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Quotation />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/purchase-order/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseOrder />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/purchase-order/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseOrder />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/sale-order/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SaleOrder />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/sale-order/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SaleOrder />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/delivery-challan/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DeliveryChallan />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/delivery-challan/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DeliveryChallan />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/job-work/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <JobWork />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/job-work/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <JobWork />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/credit-note/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreditNote />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/credit-note/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreditNote />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/debit-note/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DebitNote />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/debit-note/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DebitNote />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/proforma/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProformaInvoice />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/proforma/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProformaInvoice />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/payments/inward" element={
+              <ProtectedRoute>
+                <Layout>
+                  <InwardPayment />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/payments/inward/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateInwardPayment />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/payments/outward" element={
+              <ProtectedRoute>
+                <Layout>
+                  <OutwardPayment />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/payments/outward/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateOutwardPayment />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/payments/profit-loss" element={
+              <ProtectedRoute>
+                <Layout extended={true}>
+                  <ProfitLossOverview />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Reports />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route
+              path="/history"
+              element={
                 <ProtectedRoute>
                   <Layout>
-                    <Compliance />
+                    <HistorySection />
                   </Layout>
                 </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Settings />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/ledger" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Ledger />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/ledger/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ContactLedger />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+              }
+            />
+            <Route path="/compliance" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Compliance />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Settings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/ledger" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Ledger />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/ledger/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ContactLedger />
+                </Layout>
+              </ProtectedRoute>
+            } />
 
 
-              <Route path="/staff" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Staff />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/staff/account/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <StaffAccount />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/staff/profile/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <StaffProfile />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/staff/salary-history/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <StaffSalaryHistory />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/staff/record-payment/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <RecordStaffPayment />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+            <Route path="/staff" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Staff />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/account/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <StaffAccount />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/profile/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <StaffProfile />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/salary-history/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <StaffSalaryHistory />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/record-payment/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <RecordStaffPayment />
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-              <Route path="/expenses/daily" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <DailyExpenses />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/expenses/daily/new" element={
-                <ProtectedRoute>
-                  <Layout extended={true}>
-                    <AddDailyExpense />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/expenses/daily/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout extended={true}>
-                    <AddDailyExpense />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/income/other" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <OtherIncome />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/income/other/new" element={
-                <ProtectedRoute>
-                  <Layout extended={true}>
-                    <AddOtherIncome />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/income/other/edit/:id" element={
-                <ProtectedRoute>
-                  <Layout extended={true}>
-                    <AddOtherIncome />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+            <Route path="/expenses/daily" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DailyExpenses />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/expenses/daily/new" element={
+              <ProtectedRoute>
+                <Layout extended={true}>
+                  <AddDailyExpense />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/expenses/daily/edit/:id" element={
+              <ProtectedRoute>
+                <Layout extended={true}>
+                  <AddDailyExpense />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/income/other" element={
+              <ProtectedRoute>
+                <Layout>
+                  <OtherIncome />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/income/other/new" element={
+              <ProtectedRoute>
+                <Layout extended={true}>
+                  <AddOtherIncome />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/income/other/edit/:id" element={
+              <ProtectedRoute>
+                <Layout extended={true}>
+                  <AddOtherIncome />
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-              <Route path="/loans" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <LoanManager />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/loan-calculator" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <AdvancedLoanCalculator />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/loans/new" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <AddLoan />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/loans/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <LoanDetails />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/loans/:id/transactions" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <LoanTransactions />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+            <Route path="/loans" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanManager />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loan-calculator" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AdvancedLoanCalculator />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AddLoan />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanDetails />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/:id/transactions" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanTransactions />
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-              {/* Catch all - Redirect to dashboard */}
-              <Route path="/loans/:id/transactions/:txId" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <PaymentDetails />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+            {/* Catch all - Redirect to dashboard */}
+            <Route path="/loans/:id/transactions/:txId" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PaymentDetails />
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-              <Route path="/banks" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <BankManager />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/banks/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <BankDetails />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+            <Route path="/banks" element={
+              <ProtectedRoute>
+                <Layout>
+                  <BankManager />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/banks/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <BankDetails />
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-              <Route path="/banking-report" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <BankingReport />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              <Route path="/credit-report" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreditReport />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+            <Route path="/banking-report" element={
+              <ProtectedRoute>
+                <Layout>
+                  <BankingReport />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/credit-report" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreditReport />
+                </Layout>
+              </ProtectedRoute>
+            } />
 
-              <Route path="/search" element={
-                <ProtectedRoute>
-                  <Layout noWrapper>
-                    <SearchResults />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </LanguageProvider>
-        </ThemeProvider>
+            <Route path="/search" element={
+              <ProtectedRoute>
+                <Layout noWrapper>
+                  <SearchResults />
+                </Layout>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </LanguageProvider>
       </AuthProvider>
     </Router>
 

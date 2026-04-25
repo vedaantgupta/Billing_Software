@@ -1,9 +1,7 @@
 // Database utility connecting to MongoDB Express Backend
 
 const DB_KEY = 'gogstbill_db';
-const API_BASE_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') 
-  ? 'http://127.0.0.1:5000/api' 
-  : '/api';
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
 const defaultData = {
   company: {
@@ -27,15 +25,15 @@ export const logActivity = async (action, userId, userName = 'You') => {
     await fetch(`${API_BASE_URL}/work`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        userId, 
-        type: 'activityLogs', 
-        data: { 
-          id: Date.now().toString(), 
-          time, 
-          action, 
-          user: userName 
-        } 
+      body: JSON.stringify({
+        userId,
+        type: 'activityLogs',
+        data: {
+          id: Date.now().toString(),
+          time,
+          action,
+          user: userName
+        }
       })
     });
   } catch (err) {
@@ -66,7 +64,7 @@ export const getItems = async (collection, userId) => {
     console.warn(`getItems called without userId for collection: ${collection}`);
     return [];
   }
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}/work/${userId}?type=${collection}`);
     if (!response.ok) {
@@ -78,10 +76,10 @@ export const getItems = async (collection, userId) => {
     }
     const items = await response.json();
     const mappedItems = items.map(i => ({ ...i.data, _dbId: i._id }));
-    
+
     // Cache for offline
     localStorage.setItem(`${DB_KEY}_cache_${collection}`, JSON.stringify(mappedItems));
-    
+
     return mappedItems;
   } catch (error) {
     console.error(`Error fetching ${collection}:`, error);
@@ -105,32 +103,32 @@ export const addItem = async (collection, item, userId, userName = 'You') => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, type: collection, data: { ...item, id: timestampId } })
     });
-    
+
     if (!response.ok) {
       const errData = await response.json();
       throw new Error(errData.message || `Failed to add ${collection}`);
     }
-    
+
     const result = await response.json();
-    
+
     // Log Activity
     let actionLabel = `Added ${collection}`;
     if (collection === 'documents') actionLabel = `Created ${item.docType || 'Document'} #${item.invoiceNumber || timestampId}`;
     if (collection === 'contacts') actionLabel = `Added Contact: ${item.name}`;
     if (collection === 'products') actionLabel = `Added Product: ${item.name}`;
     logActivity(actionLabel, userId, userName);
-    
+
     return { ...item, id: timestampId, _dbId: result.id };
   } catch (error) {
     console.error(`Error adding to ${collection}:`, error);
-    
+
     // Add to offline queue
     const queue = JSON.parse(localStorage.getItem(`${DB_KEY}_queue`) || '[]');
     queue.push({ collection, item, userId, userName, timestamp: Date.now() });
     localStorage.setItem(`${DB_KEY}_queue`, JSON.stringify(queue));
-    
+
     alert('You are offline. Your changes have been saved locally and will sync when you are back online.');
-    
+
     return { ...item, id: Date.now().toString(), offline: true };
   }
 };
@@ -162,16 +160,16 @@ if (typeof window !== 'undefined') {
 
 export const updateItem = async (collection, id, updates, userId, userName = 'You') => {
   if (!userId) return null;
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}/work/${userId}/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
     });
-    
+
     if (!response.ok) throw new Error(`Failed to update ${collection}`);
-    
+
     logActivity(`Updated ${collection} #${id}`, userId, userName);
     return updates;
   } catch (err) {
@@ -182,14 +180,14 @@ export const updateItem = async (collection, id, updates, userId, userName = 'Yo
 
 export const deleteItem = async (collection, id, userId, userName = 'You') => {
   if (!userId) return false;
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}/work/${userId}/${id}`, {
       method: 'DELETE'
     });
-    
+
     if (!response.ok) throw new Error(`Failed to delete ${collection}`);
-    
+
     logActivity(`Deleted ${collection} #${id}`, userId, userName);
     return true;
   } catch (err) {

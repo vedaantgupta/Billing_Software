@@ -275,7 +275,7 @@ const Products = () => {
              <button 
                 title="Download CSV Template"
                 className="btn" 
-                style={{ background: 'var(--btn-ghost-bg)', color: 'var(--btn-ghost-text)', border: '1px solid var(--btn-ghost-border)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }} 
+                style={{ background: 'white', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }} 
                 onClick={downloadTemplate}
              >
                 <Download size={18} /> <span className="hidden sm:inline">Template</span>
@@ -283,7 +283,7 @@ const Products = () => {
              <button 
                 title="Upload CSV"
                 className="btn" 
-                style={{ background: 'var(--btn-ghost-bg)', color: 'var(--btn-ghost-text)', border: '1px solid var(--btn-ghost-border)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }} 
+                style={{ background: 'white', color: 'var(--primary-color)', border: '1px solid var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }} 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isImporting}
              >
@@ -310,7 +310,7 @@ const Products = () => {
               border: '1px solid var(--border-color)', 
               borderRadius: '8px', 
               fontSize: '0.95rem', 
-              background: 'var(--search-bg)',
+              background: 'rgba(255, 255, 255, 0.9)',
               backdropFilter: 'blur(10px)',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
               transition: 'all 0.2s',
@@ -318,8 +318,8 @@ const Products = () => {
               color: 'var(--text-main)',
               position: 'relative'
             }}
-            onFocus={(e) => { e.target.style.borderColor = 'var(--primary-color)'; e.target.style.background = 'var(--bg-color)'; e.target.style.boxShadow = '0 0 0 3px rgba(13, 138, 188, 0.1)'; }}
-            onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.background = 'var(--search-bg)'; e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)'; }}
+            onFocus={(e) => { e.target.style.borderColor = 'var(--primary-color)'; e.target.style.background = 'white'; e.target.style.boxShadow = '0 0 0 3px rgba(13, 138, 188, 0.1)'; }}
+            onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.background = 'rgba(255, 255, 255, 0.9)'; e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)'; }}
           />
         </div>
       </div>
@@ -327,7 +327,7 @@ const Products = () => {
       <div className="glass" style={{ padding: '1.5rem', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid var(--border-color)', background: 'var(--table-header-bg)' }}>
+            <tr style={{ borderBottom: '2px solid var(--border-color)', background: '#f8fafc' }}>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Item Details</th>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>HSN/SAC</th>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Financials</th>
@@ -344,7 +344,7 @@ const Products = () => {
                 (p.hsn && p.hsn.toLowerCase().includes(searchQuery.toLowerCase()))
               )
               .map(p => (
-              <tr key={p._dbId} style={{ borderBottom: '1px solid var(--border-color)', background: p.itemType === 'product' && p.stock <= (Number(p.lowStockAlert) || 5) ? 'var(--row-low-stock-bg)' : 'transparent' }}>
+              <tr key={p._dbId} style={{ borderBottom: '1px solid var(--border-color)', background: p.itemType === 'product' && p.stock <= (Number(p.lowStockAlert) || 5) ? 'rgba(254, 226, 226, 0.3)' : 'transparent' }}>
                 <td style={{ padding: '1rem' }}>
                   <div className="flex items-center gap-3">
                     {p.image ? (

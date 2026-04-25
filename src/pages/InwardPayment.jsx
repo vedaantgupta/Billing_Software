@@ -153,14 +153,14 @@ const InwardPayment = () => {
       </div>
 
       <div className="flex gap-4 mb-6">
-         <div className="glass w-full stat-card-received" style={{ padding: '1.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+         <div className="glass w-full" style={{ padding: '1.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
             <div className="flex items-center gap-3">
                <div style={{ background: '#10b981', color: 'white', padding: '0.75rem', borderRadius: '12px' }}>
                   <ArrowDownLeft size={24} />
                </div>
                <div>
-                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#166534' }} className="stat-card-label">Total Received</p>
-                  <h2 style={{ margin: 0, fontSize: '1.75rem', color: '#14532d' }} className="stat-card-value">₹{totalReceived.toLocaleString()}</h2>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#166534' }}>Total Received</p>
+                  <h2 style={{ margin: 0, fontSize: '1.75rem', color: '#14532d' }}>₹{totalReceived.toLocaleString()}</h2>
                </div>
             </div>
          </div>

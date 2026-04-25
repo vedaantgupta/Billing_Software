@@ -628,7 +628,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              <div className="bank-payment-section" style={{ padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1.5px solid #e2e8f0', marginBottom: '1.5rem' }}>
+              <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1.5px solid #e2e8f0', marginBottom: '1.5rem' }}>
                 <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>🏦 Bank & Payment Details (For Invoices)</h4>
                 <div className="flex gap-4">
                   <div className="form-group w-full" style={{ flex: 1 }}>
@@ -726,12 +726,12 @@ const Settings = () => {
           <div>
             <h3 className="mb-4">Cloud Security Dashboard</h3>
             <div className="flex gap-4">
-              <div className="glass w-full security-card" style={{ padding: '1.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+              <div className="glass w-full" style={{ padding: '1.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
                 <Shield size={32} color="#16a34a" className="mb-2" />
                 <h4 style={{ margin: 0 }}>End-to-End Encryption</h4>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>All data transmitted is secured with 256-bit SSL encryption.</p>
               </div>
-              <div className="glass w-full security-card" style={{ padding: '1.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+              <div className="glass w-full" style={{ padding: '1.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
                 <Activity size={32} color="#16a34a" className="mb-2" />
                 <h4 style={{ margin: 0 }}>Automated Cloud Backups</h4>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Database runs daily automated snapshots ensuring zero data loss.</p>
@@ -743,10 +743,10 @@ const Settings = () => {
         {activeTab === 'activity' && (
           <div>
             <h3 className="mb-4">System Activity Log</h3>
-            <div className="activity-log-item" style={{ paddingLeft: '1rem', borderLeft: '2px solid var(--border-color)' }}>
+            <div style={{ paddingLeft: '1rem', borderLeft: '2px solid var(--border-color)' }}>
               {activityLogs.map((log, i) => (
                 <div key={i} style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                  <div className="activity-log-dot" style={{ position: 'absolute', left: '-1.35rem', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary-color)' }}></div>
+                  <div style={{ position: 'absolute', left: '-1.35rem', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary-color)' }}></div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>{log.time}</div>
                   <div><strong>{log.user}</strong> {log.action}</div>
                 </div>
@@ -764,7 +764,7 @@ const Settings = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
               {/* Creator Area */}
-              <div className="glass signature-creator" style={{ padding: '1.5rem', background: '#fff' }}>
+              <div className="glass" style={{ padding: '1.5rem', background: '#fff' }}>
                 <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
                   <button className={`btn ${signatureMode === 'draw' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setSignatureMode('draw')}>
                     <PenTool size={16} /> Draw Signature
@@ -788,7 +788,7 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    <div className="signature-canvas-box" style={{ border: '2px dashed #e2e8f0', borderRadius: '8px', background: '#f8fafc', position: 'relative', height: '250px' }}>
+                    <div style={{ border: '2px dashed #e2e8f0', borderRadius: '8px', background: '#f8fafc', position: 'relative', height: '250px' }}>
                       <canvas
                         ref={canvasRef}
                         onMouseDown={startDrawing}
@@ -870,7 +870,7 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    <div className="signature-canvas-box" style={{ flex: 1, border: '2px dashed #e2e8f0', borderRadius: '8px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1rem 0', minHeight: '130px', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, border: '2px dashed #e2e8f0', borderRadius: '8px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '1rem 0', minHeight: '130px', overflow: 'hidden' }}>
                       {typedName ? (
                         <div style={{ fontFamily: `"${selectedFont}", cursive`, fontSize: selectedFont === 'Great Vibes' ? '3.5rem' : '3rem', color: penColor, padding: '0 1rem' }}>
                           {typedName}
@@ -894,9 +894,9 @@ const Settings = () => {
 
               {/* Upload & Preview */}
               <div className="flex flex-col gap-4">
-                <div className="glass signature-creator" style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div className="glass" style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Signature Preview</h4>
-                  <div className="signature-canvas-box" style={{ flex: 1, background: '#f8fafc', borderRadius: '8px', border: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem', minHeight: '150px' }}>
+                  <div style={{ flex: 1, background: '#f8fafc', borderRadius: '8px', border: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem', minHeight: '150px' }}>
                     {companyProfile.signature ? (
                       <img src={companyProfile.signature} alt="Signature Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                     ) : (
@@ -917,10 +917,9 @@ const Settings = () => {
                   )}
                 </div>
 
-                <div className="glass signature-creator" style={{ padding: '1.5rem' }}>
+                <div className="glass" style={{ padding: '1.5rem' }}>
                   <h4 style={{ marginBottom: '1rem', color: '#1e293b' }}>Upload Image</h4>
                   <div
-                    className="signature-canvas-box"
                     style={{ border: '2px dashed #e2e8f0', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', cursor: 'pointer', position: 'relative' }}
                     onDragOver={e => e.preventDefault()}
                     onDrop={e => {
