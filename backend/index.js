@@ -28,7 +28,7 @@ const port = process.env.PORT || 5000;
 
 // Start of application logic
 
-const uri = process.env.MONGO_DB_DNS;
+const uri = process.env.MONGODB_URI || process.env.MONGO_URI || process.env.MONGO_DB_DNS;
 
 if (!uri) {
   console.error('CRITICAL ERROR: MONGO_DB_DNS is NOT defined in your .env file!');
@@ -37,8 +37,18 @@ if (!uri) {
 
 const client = new MongoClient(uri);
 
+app.set('trust proxy', 1); // For Render/Proxies
 app.use(cors());
 app.use(express.json());
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'online', 
+    database: isDbConnected ? 'connected' : 'disconnected',
+    timestamp: new Date()
+  });
+});
 
 // Collections initialization
 let db, usersCollection, workCollection, salesCollection;
@@ -456,11 +466,15 @@ app.post('/api/ai/chat', async (req, res) => {
 });
 
 // Serve Vite React build
-app.use(express.static(path.join(__dirname, "../dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../dist/index.html"));
-});
+const distPath = path.resolve(__dirname, "../dist");
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+} else {
+  console.warn("[WARN] 'dist' folder not found. Frontend will not be served.");
+}
 
 // Start the server immediately, then try to connect to DB
 app.listen(port, () => {

@@ -8,6 +8,7 @@
     "server": "npx nodemon backend/index.js",
     "dev-full": "npx concurrently \"npm run dev\" \"npm run server\"",
     "build": "vite build",
+    "start": "node backend/index.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

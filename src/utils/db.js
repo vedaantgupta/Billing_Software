@@ -1,7 +1,9 @@
 // Database utility connecting to MongoDB Express Backend
 
 const DB_KEY = 'gogstbill_db';
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') 
+  ? 'http://127.0.0.1:5000/api' 
+  : '/api';
 
 const defaultData = {
   company: {
