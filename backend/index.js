@@ -455,9 +455,7 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
-const path = require("path");
-
-// Serve Vite build
+// Serve Vite React build
 app.use(express.static(path.join(__dirname, "../dist")));
 
 app.get("*", (req, res) => {
