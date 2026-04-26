@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video } from 'lucide-react';
 import './Layout.css';
 import AIAssistant from './AIAssistant';
 import { getDB, getItems } from '../utils/db';
@@ -144,6 +144,9 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           </NavLink>
           <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <Briefcase size={20} /> Projects
+          </NavLink>
+          <NavLink to="/meet" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+            <Video size={20} /> Meet & Connect
           </NavLink>
 
 

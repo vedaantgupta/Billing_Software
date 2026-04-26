@@ -58,6 +58,7 @@ import HistorySection from './pages/HistorySection';
 import SearchResults from './pages/SearchResults';
 import Projects from './pages/Projects';
 import ProjectDetails from './pages/ProjectDetails';
+import Meet from './pages/Meet';
 
 
 function App() {
@@ -509,6 +510,13 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ProjectDetails />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/meet" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Meet />
                 </Layout>
               </ProtectedRoute>
             } />

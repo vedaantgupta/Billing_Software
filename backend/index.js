@@ -76,7 +76,7 @@ const upload = multer({
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Collections initialization
-let db, usersCollection, workCollection, salesCollection;
+let db, usersCollection, workCollection, salesCollection, meetsCollection, meetMessagesCollection;
 let isDbConnected = false;
 
 async function tryConnect() {
@@ -89,6 +89,8 @@ async function tryConnect() {
     usersCollection = db.collection('users');
     workCollection = db.collection('work');
     salesCollection = db.collection('sales');
+    meetsCollection = db.collection('meets');
+    meetMessagesCollection = db.collection('meet_messages');
     isDbConnected = true;
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err.message);
@@ -340,13 +342,28 @@ app.delete('/api/work/:userId/:id', async (req, res) => {
   }
 });
 
-// Global Project Chat
+// Global Project Chat (Supports Group & Private)
 app.get('/api/chat/:projectId', async (req, res) => {
   if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
   try {
     const { projectId } = req.params;
+    const { userId, recipientId } = req.query;
     const chatCollection = db.collection('project_messages');
-    const messages = await chatCollection.find({ projectId }).sort({ timestamp: 1 }).toArray();
+    
+    let query = { projectId };
+
+    if (!recipientId || recipientId === 'group') {
+      // Group chat
+      query.$or = [{ recipientId: null }, { recipientId: 'group' }];
+    } else {
+      // Private chat between two users
+      query.$or = [
+        { senderId: userId, recipientId: recipientId },
+        { senderId: recipientId, recipientId: userId }
+      ];
+    }
+
+    const messages = await chatCollection.find(query).sort({ timestamp: 1 }).toArray();
     res.json(messages);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching chat' });
@@ -378,6 +395,50 @@ app.get('/api/project-members/:projectId', async (req, res) => {
     res.json(members);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching members' });
+  }
+});
+
+app.post('/api/meet/create', checkDB, async (req, res) => {
+  try {
+    const { userId, userName, code } = req.body;
+    const existing = await meetsCollection.findOne({ code });
+    if (existing) {
+      return res.status(400).json({ message: 'Meeting code already exists. Please choose another or use the suggested one.' });
+    }
+    const meet = {
+      code,
+      creatorId: userId,
+      creatorName: userName,
+      createdAt: new Date(),
+      status: 'active'
+    };
+    await meetsCollection.insertOne(meet);
+    res.status(201).json(meet);
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating meeting' });
+  }
+});
+
+app.get('/api/meet/verify/:code', checkDB, async (req, res) => {
+  try {
+    const { code } = req.params;
+    const meet = await meetsCollection.findOne({ code });
+    if (!meet) {
+      return res.status(404).json({ message: 'Meeting not found' });
+    }
+    res.json(meet);
+  } catch (err) {
+    res.status(500).json({ message: 'Error verifying meeting' });
+  }
+});
+
+app.get('/api/meet/messages/:code', checkDB, async (req, res) => {
+  try {
+    const { code } = req.params;
+    const messages = await meetMessagesCollection.find({ meetCode: code }).sort({ timestamp: 1 }).toArray();
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching messages' });
   }
 });
 
@@ -658,6 +719,8 @@ app.post('/api/ai/chat', async (req, res) => {
 });
 
 // Socket.io Logic
+const meetParticipants = {}; // Stores participants per meetCode: { code: [ { id, name, socketId } ] }
+
 io.on('connection', (socket) => {
   console.log('⚡ User connected:', socket.id);
 
@@ -666,9 +729,129 @@ io.on('connection', (socket) => {
     console.log(`👤 User ${socket.id} joined project: ${projectId}`);
   });
 
+  socket.on('join_private', (data) => {
+    // Unique room for two users
+    const room = [data.userId, data.recipientId].sort().join('_');
+    socket.join(room);
+    console.log(`🔒 User ${socket.id} joined private room: ${room}`);
+  });
+
+  socket.on('join_meet', (data) => {
+    const { code, userId, userName } = data;
+    socket.join(`meet_${code}`);
+    
+    // Add to participants
+    if (!meetParticipants[code]) meetParticipants[code] = [];
+    // Avoid duplicates
+    if (!meetParticipants[code].find(p => p.id === userId)) {
+      meetParticipants[code].push({ id: userId, name: userName, socketId: socket.id });
+    } else {
+      // Update socket ID if user reconnected
+      const p = meetParticipants[code].find(p => p.id === userId);
+      p.socketId = socket.id;
+    }
+
+    console.log(`🤝 User ${userName} joined meet room: meet_${code}`);
+    io.to(`meet_${code}`).emit('participants_update', meetParticipants[code]);
+    
+    // Store data on socket for disconnect handling
+    socket.meetCode = code;
+    socket.userId = userId;
+  });
+
+  socket.on('send_meet_message', async (data) => {
+    const message = {
+      meetCode: data.meetCode,
+      senderId: data.senderId,
+      senderName: data.senderName,
+      text: data.text,
+      timestamp: new Date()
+    };
+    if (isDbConnected) {
+      await meetMessagesCollection.insertOne(message);
+    }
+    io.to(`meet_${data.meetCode}`).emit('receive_meet_message', message);
+  });
+
+  socket.on('send_meet_private_message', async (data) => {
+    const message = {
+      meetCode: data.meetCode,
+      senderId: data.senderId,
+      senderName: data.senderName,
+      recipientId: data.recipientId,
+      text: data.text,
+      timestamp: new Date(),
+      isPrivate: true
+    };
+    
+    // Room name for private chat between two users in a meet
+    const room = [data.senderId, data.recipientId].sort().join('_');
+    socket.join(room); // Ensure sender is in room
+    
+    // We don't save private messages to DB for now as per "meet" nature, 
+    // but we could if needed.
+    
+    // Emit to both
+    io.to(room).emit('receive_meet_private_message', message);
+    
+    // Also notify the recipient specifically if they aren't in the room yet
+    const recipient = meetParticipants[data.meetCode]?.find(p => p.id === data.recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('private_message_notification', message);
+    }
+  });
+
+  // WebRTC Signaling
+  socket.on('call_request', (data) => {
+    // data: { meetCode, callerId, callerName, recipientId, signalData, type: 'voice' | 'video' }
+    const recipient = meetParticipants[data.meetCode]?.find(p => p.id === data.recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('incoming_call', {
+        callerId: data.callerId,
+        callerName: data.callerName,
+        signalData: data.signalData,
+        type: data.type
+      });
+    }
+  });
+
+  socket.on('answer_call', (data) => {
+    // data: { meetCode, callerId, recipientId, signalData }
+    const caller = meetParticipants[data.meetCode]?.find(p => p.id === data.callerId);
+    if (caller) {
+      io.to(caller.socketId).emit('call_accepted', {
+        signalData: data.signalData,
+        recipientId: data.recipientId
+      });
+    }
+  });
+
+  socket.on('ice_candidate', (data) => {
+    const recipient = meetParticipants[data.meetCode]?.find(p => p.id === data.recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('ice_candidate', {
+        candidate: data.candidate,
+        senderId: data.senderId
+      });
+    }
+  });
+
+  socket.on('end_call', (data) => {
+    const recipient = meetParticipants[data.meetCode]?.find(p => p.id === data.recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('call_ended', { senderId: data.senderId });
+    }
+  });
+
   socket.on('send_message', (data) => {
-    // Broadcast to everyone in the project room including sender (for real-time update)
-    io.to(data.projectId).emit('receive_message', data);
+    if (data.recipientId && data.recipientId !== 'group') {
+      // Send to private room
+      const room = [data.senderId, data.recipientId].sort().join('_');
+      io.to(room).emit('receive_message', data);
+    } else {
+      // Broadcast to everyone in the project room
+      io.to(data.projectId).emit('receive_message', data);
+    }
   });
 
   socket.on('project_update', (data) => {
@@ -677,6 +860,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    if (socket.meetCode && socket.userId) {
+      const code = socket.meetCode;
+      if (meetParticipants[code]) {
+        meetParticipants[code] = meetParticipants[code].filter(p => p.id !== socket.userId);
+        io.to(`meet_${code}`).emit('participants_update', meetParticipants[code]);
+        if (meetParticipants[code].length === 0) delete meetParticipants[code];
+      }
+    }
     console.log('❌ User disconnected:', socket.id);
   });
 });

@@ -62,6 +62,7 @@ const ProjectDetails = () => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const [activeChatUser, setActiveChatUser] = useState(null); // null means Group Chat
 
   const [newTaskName, setNewTaskName] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
@@ -94,13 +95,20 @@ const ProjectDetails = () => {
   const loadMessages = useCallback(async () => {
     if (!project?.projectId) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/chat/${project.projectId}`);
+      const recipientId = activeChatUser ? activeChatUser.userId : 'group';
+      const response = await fetch(`http://localhost:5000/api/chat/${project.projectId}?userId=${user.id}&recipientId=${recipientId}`);
       const data = await response.json();
       setMessages(data);
     } catch (err) {
-      console.error("Failed to load messages", err);
+      console.error(err);
     }
-  }, [project?.projectId]);
+  }, [project?.projectId, activeChatUser, user.id]);
+
+  useEffect(() => {
+    if (activeChatUser) {
+      socket.emit('join_private', { userId: user.id, recipientId: activeChatUser.userId });
+    }
+  }, [activeChatUser, user.id]);
 
   const loadMembers = useCallback(async () => {
     if (!project?.projectId) return;
@@ -166,13 +174,24 @@ const ProjectDetails = () => {
     socket.emit("join_project", project.projectId);
 
     socket.on("receive_message", (msg) => {
-      // Check if message is for this project
+      // Check if message is for this project and current chat context
       if (msg.projectId === project.projectId) {
-        setMessages((prev) => {
-          const exists = prev.some(m => m.timestamp === msg.timestamp && m.sender === msg.sender && m.text === msg.text);
-          if (exists) return prev;
-          return [...prev, msg].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        });
+        const currentRecipientId = activeChatUser ? activeChatUser.userId : 'group';
+        const msgRecipientId = msg.recipientId || 'group';
+
+        const isGroupMatch = currentRecipientId === 'group' && msgRecipientId === 'group';
+        const isPrivateMatch = activeChatUser && (
+          (msg.senderId === user.id && msg.recipientId === activeChatUser.userId) ||
+          (msg.senderId === activeChatUser.userId && msg.recipientId === user.id)
+        );
+
+        if (isGroupMatch || isPrivateMatch) {
+          setMessages((prev) => {
+            const exists = prev.some(m => m.timestamp === msg.timestamp && m.sender === msg.sender && m.text === msg.text);
+            if (exists) return prev;
+            return [...prev, msg].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          });
+        }
       }
     });
 
@@ -201,6 +220,8 @@ const ProjectDetails = () => {
 
     const msgData = {
       projectId: project.projectId,
+      senderId: user.id,
+      recipientId: activeChatUser ? activeChatUser.userId : 'group',
       text: newMessage,
       sender: user.firstName,
       timestamp: new Date().toISOString(),
@@ -245,6 +266,8 @@ const ProjectDetails = () => {
         // Send a message with file info
         const msgData = {
           projectId: project.projectId,
+          senderId: user.id,
+          recipientId: activeChatUser ? activeChatUser.userId : 'group',
           sender: user.firstName,
           text: '', // Leave text empty to avoid double names
           timestamp: new Date().toISOString(),
@@ -306,6 +329,8 @@ const ProjectDetails = () => {
             console.log("Voice message uploaded successfully:", data.url);
             const msgData = {
               projectId: project.projectId,
+              senderId: user.id,
+              recipientId: activeChatUser ? activeChatUser.userId : 'group',
               sender: user.firstName,
               text: '',
               timestamp: new Date().toISOString(),
@@ -909,18 +934,22 @@ const ProjectDetails = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ 
                     width: '45px', height: '45px', borderRadius: '14px', 
-                    background: `linear-gradient(135deg, ${project.color || '#4f46e5'}, #818cf8)`, 
-                    color: 'white', display: 'flex', alignItems: 'center', 
+                    background: activeChatUser ? '#f1f5f9' : `linear-gradient(135deg, ${project.color || '#4f46e5'}, #818cf8)`, 
+                    color: activeChatUser ? '#64748b' : 'white', display: 'flex', alignItems: 'center', 
                     justifyContent: 'center', fontWeight: 900, fontSize: '1.2rem',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                    boxShadow: activeChatUser ? 'none' : '0 4px 6px -1px rgba(0,0,0,0.1)'
                   }}>
-                    {project.name[0]}
+                    {activeChatUser ? activeChatUser.name[0] : project.name[0]}
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>{project.name}</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
+                      {activeChatUser ? `Direct Message: ${activeChatUser.name}` : project.name}
+                    </h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{staff.length + 1} Active Now</span>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                        {activeChatUser ? 'Online' : `${members.length} Members`}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1116,21 +1145,39 @@ const ProjectDetails = () => {
               padding: '1.5rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '2rem'
+              gap: '2rem',
+              overflowY: 'auto'
             }}>
               <div>
-                <h4 style={{ margin: '0 0 1rem', fontSize: '0.8rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Project Info</h4>
-                <div className="l-card" style={{ padding: '1rem', border: 'none', background: 'white' }}>
-                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700 }}>ID: {project.projectId}</p>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#64748b' }}>Share this ID to invite others to the chat.</p>
-                </div>
-              </div>
+                <button 
+                  onClick={() => setActiveChatUser(null)}
+                  style={{ 
+                    width: '100%', padding: '0.75rem', borderRadius: '12px', 
+                    border: '1px solid #e2e8f0', background: !activeChatUser ? '#4f46e5' : 'white', 
+                    color: !activeChatUser ? 'white' : '#1e293b', fontWeight: 700, fontSize: '0.85rem', 
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    transition: 'all 0.2s',
+                    marginBottom: '2rem'
+                  }}
+                >
+                  <MessageSquare size={18} /> Team Discussion
+                </button>
 
-              <div>
                 <h4 style={{ margin: '0 0 1rem', fontSize: '0.8rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Members</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {members.map(member => (
-                    <div key={member.userId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div 
+                      key={member.userId} 
+                      onClick={() => member.userId !== user.id && setActiveChatUser(member)}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                        cursor: member.userId === user.id ? 'default' : 'pointer',
+                        padding: '0.5rem',
+                        borderRadius: '12px',
+                        background: activeChatUser?.userId === member.userId ? '#eff6ff' : 'transparent',
+                        transition: 'all 0.2s'
+                      }}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div style={{ 
                           width: '32px', height: '32px', borderRadius: '10px', 
@@ -1142,7 +1189,7 @@ const ProjectDetails = () => {
                           {member.name[0]}
                         </div>
                         <div>
-                          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700 }}>{member.name} {member.userId === user.id && '(You)'}</p>
+                          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: activeChatUser?.userId === member.userId ? '#2563eb' : '#1e293b' }}>{member.name} {member.userId === user.id && '(You)'}</p>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '0.65rem', color: member.role === 'Admin' ? '#ef4444' : '#94a3b8', fontWeight: 800 }}>{member.role.toUpperCase()}</span>
                             {member.accessBlocked && <span style={{ fontSize: '0.55rem', color: '#ef4444', fontWeight: 900, background: '#fee2e2', padding: '0 4px', borderRadius: '4px' }}>FULL BLOCKED</span>}
