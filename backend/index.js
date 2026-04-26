@@ -50,7 +50,8 @@ if (!uri) {
 const client = new MongoClient(uri);
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '2048mb' }));
+app.use(express.urlencoded({ limit: '2048mb', extended: true }));
 
 // Configure Multer for File Uploads
 const storage = multer.diskStorage({
@@ -67,7 +68,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
@@ -349,7 +350,7 @@ app.get('/api/chat/:projectId', async (req, res) => {
     const { projectId } = req.params;
     const { userId, recipientId } = req.query;
     const chatCollection = db.collection('project_messages');
-    
+
     let query = { projectId };
 
     if (!recipientId || recipientId === 'group') {
@@ -442,12 +443,42 @@ app.get('/api/meet/messages/:code', checkDB, async (req, res) => {
   }
 });
 
+app.post('/api/meet/upload', checkDB, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    res.json({
+      url: fileUrl,
+      name: req.file.originalname,
+      size: req.file.size,
+      type: req.file.mimetype,
+      filename: req.file.filename
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Upload failed' });
+  }
+});
+
+app.post('/api/meet/messages/save', checkDB, async (req, res) => {
+  try {
+    const message = {
+      ...req.body,
+      timestamp: new Date()
+    };
+    await meetMessagesCollection.insertOne(message);
+    res.json(message);
+  } catch (err) {
+    res.status(500).json({ message: 'Error saving message' });
+  }
+});
+
 app.post('/api/project-members/join', async (req, res) => {
   if (!isDbConnected) return res.status(503).json({ message: 'DB not connected' });
   try {
     const { projectId, userId, name } = req.body;
     const membersCollection = db.collection('project_members');
-    
+
     // Check if user is already a member
     const existing = await membersCollection.findOne({ projectId, userId });
     if (existing) return res.json(existing);
@@ -491,7 +522,7 @@ app.patch('/api/project-members/role', async (req, res) => {
 // File Upload Endpoint
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-  
+
   const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
   res.json({
     url: fileUrl,
@@ -739,24 +770,54 @@ io.on('connection', (socket) => {
   socket.on('join_meet', (data) => {
     const { code, userId, userName } = data;
     socket.join(`meet_${code}`);
-    
+
     // Add to participants
     if (!meetParticipants[code]) meetParticipants[code] = [];
-    // Avoid duplicates
-    if (!meetParticipants[code].find(p => p.id === userId)) {
-      meetParticipants[code].push({ id: userId, name: userName, socketId: socket.id });
+    
+    const existing = meetParticipants[code].find(p => p.id === userId);
+    if (!existing) {
+      meetParticipants[code].push({ id: userId, name: userName, socketId: socket.id, status: 'online' });
+      
+      // Broadcast system message for join
+      io.to(`meet_${code}`).emit('receive_meet_message', {
+        meetCode: code,
+        senderId: 'system',
+        senderName: 'System',
+        text: `${userName} joined the meeting`,
+        timestamp: new Date(),
+        isSystem: true
+      });
     } else {
-      // Update socket ID if user reconnected
-      const p = meetParticipants[code].find(p => p.id === userId);
-      p.socketId = socket.id;
+      existing.socketId = socket.id;
+      existing.status = 'online';
     }
 
     console.log(`🤝 User ${userName} joined meet room: meet_${code}`);
     io.to(`meet_${code}`).emit('participants_update', meetParticipants[code]);
-    
+
     // Store data on socket for disconnect handling
     socket.meetCode = code;
     socket.userId = userId;
+    socket.userName = userName;
+  });
+
+  socket.on('leave_meet', (data) => {
+    const { code, userId, userName } = data;
+    if (meetParticipants[code]) {
+      const p = meetParticipants[code].find(p => p.id === userId);
+      if (p) {
+        p.status = 'left';
+        io.to(`meet_${code}`).emit('participants_update', meetParticipants[code]);
+        io.to(`meet_${code}`).emit('receive_meet_message', {
+          meetCode: code,
+          senderId: 'system',
+          senderName: 'System',
+          text: `${userName} left the meeting`,
+          timestamp: new Date(),
+          isSystem: true
+        });
+      }
+    }
   });
 
   socket.on('send_meet_message', async (data) => {
@@ -783,17 +844,17 @@ io.on('connection', (socket) => {
       timestamp: new Date(),
       isPrivate: true
     };
-    
+
     // Room name for private chat between two users in a meet
     const room = [data.senderId, data.recipientId].sort().join('_');
     socket.join(room); // Ensure sender is in room
-    
+
     // We don't save private messages to DB for now as per "meet" nature, 
     // but we could if needed.
-    
+
     // Emit to both
     io.to(room).emit('receive_meet_private_message', message);
-    
+
     // Also notify the recipient specifically if they aren't in the room yet
     const recipient = meetParticipants[data.meetCode]?.find(p => p.id === data.recipientId);
     if (recipient) {
@@ -863,9 +924,11 @@ io.on('connection', (socket) => {
     if (socket.meetCode && socket.userId) {
       const code = socket.meetCode;
       if (meetParticipants[code]) {
-        meetParticipants[code] = meetParticipants[code].filter(p => p.id !== socket.userId);
-        io.to(`meet_${code}`).emit('participants_update', meetParticipants[code]);
-        if (meetParticipants[code].length === 0) delete meetParticipants[code];
+        const p = meetParticipants[code].find(p => p.id === socket.userId);
+        if (p && p.status !== 'left') {
+          p.status = 'offline';
+          io.to(`meet_${code}`).emit('participants_update', meetParticipants[code]);
+        }
       }
     }
     console.log('❌ User disconnected:', socket.id);
