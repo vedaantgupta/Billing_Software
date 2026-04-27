@@ -1100,6 +1100,15 @@
   color: #ef4444;
 }
 
+.call-declined-toast.left .toast-content {
+  border-color: rgba(var(--primary-rgb), 0.3);
+}
+
+.call-declined-toast.left .toast-content strong,
+.call-declined-toast.left .toast-content svg {
+  color: var(--primary-color);
+}
+
 @keyframes slideUp {
   from { transform: translateY(50px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }

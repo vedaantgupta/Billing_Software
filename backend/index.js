@@ -977,8 +977,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('leave_group_call', (data) => {
+    // data: { meetCode, userId, userName }
     socket.to(`meet_${data.meetCode}`).emit('user_left_group_call', {
-      userId: data.userId
+      userId: data.userId,
+      userName: data.userName
     });
   });
 

@@ -56,7 +56,7 @@ const Meet = () => {
   const [showCallModal, setShowCallModal] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [callJoinedUsers, setCallJoinedUsers] = useState([]); // track who joined the group call
-  const [callDeclinedToast, setCallDeclinedToast] = useState(null); // { name } for toast
+  const [callNotificationToast, setCallNotificationToast] = useState(null); // { name, type: 'declined' | 'left' } for toast
 
   const socketRef = useRef();
   const messagesEndRef = useRef(null);
@@ -240,6 +240,10 @@ const Meet = () => {
           peersRef.current.delete(data.userId);
           setRemoteStreams(prev => prev.filter(s => s.userId !== data.userId));
         }
+        if (data.userName) {
+          setCallNotificationToast({ name: data.userName, type: 'left' });
+          setTimeout(() => setCallNotificationToast(null), 4000);
+        }
       });
 
       socketRef.current.on('call_ended', () => {
@@ -249,8 +253,8 @@ const Meet = () => {
       socketRef.current.on('call_declined', (data) => {
         // Auto-cut the outgoing call and show toast
         endCall();
-        setCallDeclinedToast({ name: data.declinerName });
-        setTimeout(() => setCallDeclinedToast(null), 4000);
+        setCallNotificationToast({ name: data.declinerName, type: 'declined' });
+        setTimeout(() => setCallNotificationToast(null), 4000);
       });
 
       // Fetch existing group messages
@@ -836,7 +840,8 @@ const Meet = () => {
     setGroupCallActive(false);
     socketRef.current.emit('leave_group_call', {
       meetCode: activeMeet.code,
-      userId: user.id
+      userId: user.id,
+      userName: user.firstName + ' ' + (user.lastName || '')
     });
   };
 
@@ -1311,11 +1316,14 @@ const Meet = () => {
           </div>
         )}
 
-        {callDeclinedToast && (
-          <div className="call-declined-toast">
+        {callNotificationToast && (
+          <div className={`call-declined-toast ${callNotificationToast.type}`}>
             <div className="toast-content">
-              <PhoneOff size={18} />
-              <span><strong>{callDeclinedToast.name}</strong> declined the call</span>
+              {callNotificationToast.type === 'left' ? <LogOut size={18} /> : <PhoneOff size={18} />}
+              <span>
+                <strong>{callNotificationToast.name}</strong> 
+                {callNotificationToast.type === 'left' ? ' left the call' : ' declined the call'}
+              </span>
             </div>
           </div>
         )}
