@@ -904,6 +904,41 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('join_group_call', (data) => {
+    // data: { meetCode, userId, userName }
+    socket.to(`meet_${data.meetCode}`).emit('user_joined_group_call', {
+      userId: data.userId,
+      userName: data.userName
+    });
+  });
+
+  socket.on('group_call_signal', (data) => {
+    // data: { meetCode, recipientId, senderId, signalData }
+    const recipient = meetParticipants[data.meetCode]?.find(p => p.id === data.recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('group_call_signal', {
+        senderId: data.senderId,
+        signalData: data.signalData
+      });
+    }
+  });
+
+  socket.on('group_call_ice', (data) => {
+    const recipient = meetParticipants[data.meetCode]?.find(p => p.id === data.recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('group_call_ice', {
+        senderId: data.senderId,
+        candidate: data.candidate
+      });
+    }
+  });
+
+  socket.on('leave_group_call', (data) => {
+    socket.to(`meet_${data.meetCode}`).emit('user_left_group_call', {
+      userId: data.userId
+    });
+  });
+
   socket.on('send_message', (data) => {
     if (data.recipientId && data.recipientId !== 'group') {
       // Send to private room

@@ -62,6 +62,9 @@ const Meet = () => {
   const peerConnectionRef = useRef();
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
+  const peersRef = useRef(new Map()); // Map of userId -> RTCPeerConnection
+  const [remoteStreams, setRemoteStreams] = useState([]); // Array of { userId, stream }
+  const [groupCallActive, setGroupCallActive] = useState(false);
 
   useEffect(() => {
     activeChatRef.current = activeChat;
@@ -171,13 +174,50 @@ const Meet = () => {
         }
       });
 
-      socketRef.current.on('ice_candidate', async (data) => {
-        if (peerConnectionRef.current) {
-          try {
-            await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-          } catch (e) {
-            console.error('Error adding ice candidate', e);
-          }
+      socketRef.current.on('ice_candidate', (data) => {
+        if (peerConnectionRef.current && data.senderId === activeChatRef.current.id) {
+          peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      });
+
+      socketRef.current.on('user_joined_group_call', (data) => {
+        if (localStreamRef.current) {
+          initiatePeerConnection(data.userId, data.userName, localStreamRef.current);
+        }
+      });
+
+      socketRef.current.on('group_call_signal', async (data) => {
+        const { senderId, senderName, signalData } = data;
+        let pc = peersRef.current.get(senderId);
+
+        if (signalData.type === 'offer') {
+          pc = setupPeer(senderId, senderName, localStreamRef.current);
+          await pc.setRemoteDescription(new RTCSessionDescription(signalData));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          socketRef.current.emit('group_call_signal', {
+            meetCode: activeMeet.code,
+            recipientId: senderId,
+            senderId: user.id,
+            senderName: user.firstName + ' ' + (user.lastName || ''),
+            signalData: answer
+          });
+        } else if (signalData.type === 'answer') {
+          if (pc) await pc.setRemoteDescription(new RTCSessionDescription(signalData));
+        }
+      });
+
+      socketRef.current.on('group_call_ice', (data) => {
+        const pc = peersRef.current.get(data.senderId);
+        if (pc) pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      });
+
+      socketRef.current.on('user_left_group_call', (data) => {
+        const pc = peersRef.current.get(data.userId);
+        if (pc) {
+          pc.close();
+          peersRef.current.delete(data.userId);
+          setRemoteStreams(prev => prev.filter(s => s.userId !== data.userId));
         }
       });
 
@@ -634,6 +674,85 @@ const Meet = () => {
     }
   };
 
+  // Group Call Functions
+  const setupPeer = (targetUserId, targetUserName, stream) => {
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socketRef.current.emit('group_call_ice', {
+          meetCode: activeMeet.code,
+          recipientId: targetUserId,
+          senderId: user.id,
+          candidate: event.candidate
+        });
+      }
+    };
+
+    pc.ontrack = (event) => {
+      setRemoteStreams(prev => {
+        const existing = prev.find(s => s.userId === targetUserId);
+        if (existing) return prev;
+        return [...prev, { userId: targetUserId, stream: event.streams[0], userName: targetUserName }];
+      });
+    };
+
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    peersRef.current.set(targetUserId, pc);
+    return pc;
+  };
+
+  const initiatePeerConnection = async (targetUserId, targetUserName, stream) => {
+    const pc = setupPeer(targetUserId, targetUserName, stream);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socketRef.current.emit('group_call_signal', {
+      meetCode: activeMeet.code,
+      recipientId: targetUserId,
+      senderId: user.id,
+      senderName: user.firstName + ' ' + (user.lastName || ''),
+      signalData: offer
+    });
+  };
+
+  const startGroupCall = async (type) => {
+    setCallType(type);
+    setGroupCallActive(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: type === 'video',
+        audio: true
+      });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+
+      socketRef.current.emit('join_group_call', {
+        meetCode: activeMeet.code,
+        userId: user.id,
+        userName: user.firstName + ' ' + (user.lastName || '')
+      });
+    } catch (err) {
+      console.error('Error starting group call:', err);
+      setGroupCallActive(false);
+    }
+  };
+
+  const leaveGroupCall = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+    }
+    peersRef.current.forEach(pc => pc.close());
+    peersRef.current.clear();
+    setRemoteStreams([]);
+    setGroupCallActive(false);
+    socketRef.current.emit('leave_group_call', {
+      meetCode: activeMeet.code,
+      userId: user.id
+    });
+  };
+
   const endCall = () => {
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => track.stop());
@@ -758,7 +877,7 @@ const Meet = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                {activeChat !== 'group' && (
+                {activeChat !== 'group' ? (
                   <>
                     <button className="control-btn" style={{ width: '40px', height: '40px', background: '#f1f5f9', color: 'var(--text-main)' }} onClick={() => startCall('voice')}>
                       <Phone size={18} />
@@ -767,6 +886,10 @@ const Meet = () => {
                       <Video size={18} />
                     </button>
                   </>
+                ) : (
+                  <button className="btn-meet btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => startGroupCall('video')}>
+                    <Video size={16} /> Join Group Video
+                  </button>
                 )}
                 <button
                   className="btn-meet btn-outline"
@@ -908,64 +1031,84 @@ const Meet = () => {
           </div>
         </div>
 
-        {/* WebRTC Overlays */}
-        {callStatus !== 'idle' && (
+        {/* Call Overlays */}
+        {(callStatus === 'incoming' && !groupCallActive) && (
           <div className="call-overlay">
-            {callStatus === 'incoming' ? (
-              <div className="incoming-call-box">
-                <div className="caller-avatar">
-                  <div className="avatar-ripple"></div>
-                  {incomingCall.callerName.charAt(0)}
-                </div>
-                <div>
-                  <h2 style={{ margin: 0 }}>{incomingCall.callerName}</h2>
-                  <p style={{ color: 'var(--text-secondary)' }}>Incoming {callType} call...</p>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button className="btn-meet btn-primary" style={{ background: '#10b981' }} onClick={answerCall}>
-                    <Phone size={18} /> Accept
-                  </button>
-                  <button className="btn-meet btn-primary" style={{ background: '#ef4444' }} onClick={endCall}>
-                    <PhoneOff size={18} /> Decline
-                  </button>
-                </div>
+            <div className="incoming-call-box">
+              <div className="caller-avatar">
+                <div className="avatar-ripple"></div>
+                {incomingCall.callerName.charAt(0)}
               </div>
-            ) : (
-              <div className="call-container">
-                <div className={`video-grid ${callStatus === 'active' ? 'peer-active' : ''}`}>
-                  <div className="video-tile">
-                    <video ref={localVideoRef} autoPlay muted playsInline />
-                    <div className="video-label">You {isVideoOff && '(Camera Off)'}</div>
-                  </div>
-                  {callStatus === 'active' && (
-                    <div className="video-tile">
-                      <video ref={remoteVideoRef} autoPlay playsInline />
-                      <div className="video-label">{activeChat.name || incomingCall?.callerName}</div>
-                    </div>
-                  )}
-                  {callStatus === 'calling' && (
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-                      <div className="avatar-ripple" style={{ width: '150px', height: '150px' }}></div>
-                      <h3>Calling {activeChat.name}...</h3>
-                    </div>
-                  )}
+              <div>
+                <h2 style={{ margin: 0 }}>{incomingCall.callerName}</h2>
+                <p style={{ color: 'var(--text-secondary)' }}>Incoming {incomingCall.type} call...</p>
+              </div>
+              <div className="modal-btns">
+                <button className="control-btn danger" onClick={endCall}><PhoneOff size={24} /></button>
+                <button className="control-btn" style={{ background: '#10b981' }} onClick={answerCall}>
+                  {incomingCall.type === 'video' ? <Video size={24} /> : <Phone size={24} />}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(callStatus !== 'idle' || groupCallActive) && (
+          <div className="call-overlay">
+            <div className="call-container">
+              <div className={`video-grid ${(remoteStreams.length > 0 || (callStatus === 'active' && !groupCallActive)) ? 'peer-active' : ''}`}>
+                <div className="video-tile">
+                  <video ref={localVideoRef} autoPlay muted playsInline />
+                  <div className="video-label">You</div>
                 </div>
 
-                <div className="call-controls">
-                  <button className={`control-btn ${isMuted ? 'active' : ''}`} onClick={toggleMic}>
-                    {isMuted ? <MicOff /> : <Mic />}
-                  </button>
-                  {callType === 'video' && (
-                    <button className={`control-btn ${isVideoOff ? 'active' : ''}`} onClick={toggleVideo}>
-                      {isVideoOff ? <VideoOff /> : <Video />}
-                    </button>
-                  )}
-                  <button className="control-btn danger" onClick={endCall}>
-                    <PhoneOff />
-                  </button>
-                </div>
+                {!groupCallActive && callStatus !== 'idle' && (
+                  <div className="video-tile">
+                    <video ref={remoteVideoRef} autoPlay playsInline />
+                    <div className="video-label">
+                      {callStatus === 'calling' ? `Calling ${activeChat.name}...` : activeChat.name}
+                    </div>
+                  </div>
+                )}
+
+                {groupCallActive && remoteStreams.map((rs, i) => (
+                  <div key={rs.userId} className="video-tile">
+                    <video 
+                      autoPlay 
+                      playsInline 
+                      ref={el => {
+                        if (el) el.srcObject = rs.stream;
+                      }} 
+                    />
+                    <div className="video-label">{rs.userName || 'Participant'}</div>
+                  </div>
+                ))}
               </div>
-            )}
+
+              <div className="call-controls">
+                <button className={`control-btn ${isMuted ? 'active' : ''}`} onClick={() => {
+                  const audioTrack = localStreamRef.current.getAudioTracks()[0];
+                  audioTrack.enabled = !audioTrack.enabled;
+                  setIsMuted(!audioTrack.enabled);
+                }}>
+                  {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+                </button>
+                
+                {callType === 'video' && (
+                  <button className={`control-btn ${isVideoOff ? 'active' : ''}`} onClick={() => {
+                    const videoTrack = localStreamRef.current.getVideoTracks()[0];
+                    videoTrack.enabled = !videoTrack.enabled;
+                    setIsVideoOff(!videoTrack.enabled);
+                  }}>
+                    {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
+                  </button>
+                )}
+
+                <button className="control-btn danger" onClick={groupCallActive ? leaveGroupCall : endCall}>
+                  <PhoneOff size={24} />
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
