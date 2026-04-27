@@ -426,7 +426,7 @@ const Meet = () => {
     setFileCaption('');
     setShowAttachMenu(false);
 
-    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+    if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/')) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     } else {
@@ -897,15 +897,17 @@ const Meet = () => {
       };
 
       mediaRecorder.onstop = async () => {
-        // If we are cancelling, don't create a preview
+        // If we are cancelling, chunks are cleared first
         if (audioChunksRef.current.length === 0) return;
 
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const extension = mimeType.split('/')[1].split(';')[0];
         const file = new File([audioBlob], `voice-note-${Date.now()}.${extension}`, { type: mimeType });
         
+        // Use functional updates to ensure state consistency
         setPendingFile(file);
-        setPreviewUrl(URL.createObjectURL(audioBlob));
+        const url = URL.createObjectURL(audioBlob);
+        setPreviewUrl(url);
         
         stream.getTracks().forEach(track => track.stop());
       };
