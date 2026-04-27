@@ -56,6 +56,7 @@ const Meet = () => {
   const [showCallModal, setShowCallModal] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [callJoinedUsers, setCallJoinedUsers] = useState([]); // track who joined the group call
+  const [callDeclinedToast, setCallDeclinedToast] = useState(null); // { name } for toast
 
   const socketRef = useRef();
   const messagesEndRef = useRef(null);
@@ -243,6 +244,13 @@ const Meet = () => {
 
       socketRef.current.on('call_ended', () => {
         endCall();
+      });
+
+      socketRef.current.on('call_declined', (data) => {
+        // Auto-cut the outgoing call and show toast
+        endCall();
+        setCallDeclinedToast({ name: data.declinerName });
+        setTimeout(() => setCallDeclinedToast(null), 4000);
       });
 
       // Fetch existing group messages
@@ -1172,7 +1180,21 @@ const Meet = () => {
 
               {/* Action Buttons */}
               <div className="call-action-btns">
-                <button className="call-btn call-btn-decline" onClick={() => { setIncomingCall(null); setCallStatus('idle'); setCallJoinedUsers([]); }}>
+                <button 
+                  className="call-btn call-btn-decline" 
+                  onClick={() => { 
+                    if (socketRef.current && !incomingCall.isGroup) {
+                      socketRef.current.emit('decline_call', {
+                        meetCode: activeMeet.code,
+                        callerId: incomingCall.callerId,
+                        declinerName: user.firstName + ' ' + (user.lastName || '')
+                      });
+                    }
+                    setIncomingCall(null); 
+                    setCallStatus('idle'); 
+                    setCallJoinedUsers([]); 
+                  }}
+                >
                   <PhoneOff size={26} />
                   <span>Decline</span>
                 </button>
@@ -1285,6 +1307,15 @@ const Meet = () => {
                 </button>
                 <button className="btn-meet btn-outline" style={{ width: '100%' }} onClick={() => setShowCallModal(false)}>Cancel</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {callDeclinedToast && (
+          <div className="call-declined-toast">
+            <div className="toast-content">
+              <PhoneOff size={18} />
+              <span><strong>{callDeclinedToast.name}</strong> declined the call</span>
             </div>
           </div>
         )}

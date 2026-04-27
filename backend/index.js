@@ -904,6 +904,16 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('decline_call', (data) => {
+    // data: { meetCode, callerId, declinerName }
+    const caller = meetParticipants[data.meetCode]?.find(p => p.id === data.callerId);
+    if (caller) {
+      io.to(caller.socketId).emit('call_declined', {
+        declinerName: data.declinerName
+      });
+    }
+  });
+
   socket.on('join_group_call', (data) => {
     // data: { meetCode, userId, userName, type, targets }
     const { meetCode, userId, userName, type, targets } = data;
