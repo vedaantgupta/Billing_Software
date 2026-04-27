@@ -52,6 +52,10 @@ const Meet = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const [viewerMedia, setViewerMedia] = useState(null); // { url, name, type }
 
+  // Group Call Selection
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
+
   const socketRef = useRef();
   const messagesEndRef = useRef(null);
   const activeChatRef = useRef(activeChat);
@@ -677,7 +681,13 @@ const Meet = () => {
   // Group Call Functions
   const setupPeer = (targetUserId, targetUserName, stream) => {
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' }
+      ]
     });
 
     pc.onicecandidate = (event) => {
@@ -692,6 +702,7 @@ const Meet = () => {
     };
 
     pc.ontrack = (event) => {
+      console.log(`[WebRTC] Received remote track from ${targetUserId}`);
       setRemoteStreams(prev => {
         const existing = prev.find(s => s.userId === targetUserId);
         if (existing) return prev;
@@ -699,7 +710,11 @@ const Meet = () => {
       });
     };
 
-    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    stream.getTracks().forEach(track => {
+      console.log(`[WebRTC] Adding local track: ${track.kind}`);
+      pc.addTrack(track, stream);
+    });
+
     peersRef.current.set(targetUserId, pc);
     return pc;
   };
@@ -717,22 +732,31 @@ const Meet = () => {
     });
   };
 
-  const startGroupCall = async (type) => {
+  const startGroupCall = async (type, targets = null) => {
     setCallType(type);
     setGroupCallActive(true);
+    setShowCallModal(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: type === 'video',
-        audio: true
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       });
       localStreamRef.current = stream;
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
-      socketRef.current.emit('join_group_call', {
+      const callData = {
         meetCode: activeMeet.code,
         userId: user.id,
-        userName: user.firstName + ' ' + (user.lastName || '')
-      });
+        userName: user.firstName + ' ' + (user.lastName || ''),
+        type: type,
+        targets: targets // null means everyone
+      };
+
+      socketRef.current.emit('join_group_call', callData);
     } catch (err) {
       console.error('Error starting group call:', err);
       setGroupCallActive(false);
@@ -887,8 +911,8 @@ const Meet = () => {
                     </button>
                   </>
                 ) : (
-                  <button className="btn-meet btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => startGroupCall('video')}>
-                    <Video size={16} /> Join Group Video
+                  <button className="btn-meet btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => setShowCallModal(true)}>
+                    <Video size={16} /> Group Call
                   </button>
                 )}
                 <button
@@ -1111,9 +1135,54 @@ const Meet = () => {
             </div>
           </div>
         )}
+
+        {showCallModal && (
+          <div className="confirmation-modal-overlay">
+            <div className="confirmation-modal" style={{ maxWidth: '500px' }}>
+              <div className="modal-icon"><Users size={40} /></div>
+              <div>
+                <h2>Group Call</h2>
+                <p>Select who you want to call or call everyone in the room.</p>
+              </div>
+              
+              <div className="participants-select-list">
+                {participants.length > 0 ? participants.map(p => (
+                  <div 
+                    key={p.id} 
+                    className={`participant-select-item ${selectedParticipants.includes(p.id) ? 'selected' : ''}`}
+                    onClick={() => {
+                      if (selectedParticipants.includes(p.id)) {
+                        setSelectedParticipants(prev => prev.filter(id => id !== p.id));
+                      } else {
+                        setSelectedParticipants(prev => [...prev, p.id]);
+                      }
+                    }}
+                  >
+                    <div className="participant-avatar">{p.name.charAt(0)}</div>
+                    <span>{p.name}</span>
+                    <div className="checkbox-ring">
+                      {selectedParticipants.includes(p.id) && <Check size={14} />}
+                    </div>
+                  </div>
+                )) : <p style={{ opacity: 0.5 }}>No other participants online</p>}
+              </div>
+
+              <div className="modal-btns" style={{ flexDirection: 'column' }}>
+                <button 
+                  className="btn-meet btn-primary" 
+                  style={{ width: '100%' }} 
+                  onClick={() => startGroupCall('video', selectedParticipants.length > 0 ? selectedParticipants : null)}
+                >
+                  {selectedParticipants.length > 0 ? `Call Selected (${selectedParticipants.length})` : 'Call Everyone'}
+                </button>
+                <button className="btn-meet btn-outline" style={{ width: '100%' }} onClick={() => setShowCallModal(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
-  }
+  };
 
   return (
     <div className="meet-container">
