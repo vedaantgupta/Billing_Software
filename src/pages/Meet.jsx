@@ -55,6 +55,7 @@ const Meet = () => {
   // Group Call Selection
   const [showCallModal, setShowCallModal] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
+  const [callJoinedUsers, setCallJoinedUsers] = useState([]); // track who joined the group call
 
   const socketRef = useRef();
   const messagesEndRef = useRef(null);
@@ -175,6 +176,14 @@ const Meet = () => {
         setIncomingCall({ ...data, isGroup: true });
         setCallStatus('incoming');
         setCallType(data.type);
+        setCallJoinedUsers([]); // reset joined list on new call
+      });
+
+      socketRef.current.on('call_participant_joined', (data) => {
+        setCallJoinedUsers(prev => {
+          if (prev.find(u => u.userId === data.userId)) return prev;
+          return [...prev, { userId: data.userId, userName: data.userName }];
+        });
       });
 
       socketRef.current.on('call_accepted', async (data) => {
@@ -1105,26 +1114,71 @@ const Meet = () => {
           </div>
         </div>
 
-        {/* Call Overlays */}
-        {callStatus === 'incoming' && (
-          <div className="call-overlay">
-            <div className="incoming-call-box">
-              <div className="caller-avatar">
-                <div className="avatar-ripple"></div>
-                {incomingCall?.callerName ? incomingCall.callerName.charAt(0) : '?'}
+        {/* Premium Incoming Call Overlay */}
+        {callStatus === 'incoming' && incomingCall && (
+          <div className="incoming-call-overlay">
+            <div className="incoming-call-card">
+              {/* Background blur blobs */}
+              <div className="call-bg-blob blob-1"></div>
+              <div className="call-bg-blob blob-2"></div>
+
+              {/* Call type badge */}
+              <div className="call-type-badge">
+                {incomingCall.type === 'video' ? <Video size={14} /> : <Phone size={14} />}
+                {incomingCall.isGroup ? 'Group' : 'Private'} {incomingCall.type === 'video' ? 'Video' : 'Voice'} Call
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <h2 style={{ margin: 0 }}>{incomingCall?.callerName || 'Someone'}</h2>
-                <p style={{ color: 'var(--text-secondary)' }}>
-                  Incoming {incomingCall?.isGroup ? 'Group' : 'Private'} {incomingCall?.type || 'media'} call...
-                </p>
+
+              {/* Caller Info */}
+              <div className="caller-info-section">
+                <div className="caller-avatar-ring">
+                  <div className="ring ring-1"></div>
+                  <div className="ring ring-2"></div>
+                  <div className="ring ring-3"></div>
+                  <div className="caller-avatar-large">
+                    {incomingCall.callerName?.charAt(0) ?? '?'}
+                  </div>
+                </div>
+                <div className="caller-text">
+                  <h2 className="caller-name">{incomingCall.callerName || 'Someone'}</h2>
+                  <p className="caller-subtitle">
+                    {incomingCall.isGroup ? 'is inviting you to a group call' : 'is calling you'}
+                  </p>
+                </div>
               </div>
-              <div className="modal-btns">
-                <button className="control-btn danger" onClick={() => { setIncomingCall(null); setCallStatus('idle'); }}>
-                  <PhoneOff size={24} />
+
+              {/* Joined Participants (group call only) */}
+              {incomingCall.isGroup && (
+                <div className="call-joined-row">
+                  <div className="call-joined-avatars">
+                    {callJoinedUsers.slice(0, 5).map((u, i) => (
+                      <div key={u.userId} className="call-joined-avatar" style={{ zIndex: 10 - i }} title={u.userName}>
+                        {u.userName.charAt(0)}
+                      </div>
+                    ))}
+                    {callJoinedUsers.length > 5 && (
+                      <div className="call-joined-avatar call-joined-more">+{callJoinedUsers.length - 5}</div>
+                    )}
+                  </div>
+                  {callJoinedUsers.length === 0 ? (
+                    <span className="call-joined-label">Waiting for others...</span>
+                  ) : (
+                    <span className="call-joined-label">
+                      {callJoinedUsers.slice(0, 2).map(u => u.userName.split(' ')[0]).join(', ')}
+                      {callJoinedUsers.length > 2 ? ` & ${callJoinedUsers.length - 2} more` : ''} joined
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="call-action-btns">
+                <button className="call-btn call-btn-decline" onClick={() => { setIncomingCall(null); setCallStatus('idle'); setCallJoinedUsers([]); }}>
+                  <PhoneOff size={26} />
+                  <span>Decline</span>
                 </button>
-                <button className="control-btn" style={{ background: '#10b981' }} onClick={incomingCall?.isGroup ? acceptGroupCall : answerCall}>
-                  {incomingCall?.type === 'video' ? <Video size={24} /> : <Phone size={24} />}
+                <button className="call-btn call-btn-accept" onClick={incomingCall.isGroup ? acceptGroupCall : answerCall}>
+                  {incomingCall.type === 'video' ? <Video size={26} /> : <Phone size={26} />}
+                  <span>Accept</span>
                 </button>
               </div>
             </div>

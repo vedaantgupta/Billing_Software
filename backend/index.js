@@ -932,8 +932,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('accept_group_call', (data) => {
-    // data: { meetCode, userId, userName, callerId }
+    // data: { meetCode, userId, userName, callerId, targets }
+    // Notify the room that this user joined
     socket.to(`meet_${data.meetCode}`).emit('user_joined_group_call', {
+      userId: data.userId,
+      userName: data.userName
+    });
+    // Also notify ALL recipients of the original call about this join
+    socket.to(`meet_${data.meetCode}`).emit('call_participant_joined', {
       userId: data.userId,
       userName: data.userName
     });
