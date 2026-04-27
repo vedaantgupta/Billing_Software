@@ -882,7 +882,13 @@ const Meet = () => {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      // Determine supported mime type
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') 
+        ? 'audio/webm' 
+        : (MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : 'audio/mp4');
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -891,18 +897,20 @@ const Meet = () => {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: 'audio/webm' });
+        // If we are cancelling, don't create a preview
+        if (audioChunksRef.current.length === 0) return;
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        const extension = mimeType.split('/')[1].split(';')[0];
+        const file = new File([audioBlob], `voice-note-${Date.now()}.${extension}`, { type: mimeType });
         
-        // Use existing upload logic
         setPendingFile(file);
         setPreviewUrl(URL.createObjectURL(audioBlob));
         
-        // Stop all tracks immediately
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start(1000); // Collect data every 1 second
+      mediaRecorder.start(200); // More frequent chunks for better reliability
       setIsRecording(true);
       setRecordingTime(0);
       recordingIntervalRef.current = setInterval(() => {
@@ -910,12 +918,12 @@ const Meet = () => {
       }, 1000);
     } catch (err) {
       console.error('Error starting recording:', err);
-      alert('Could not access microphone');
+      alert('Could not access microphone. Please check your permissions.');
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       clearInterval(recordingIntervalRef.current);
@@ -923,9 +931,9 @@ const Meet = () => {
   };
 
   const cancelRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      audioChunksRef.current = []; // Clear chunks first so onstop returns early
       mediaRecorderRef.current.stop();
-      audioChunksRef.current = [];
       setIsRecording(false);
       clearInterval(recordingIntervalRef.current);
       setPendingFile(null);
