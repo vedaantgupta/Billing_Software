@@ -171,6 +171,12 @@ const Meet = () => {
         setCallType(data.type);
       });
 
+      socketRef.current.on('incoming_group_call', (data) => {
+        setIncomingCall({ ...data, isGroup: true });
+        setCallStatus('incoming');
+        setCallType(data.type);
+      });
+
       socketRef.current.on('call_accepted', async (data) => {
         setCallStatus('active');
         if (peerConnectionRef.current) {
@@ -678,6 +684,35 @@ const Meet = () => {
     }
   };
 
+  const acceptGroupCall = async () => {
+    setCallStatus('active');
+    setGroupCallActive(true);
+    setIncomingCall(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: callType === 'video',
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+
+      socketRef.current.emit('accept_group_call', {
+        meetCode: activeMeet.code,
+        userId: user.id,
+        userName: user.firstName + ' ' + (user.lastName || ''),
+        callerId: incomingCall.callerId
+      });
+    } catch (err) {
+      console.error('Error accepting group call:', err);
+      setGroupCallActive(false);
+      setCallStatus('idle');
+    }
+  };
+
   // Group Call Functions
   const setupPeer = (targetUserId, targetUserName, stream) => {
     const pc = new RTCPeerConnection({
@@ -1068,8 +1103,8 @@ const Meet = () => {
                 <p style={{ color: 'var(--text-secondary)' }}>Incoming {incomingCall.type} call...</p>
               </div>
               <div className="modal-btns">
-                <button className="control-btn danger" onClick={endCall}><PhoneOff size={24} /></button>
-                <button className="control-btn" style={{ background: '#10b981' }} onClick={answerCall}>
+                <button className="control-btn danger" onClick={() => { setIncomingCall(null); setCallStatus('idle'); }}><PhoneOff size={24} /></button>
+                <button className="control-btn" style={{ background: '#10b981' }} onClick={incomingCall.isGroup ? acceptGroupCall : answerCall}>
                   {incomingCall.type === 'video' ? <Video size={24} /> : <Phone size={24} />}
                 </button>
               </div>

@@ -905,7 +905,34 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join_group_call', (data) => {
-    // data: { meetCode, userId, userName }
+    // data: { meetCode, userId, userName, type, targets }
+    const { meetCode, userId, userName, type, targets } = data;
+    
+    if (targets && targets.length > 0) {
+      // Send only to specific targets
+      meetParticipants[meetCode]?.forEach(p => {
+        if (targets.includes(p.id)) {
+          io.to(p.socketId).emit('incoming_group_call', {
+            meetCode,
+            callerId: userId,
+            callerName: userName,
+            type
+          });
+        }
+      });
+    } else {
+      // Broadcast to everyone else
+      socket.to(`meet_${meetCode}`).emit('incoming_group_call', {
+        meetCode,
+        callerId: userId,
+        callerName: userName,
+        type
+      });
+    }
+  });
+
+  socket.on('accept_group_call', (data) => {
+    // data: { meetCode, userId, userName, callerId }
     socket.to(`meet_${data.meetCode}`).emit('user_joined_group_call', {
       userId: data.userId,
       userName: data.userName
