@@ -620,10 +620,6 @@ const Meet = () => {
       remoteStreamRef.current = event.streams[0];
     };
 
-    localStreamRef.current.getTracks().forEach(track => {
-      pc.addTrack(track, localStreamRef.current);
-    });
-
     peerConnectionRef.current = pc;
     return pc;
   };
@@ -641,6 +637,12 @@ const Meet = () => {
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
       const pc = createPeerConnection(activeChat.id);
+      
+      // Ensure local tracks are added
+      stream.getTracks().forEach(track => {
+        pc.addTrack(track, stream);
+      });
+
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
@@ -669,6 +671,14 @@ const Meet = () => {
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
       const pc = createPeerConnection(incomingCall.callerId);
+      
+      // Add local tracks
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => {
+          pc.addTrack(track, localStreamRef.current);
+        });
+      }
+
       await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.signalData));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
@@ -1096,28 +1106,32 @@ const Meet = () => {
         </div>
 
         {/* Call Overlays */}
-        {(callStatus === 'incoming' && !groupCallActive) && (
+        {callStatus === 'incoming' && (
           <div className="call-overlay">
             <div className="incoming-call-box">
               <div className="caller-avatar">
                 <div className="avatar-ripple"></div>
-                {incomingCall.callerName.charAt(0)}
+                {incomingCall?.callerName ? incomingCall.callerName.charAt(0) : '?'}
               </div>
-              <div>
-                <h2 style={{ margin: 0 }}>{incomingCall.callerName}</h2>
-                <p style={{ color: 'var(--text-secondary)' }}>Incoming {incomingCall.type} call...</p>
+              <div style={{ textAlign: 'center' }}>
+                <h2 style={{ margin: 0 }}>{incomingCall?.callerName || 'Someone'}</h2>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  Incoming {incomingCall?.isGroup ? 'Group' : 'Private'} {incomingCall?.type || 'media'} call...
+                </p>
               </div>
               <div className="modal-btns">
-                <button className="control-btn danger" onClick={() => { setIncomingCall(null); setCallStatus('idle'); }}><PhoneOff size={24} /></button>
-                <button className="control-btn" style={{ background: '#10b981' }} onClick={incomingCall.isGroup ? acceptGroupCall : answerCall}>
-                  {incomingCall.type === 'video' ? <Video size={24} /> : <Phone size={24} />}
+                <button className="control-btn danger" onClick={() => { setIncomingCall(null); setCallStatus('idle'); }}>
+                  <PhoneOff size={24} />
+                </button>
+                <button className="control-btn" style={{ background: '#10b981' }} onClick={incomingCall?.isGroup ? acceptGroupCall : answerCall}>
+                  {incomingCall?.type === 'video' ? <Video size={24} /> : <Phone size={24} />}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {(callStatus !== 'idle' || groupCallActive) && (
+        {(callStatus === 'active' || callStatus === 'calling' || groupCallActive) && (
           <div className="call-overlay">
             <div className="call-container">
               <div className={`video-grid ${(remoteStreams.length > 0 || (callStatus === 'active' && !groupCallActive)) ? 'peer-active' : ''}`}>
