@@ -185,8 +185,9 @@ const Meet = () => {
       });
 
       socketRef.current.on('ice_candidate', (data) => {
-        if (peerConnectionRef.current && data.senderId === activeChatRef.current.id) {
-          peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+        if (peerConnectionRef.current) {
+          peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate))
+            .catch(e => console.warn('ICE Candidate error:', e));
         }
       });
 
@@ -818,14 +819,18 @@ const Meet = () => {
     }
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
     }
 
-    if (socketRef.current && activeChat) {
-      socketRef.current.emit('end_call', {
-        meetCode: activeMeet.code,
-        recipientId: activeChat.id || incomingCall?.callerId,
-        senderId: user.id
-      });
+    if (socketRef.current) {
+      const targetId = activeChat === 'group' ? (incomingCall?.callerId) : activeChat.id;
+      if (targetId) {
+        socketRef.current.emit('end_call', {
+          meetCode: activeMeet.code,
+          recipientId: targetId,
+          senderId: user.id
+        });
+      }
     }
 
     setCallStatus('idle');
