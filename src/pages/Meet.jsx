@@ -58,6 +58,13 @@ const Meet = () => {
   const [callJoinedUsers, setCallJoinedUsers] = useState([]); // track who joined the group call
   const [callNotificationToast, setCallNotificationToast] = useState(null); // { name, type: 'declined' | 'left' } for toast
 
+  // Voice Notes
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingIntervalRef = useRef(null);
+
   const socketRef = useRef();
   const messagesEndRef = useRef(null);
   const activeChatRef = useRef(activeChat);
@@ -871,6 +878,67 @@ const Meet = () => {
     setIsVideoOff(false);
   };
 
+  // Voice Note Functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const file = new File([audioBlob], `voice-note-${Date.now()}.webm`, { type: 'audio/webm' });
+        
+        // Use existing upload logic
+        setPendingFile(file);
+        setPreviewUrl(URL.createObjectURL(audioBlob));
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Error starting recording:', err);
+      alert('Could not access microphone');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      clearInterval(recordingIntervalRef.current);
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      audioChunksRef.current = [];
+      setIsRecording(false);
+      clearInterval(recordingIntervalRef.current);
+      setPendingFile(null);
+      setPreviewUrl('');
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const toggleMic = () => {
     if (localStreamRef.current) {
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
@@ -1047,76 +1115,109 @@ const Meet = () => {
             </div>
 
             <form className="chat-input-area" onSubmit={sendMessage}>
-              {pendingFile && (
-                <div className="input-attachment-preview">
-                  <div className="preview-card-large">
-                    <button type="button" className="remove-attachment-large" onClick={cancelUpload}><X size={20} /></button>
-                    <div className="preview-media-box">
-                      {previewUrl ? (
-                        pendingFile.type.startsWith('image/') ? <img src={previewUrl} alt="" /> : <video src={previewUrl} muted />
-                      ) : (
-                        <div className="file-icon-large">
-                          <File size={48} />
-                          <span>{pendingFile.name.split('.').pop().toUpperCase()}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="preview-meta-large">
-                      <div className="preview-name-large">{pendingFile.name}</div>
-                      <div className="preview-size-large">{(pendingFile.size / (1024 * 1024)).toFixed(2)} MB</div>
-                    </div>
-                    <button type="button" className="preview-send-btn" onClick={sendMessage} disabled={isUploading}>
-                      {isUploading ? 'Sending...' : <><Send size={18} /> Send File</>}
+              {isRecording ? (
+                <div className="recording-bar">
+                  <div className="recording-info">
+                    <div className="recording-dot"></div>
+                    <span className="recording-timer">Recording... {formatTime(recordingTime)}</span>
+                  </div>
+                  <div className="recording-actions">
+                    <button type="button" className="recording-btn cancel" onClick={cancelRecording}>
+                      <X size={18} /> Cancel
+                    </button>
+                    <button type="button" className="recording-btn stop" onClick={stopRecording}>
+                      <Mic size={18} /> Stop & Preview
                     </button>
                   </div>
                 </div>
-              )}
-
-              <div style={{ position: 'relative' }}>
-                <button 
-                  type="button" 
-                  className="attach-btn" 
-                  onClick={() => setShowAttachMenu(!showAttachMenu)}
-                >
-                  <Plus size={20} />
-                </button>
-                
-                {showAttachMenu && (
-                  <div className="attach-menu">
-                    <label className="attach-item">
-                      <File size={18} /> Documents
-                      <input type="file" hidden onChange={handleFileUpload} />
-                    </label>
-                    <label className="attach-item">
-                      <Image size={18} /> Images
-                      <input type="file" accept="image/*" hidden onChange={handleFileUpload} />
-                    </label>
-                    <label className="attach-item">
-                      <Film size={18} /> Videos
-                      <input type="file" accept="video/*" hidden onChange={handleFileUpload} />
-                    </label>
-                    <label className="attach-item">
-                      <Music size={18} /> Audio
-                      <input type="file" accept="audio/*" hidden onChange={handleFileUpload} />
-                    </label>
-                    <div className="attach-item" onClick={shareLocation}>
-                      <MapPin size={18} /> Location
+              ) : (
+                <>
+                  {pendingFile && (
+                    <div className="input-attachment-preview">
+                      <div className="preview-card-large">
+                        <button type="button" className="remove-attachment-large" onClick={cancelUpload}><X size={20} /></button>
+                        <div className="preview-media-box">
+                          {previewUrl ? (
+                            pendingFile.type.startsWith('image/') ? <img src={previewUrl} alt="" /> : 
+                            pendingFile.type.startsWith('audio/') ? (
+                              <div className="audio-preview-icon">
+                                <Music size={48} />
+                                <span>Voice Note</span>
+                              </div>
+                            ) : <video src={previewUrl} muted />
+                          ) : (
+                            <div className="file-icon-large">
+                              <File size={48} />
+                              <span>{pendingFile.name.split('.').pop().toUpperCase()}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="preview-meta-large">
+                          <div className="preview-name-large">{pendingFile.name}</div>
+                          <div className="preview-size-large">{(pendingFile.size / (1024 * 1024)).toFixed(2)} MB</div>
+                        </div>
+                        <button type="button" className="preview-send-btn" onClick={sendMessage} disabled={isUploading}>
+                          {isUploading ? 'Sending...' : <><Send size={18} /> Send File</>}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
 
-              <input
-                type="text"
-                className="chat-input"
-                placeholder={pendingFile ? "Add a caption..." : (activeChat === 'group' ? "Message group..." : `Message ${activeChat.name?.split(' ')[0]} privately...`)}
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                disabled={isUploading}
-              />
-              <button type="submit" className="send-btn" disabled={isUploading || (!newMessage.trim() && !pendingFile)}>
-                <Send size={20} />
-              </button>
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      type="button" 
+                      className="attach-btn" 
+                      onClick={() => setShowAttachMenu(!showAttachMenu)}
+                    >
+                      <Plus size={20} />
+                    </button>
+                    
+                    {showAttachMenu && (
+                      <div className="attach-menu">
+                        <label className="attach-item">
+                          <File size={18} /> Documents
+                          <input type="file" hidden onChange={handleFileUpload} />
+                        </label>
+                        <label className="attach-item">
+                          <Image size={18} /> Images
+                          <input type="file" accept="image/*" hidden onChange={handleFileUpload} />
+                        </label>
+                        <label className="attach-item">
+                          <Film size={18} /> Videos
+                          <input type="file" accept="video/*" hidden onChange={handleFileUpload} />
+                        </label>
+                        <label className="attach-item">
+                          <Music size={18} /> Audio
+                          <input type="file" accept="audio/*" hidden onChange={handleFileUpload} />
+                        </label>
+                        <div className="attach-item" onClick={shareLocation}>
+                          <MapPin size={18} /> Location
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    type="text"
+                    className="chat-input"
+                    placeholder={pendingFile ? "Add a caption..." : (activeChat === 'group' ? "Message group..." : `Message ${activeChat.name?.split(' ')[0]} privately...`)}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    disabled={isUploading}
+                  />
+
+                  <div className="input-actions-row">
+                    {!newMessage.trim() && !pendingFile && (
+                      <button type="button" className="voice-note-btn" onClick={startRecording}>
+                        <Mic size={20} />
+                      </button>
+                    )}
+                    <button type="submit" className="send-btn" disabled={isUploading || (!newMessage.trim() && !pendingFile)}>
+                      <Send size={20} />
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
 
             {isUploading && (
