@@ -898,11 +898,11 @@ const Meet = () => {
         setPendingFile(file);
         setPreviewUrl(URL.createObjectURL(audioBlob));
         
-        // Stop all tracks
+        // Stop all tracks immediately
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Collect data every 1 second
       setIsRecording(true);
       setRecordingTime(0);
       recordingIntervalRef.current = setInterval(() => {
@@ -1140,9 +1140,12 @@ const Meet = () => {
                           {previewUrl ? (
                             pendingFile.type.startsWith('image/') ? <img src={previewUrl} alt="" /> : 
                             pendingFile.type.startsWith('audio/') ? (
-                              <div className="audio-preview-icon">
-                                <Music size={48} />
-                                <span>Voice Note</span>
+                              <div className="audio-preview-container">
+                                <audio src={previewUrl} controls className="preview-audio-player" />
+                                <div className="audio-preview-icon">
+                                  <Music size={32} />
+                                  <span>Voice Note Preview</span>
+                                </div>
                               </div>
                             ) : <video src={previewUrl} muted />
                           ) : (
