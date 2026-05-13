@@ -92,6 +92,10 @@ async function tryConnect() {
     salesCollection = db.collection('sales');
     meetsCollection = db.collection('meets');
     meetMessagesCollection = db.collection('meet_messages');
+    const reviewsCollection = db.collection('reviews');
+    
+    // Create index on users for public profile search by username/id if needed
+    
     isDbConnected = true;
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err.message);
@@ -143,6 +147,31 @@ app.post('/api/register', async (req, res) => {
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ message: 'Error registering user: ' + err.message });
+  }
+});
+
+// Auth: Update Professional Profile
+app.put('/api/user/profile/:userId', checkDB, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { professionalProfile, firstName, lastName } = req.body;
+    
+    let query;
+    if (ObjectId.isValid(userId) && (String(userId).length === 12 || String(userId).length === 24)) {
+      query = { _id: new ObjectId(userId) };
+    } else {
+      query = { username: userId };
+    }
+
+    const updateDoc = { $set: { professionalProfile } };
+    if (firstName !== undefined) updateDoc.$set.firstName = firstName;
+    if (lastName !== undefined) updateDoc.$set.lastName = lastName;
+
+    await usersCollection.updateOne(query, updateDoc);
+    res.json({ message: 'Professional profile updated successfully' });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ message: 'Error updating profile' });
   }
 });
 
@@ -748,6 +777,150 @@ app.post('/api/ai/chat', async (req, res) => {
     res.status(500).json({ message: 'Error communicating with AI assistant' });
   }
 });
+
+// --- Network & Marketplace Hub Endpoints ---
+
+app.post('/api/network/post', checkDB, async (req, res) => {
+  try {
+    const postData = req.body;
+    const networkCollection = db.collection('network_posts');
+    await networkCollection.insertOne({ ...postData, timestamp: new Date() });
+    res.status(201).json({ message: 'Posted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error posting' });
+  }
+});
+
+app.get('/api/network/feed', checkDB, async (req, res) => {
+  try {
+    const networkCollection = db.collection('network_posts');
+    const posts = await networkCollection.find().sort({ timestamp: -1 }).limit(50).toArray();
+
+    // Enrich posts with author profile picture from users collection
+    const enrichedPosts = await Promise.all(posts.map(async (post) => {
+      if (post.authorImage) return post; // Already has image, skip lookup
+      try {
+        const authorUser = await db.collection('users').findOne(
+          { _id: new ObjectId(post.authorId) },
+          { projection: { professionalProfile: 1 } }
+        );
+        return {
+          ...post,
+          authorImage: authorUser?.professionalProfile?.profilePicture || null
+        };
+      } catch {
+        return post; // If lookup fails, return post as-is
+      }
+    }));
+
+    res.json(enrichedPosts);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching feed' });
+  }
+});
+
+app.post('/api/network/like', checkDB, async (req, res) => {
+  try {
+    const { postId, userId } = req.body;
+    const networkCollection = db.collection('network_posts');
+    
+    const post = await networkCollection.findOne({ _id: new ObjectId(postId) });
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    
+    let likes = post.likes || [];
+    if (likes.includes(userId)) {
+      likes = likes.filter(id => id !== userId); // Unlike
+    } else {
+      likes.push(userId); // Like
+    }
+    
+    await networkCollection.updateOne({ _id: new ObjectId(postId) }, { $set: { likes } });
+    res.json({ likes });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating like' });
+  }
+});
+
+app.get('/api/public/product/:id', checkDB, async (req, res) => {
+  try {
+    const { id } = req.params;
+    let query;
+    
+    if (ObjectId.isValid(id) && (id.length === 12 || id.length === 24)) {
+      query = { $or: [{ _id: new ObjectId(id) }, { 'data.urlSlug': id }] };
+    } else {
+      query = { 'data.urlSlug': id };
+    }
+
+    const product = await workCollection.findOne(query);
+    
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    const seller = await usersCollection.findOne(
+      { _id: new ObjectId(product.userId) },
+      { projection: { companyName: 1, firstName: 1, lastName: 1, city: 1, state: 1, professionalProfile: 1 } }
+    );
+    
+    res.json({ product, seller });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching product details' });
+  }
+});
+
+app.get('/api/public/profile/:userId', checkDB, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    let query;
+    if (ObjectId.isValid(userId) && (String(userId).length === 12 || String(userId).length === 24)) {
+      query = { _id: new ObjectId(userId) };
+    } else {
+      // Allow searching by username
+      query = { username: userId };
+    }
+    
+    const user = await usersCollection.findOne(query);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    // Fetch only published products
+    const products = await workCollection.find({ userId: user._id.toString(), type: 'products', 'data.isPublished': true }).toArray();
+    
+    const { password, resetOtp, resetOtpExpiry, ...publicUser } = user;
+    res.json({ user: publicUser, products });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching profile' });
+  }
+});
+
+// --- Reviews & Social Proof Endpoints ---
+app.post('/api/reviews', checkDB, async (req, res) => {
+  try {
+    const { targetUserId, reviewerId, reviewerName, rating, text } = req.body;
+    const reviewsCollection = db.collection('reviews');
+    await reviewsCollection.insertOne({
+      targetUserId,
+      reviewerId,
+      reviewerName,
+      rating: Number(rating),
+      text,
+      timestamp: new Date()
+    });
+    res.status(201).json({ message: 'Review posted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error posting review' });
+  }
+});
+
+app.get('/api/reviews/:userId', checkDB, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reviewsCollection = db.collection('reviews');
+    const reviews = await reviewsCollection.find({ targetUserId: userId }).sort({ timestamp: -1 }).toArray();
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching reviews' });
+  }
+});
+
 
 // Socket.io Logic
 const meetParticipants = {}; // Stores participants per meetCode: { code: [ { id, name, socketId } ] }

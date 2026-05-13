@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video, Globe } from 'lucide-react';
 import './Layout.css';
 import AIAssistant from './AIAssistant';
 import { getDB, getItems } from '../utils/db';
@@ -13,7 +13,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isExpensesOpen, setIsExpensesOpen] = useState(false);
   const navigate = useNavigate();
-  const companyInfo = getDB().company || { name: user?.firstName ? `${user.firstName} ${user.lastName}` : 'Admin User' };
+  const companyInfo = getDB().company || { name: user?.firstName ? `${user.firstName} ${user.lastName}` : (user?.username || 'Guest User') };
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -28,7 +28,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
   useEffect(() => {
     const performSearch = async () => {
-      if (searchQuery.trim().length < 1) {
+      if (!user || searchQuery.trim().length < 1) {
         setSearchResults([]);
         setShowSearchDropdown(false);
         return;
@@ -148,7 +148,9 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           <NavLink to="/meet" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <Video size={20} /> Meet & Connect
           </NavLink>
-
+          <NavLink to="/network" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+            <Globe size={20} /> Network Hub
+          </NavLink>
 
           <div className="nav-group">
             <button className={`nav-item ${isPaymentOpen ? 'group-active' : ''}`} onClick={() => setIsPaymentOpen(!isPaymentOpen)} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer' }}>

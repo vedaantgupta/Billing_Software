@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Activity, Plus, Building2, Save, PenTool, Eraser, RotateCcw, RotateCw, Trash2, Upload, Fingerprint, Type } from 'lucide-react';
+import { Shield, Users, Activity, Plus, Building2, Save, PenTool, Eraser, RotateCcw, RotateCw, Trash2, Upload, Fingerprint, Type, Briefcase } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getDB, saveDB, getItems, logActivity } from '../utils/db'; // Import our local DB
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import ProfessionalProfileSettings from '../components/ProfessionalProfileSettings';
 import './Settings.css';
 
 const staffMembers = [
@@ -480,6 +481,9 @@ const Settings = () => {
         <button className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('profile')} style={{ whiteSpace: 'nowrap' }}>
           <Building2 size={16} /> Company Profile
         </button>
+        <button className={`btn ${activeTab === 'professional' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('professional')} style={{ whiteSpace: 'nowrap' }}>
+          <Briefcase size={16} /> Professional Profile
+        </button>
         <button className={`btn ${activeTab === 'staff' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('staff')} style={{ whiteSpace: 'nowrap' }}>
           <Users size={16} /> Staff Accounts
         </button>
@@ -680,6 +684,10 @@ const Settings = () => {
               </div>
             </form>
           </div>
+        )}
+
+        {activeTab === 'professional' && (
+          <ProfessionalProfileSettings />
         )}
 
         {activeTab === 'staff' && (

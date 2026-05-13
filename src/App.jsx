@@ -59,7 +59,9 @@ import SearchResults from './pages/SearchResults';
 import Projects from './pages/Projects';
 import ProjectDetails from './pages/ProjectDetails';
 import Meet from './pages/Meet';
-
+import NetworkHub from './pages/NetworkHub';
+import PublicProfile from './pages/PublicProfile';
+import PublicProductDetail from './pages/PublicProductDetail';
 
 function App() {
   return (
@@ -72,6 +74,16 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/p/:id" element={
+              <Layout noWrapper={true}>
+                <PublicProfile />
+              </Layout>
+            } />
+            <Route path="/product/:id" element={
+              <Layout noWrapper={true}>
+                <PublicProductDetail />
+              </Layout>
+            } />
 
             {/* Protected Routes */}
             <Route path="/" element={
@@ -517,6 +529,13 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Meet />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/network" element={
+              <ProtectedRoute>
+                <Layout>
+                  <NetworkHub />
                 </Layout>
               </ProtectedRoute>
             } />

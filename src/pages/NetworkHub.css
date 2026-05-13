@@ -1,0 +1,358 @@
+.network-hub-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 100%;
+}
+
+.network-header-enhanced {
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(13, 138, 188, 0.08), rgba(13, 138, 188, 0.03));
+  border: 1px solid rgba(13, 138, 188, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header-top h2 {
+  margin: 0 0 0.25rem 0;
+  color: var(--text-main);
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.header-top p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.header-search {
+  position: relative;
+  max-width: 300px;
+  width: 100%;
+}
+
+.header-search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.header-search input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(13, 138, 188, 0.2);
+  background: white;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.header-search input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13, 138, 188, 0.1);
+}
+
+.network-tabs-bar {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(13, 138, 188, 0.1);
+}
+
+.network-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.network-tab:hover {
+  color: var(--primary-color);
+  background: rgba(13, 138, 188, 0.05);
+}
+
+.network-tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.network-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .network-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.create-post-card {
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.post-input-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-avatar-small {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.post-input-container textarea {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  resize: none;
+  font-family: inherit;
+  font-size: 1rem;
+  background: #f8fafc;
+  transition: all 0.2s;
+}
+
+.post-input-container textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(13, 138, 188, 0.1);
+}
+
+.post-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+  color: var(--primary-color);
+}
+
+.feed-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.post-card {
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.post-author-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.author-name {
+  margin: 0 0 0.2rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.post-time {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.post-body {
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-size: 1.05rem;
+}
+
+.post-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 10px;
+  color: #64748b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #f8fafc;
+  color: var(--primary-color);
+}
+
+.action-btn.liked {
+  color: #ef4444;
+}
+
+.sidebar-widget {
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.mini-profile {
+  text-align: center;
+}
+
+.mini-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tab-placeholder {
+  padding: 5rem 2rem;
+  text-align: center;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #94a3b8;
+}
+
+.placeholder-content h3 {
+  margin: 0;
+  color: var(--text-main);
+}
+
+.placeholder-content p {
+  max-width: 400px;
+  margin: 0;
+}
+
+/* Business Logo Box Styles */
+.business-logo-box {
+  background: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(13, 138, 188, 0.15);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.business-logo-box.xs {
+  width: 24px;
+  height: 24px;
+  font-size: 0.6rem;
+}
+
+.business-logo-box.sm {
+  width: 40px;
+  height: 40px;
+  font-size: 0.9rem;
+}
+
+.business-logo-box.md {
+  width: 52px;
+  height: 52px;
+  font-size: 1.1rem;
+}
+
+.business-logo-box.lg {
+  width: 80px;
+  height: 80px;
+  font-size: 1.8rem;
+}
+
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+

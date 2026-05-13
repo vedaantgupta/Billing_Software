@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { addItem, updateItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
-import { X, Package, Briefcase, Camera, Barcode as BarcodeIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Package, Briefcase, Camera, Barcode as BarcodeIcon, CheckCircle, Share2, ExternalLink } from 'lucide-react';
 import Barcode from 'react-barcode';
+import StorePublishModal from './StorePublishModal';
 
 const UNITS = ['Pieces (PCS)', 'Numbers (NOS)', 'Kilograms (KGS)', 'Grams (GMS)', 'Meters (MTR)', 'Centimeters (CMS)', 'Liters (LTR)', 'Milliliters (MLT)', 'Boxes (BOX)', 'Packets (PAC)', 'Dozens (DZN)', 'Rolls (ROL)', 'Tons (TON)'];
 const TAX_RATES = ['0', '5', '12', '18', '28'];
@@ -12,7 +14,10 @@ const PRODUCT_GROUPS = ['Electronics', 'FMCG', 'Apparel', 'Services', 'Furniture
 
 const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData = null }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [postSaveResult, setPostSaveResult] = useState(null);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   
   const [formData, setFormData] = useState({
     itemType: 'product',
@@ -34,7 +39,8 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
     batch: '',
     expiry: '',
     barcodeStr: '',
-    image: null
+    image: null,
+    isPublished: false
   });
 
   // Body scroll lock
@@ -71,7 +77,8 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
         batch: initialData.batch || '',
         expiry: initialData.expiry || '',
         barcodeStr: initialData.barcodeStr || '',
-        image: initialData.image || null
+        image: initialData.image || null,
+        isPublished: initialData.isPublished || false
       });
     } else {
       setFormData({
@@ -94,7 +101,8 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
         batch: '',
         expiry: '',
         barcodeStr: '',
-        image: null
+        image: null,
+        isPublished: false
       });
     }
   }, [initialData, isOpen]);
@@ -139,8 +147,8 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
       }
 
       if (result) {
-        onSave(result);
-        onClose();
+        setPostSaveResult({ ...itemData, id: editingId || result.id || result._id });
+        onSave({ ...itemData, id: editingId || result.id || result._id });
       }
     } catch (err) {
       console.error('Failed to save item:', err);
@@ -148,6 +156,17 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePostSaveClose = () => {
+    setPostSaveResult(null);
+    onClose();
+  };
+
+  const handlePublishConfirm = async (extendedData) => {
+    await updateItem('products', extendedData.id, extendedData, user?.id);
+    setShowPublishModal(false);
+    handlePostSaveClose();
   };
 
   if (!isOpen) return null;
@@ -167,6 +186,32 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
       padding: '20px',
       paddingLeft: '270px' // Offset by sidebar (250px) + some extra margin
     }}>
+      {postSaveResult ? (
+        <div className="glass" style={{ padding: '3rem', width: '450px', maxWidth: '100%', background: 'white', borderRadius: '16px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div style={{ width: '80px', height: '80px', background: '#dcfce7', color: '#166534', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+            <CheckCircle size={40} />
+          </div>
+          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 800 }}>Item Saved Successfully!</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Do you want to publish <strong>{postSaveResult.name}</strong> to your public store?</p>
+          
+          <div className="flex flex-col gap-3">
+            <button 
+              className="btn btn-primary" 
+              style={{ padding: '12px', fontSize: '1rem', fontWeight: 600, display: 'flex', justifyContent: 'center', gap: '8px' }}
+              onClick={() => setShowPublishModal(true)}
+            >
+              <ExternalLink size={20} /> Yes, Publish to Store
+            </button>
+            <button 
+              className="btn" 
+              style={{ padding: '12px', fontSize: '1rem', fontWeight: 600, display: 'flex', justifyContent: 'center', gap: '8px', border: '2px solid #e2e8f0', color: 'var(--text-main)', background: '#f8fafc' }}
+              onClick={handlePostSaveClose}
+            >
+              No, Keep Private
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="glass" style={{ 
         padding: '2.5rem', 
         width: '900px', 
@@ -410,6 +455,16 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
           </div>
         </form>
       </div>
+      )}
+
+      {showPublishModal && postSaveResult && (
+        <StorePublishModal
+          isOpen={showPublishModal}
+          onClose={() => setShowPublishModal(false)}
+          productData={postSaveResult}
+          onPublish={handlePublishConfirm}
+        />
+      )}
     </div>,
     document.body
   );

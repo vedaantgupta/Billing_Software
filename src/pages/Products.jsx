@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getItems, addItem, updateItem, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink, Search, Upload, Download } from 'lucide-react';
+import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink, Search, Upload, Download, CheckCircle, Share2 } from 'lucide-react';
 import Barcode from 'react-barcode';
+import StorePublishModal from '../components/StorePublishModal';
 
 const UNITS = ['Pieces (PCS)', 'Numbers (NOS)', 'Kilograms (KGS)', 'Grams (GMS)', 'Meters (MTR)', 'Centimeters (CMS)', 'Liters (LTR)', 'Milliliters (MLT)', 'Boxes (BOX)', 'Packets (PAC)', 'Dozens (DZN)', 'Rolls (ROL)', 'Tons (TON)'];
 const TAX_RATES = ['0', '5', '12', '18', '28'];
@@ -16,6 +17,8 @@ const Products = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [postSaveResult, setPostSaveResult] = useState(null);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   
   const [formData, setFormData] = useState({
     itemType: 'product',
@@ -37,7 +40,8 @@ const Products = () => {
     batch: '',
     expiry: '',
     barcodeStr: '',
-    image: null
+    image: null,
+    isPublished: false
   });
 
   const { user } = useAuth();
@@ -77,7 +81,8 @@ const Products = () => {
       batch: product.batch || '',
       expiry: product.expiry || '',
       barcodeStr: product.barcodeStr || '',
-      image: product.image || null
+      image: product.image || null,
+      isPublished: product.isPublished || false
     });
     setEditingId(product.id);
     setIsModalOpen(true);
@@ -136,37 +141,50 @@ const Products = () => {
       }
 
       if (result) {
-        setIsModalOpen(false);
+        setPostSaveResult({ ...itemData, id: editingId || result.id || result._id });
         await loadProducts();
-        setEditingId(null);
-        setFormData({
-          itemType: 'product',
-          name: '',
-          description: '',
-          hsn: '',
-          unit: 'Pieces (PCS)',
-          purchasePrice: '',
-          sellingPrice: '',
-          taxRate: '18',
-          cessPercent: '0',
-          cessAmount: '0',
-          mrp: '',
-          saleDiscount: '0',
-          inventoryType: 'Normal',
-          openingStock: '0',
-          lowStockAlert: '5',
-          productGroup: 'Others',
-          batch: '',
-          expiry: '',
-          barcodeStr: '',
-          image: null
-        });
       }
     } catch (err) {
       console.error('Failed to save item:', err);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePostSaveClose = () => {
+    setIsModalOpen(false);
+    setPostSaveResult(null);
+    setEditingId(null);
+    setFormData({
+      itemType: 'product',
+      name: '',
+      description: '',
+      hsn: '',
+      unit: 'Pieces (PCS)',
+      purchasePrice: '',
+      sellingPrice: '',
+      taxRate: '18',
+      cessPercent: '0',
+      cessAmount: '0',
+      mrp: '',
+      saleDiscount: '0',
+      inventoryType: 'Normal',
+      openingStock: '0',
+      lowStockAlert: '5',
+      productGroup: 'Others',
+      batch: '',
+      expiry: '',
+      barcodeStr: '',
+      image: null,
+      isPublished: false
+    });
+  };
+
+  const handlePublishConfirm = async (extendedData) => {
+    await updateItem('products', extendedData.id, extendedData, user?.id);
+    setShowPublishModal(false);
+    handlePostSaveClose();
+    await loadProducts();
   };
 
   const handleFileUpload = (e) => {
@@ -434,6 +452,32 @@ const Products = () => {
 
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          {postSaveResult ? (
+            <div className="glass" style={{ padding: '3rem', width: '450px', maxWidth: '100%', background: 'white', borderRadius: '16px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out' }}>
+              <div style={{ width: '80px', height: '80px', background: '#dcfce7', color: '#166534', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+                <CheckCircle size={40} />
+              </div>
+              <h2 style={{ marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 800 }}>Item Saved Successfully!</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Do you want to publish <strong>{postSaveResult.name}</strong> to your public store?</p>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  className="btn btn-primary" 
+                  style={{ padding: '12px', fontSize: '1rem', fontWeight: 600, display: 'flex', justifyContent: 'center', gap: '8px' }}
+                  onClick={() => setShowPublishModal(true)}
+                >
+                  <ExternalLink size={20} /> Yes, Publish to Store
+                </button>
+                <button 
+                  className="btn" 
+                  style={{ padding: '12px', fontSize: '1rem', fontWeight: 600, display: 'flex', justifyContent: 'center', gap: '8px', border: '2px solid #e2e8f0', color: 'var(--text-main)', background: '#f8fafc' }}
+                  onClick={handlePostSaveClose}
+                >
+                  No, Keep Private
+                </button>
+              </div>
+            </div>
+          ) : (
           <div className="glass" style={{ padding: '2.5rem', width: '900px', maxWidth: '100%', background: 'white', maxHeight: '95vh', overflowY: 'auto' }}>
             <div className="flex justify-between items-center mb-6">
               <h2 style={{ margin: 0 }}>{editingId ? (formData.itemType === 'product' ? 'Edit Product' : 'Edit Service') : (formData.itemType === 'product' ? 'Add New Product' : 'Add New Service')}</h2>
@@ -653,7 +697,17 @@ const Products = () => {
               </div>
             </form>
           </div>
+          )}
         </div>
+      )}
+
+      {showPublishModal && postSaveResult && (
+        <StorePublishModal
+          isOpen={showPublishModal}
+          onClose={() => setShowPublishModal(false)}
+          productData={postSaveResult}
+          onPublish={handlePublishConfirm}
+        />
       )}
     </div>
   );
