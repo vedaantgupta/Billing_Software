@@ -1,0 +1,98 @@
+.spreadsheet-module-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 220px); /* Fits comfortably inside the glass container */
+  min-height: 500px;
+  width: 100%;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.spreadsheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.spreadsheet-title-input {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  border: 1px solid transparent;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  outline: none;
+  width: 300px;
+  transition: all 0.2s;
+}
+
+.spreadsheet-title-input:hover,
+.spreadsheet-title-input:focus {
+  border-color: #d1d5db;
+  background-color: #f9fafb;
+}
+
+.action-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.spreadsheet-main-area {
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 60px);
+  position: relative;
+}

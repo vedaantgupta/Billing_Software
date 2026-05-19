@@ -32,6 +32,11 @@ import ContactLedger from './pages/ContactLedger';
 import JobWork from './pages/JobWork';
 import CreditNote from './pages/CreditNote';
 import DebitNote from './pages/DebitNote';
+import Letters from './pages/Letters/Letters';
+import SpreadsheetEditor from './pages/SpreadsheetEditor';
+import WordProcessor from './pages/WordProcessor';
+import PresentationEditor from './pages/PresentationEditor';
+import EditorHub from './pages/EditorHub';
 import Staff from './pages/Staff';
 import StaffAccount from './pages/StaffAccount';
 import ContactProfile from './pages/ContactProfile';
@@ -230,6 +235,62 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <JobWork />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/letters/new" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <Letters />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/letters/edit/:id" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <Letters />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/editor" element={
+              <ProtectedRoute>
+                <Layout>
+                  <EditorHub />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/editor/spreadsheet" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SpreadsheetEditor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/editor/spreadsheet/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SpreadsheetEditor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/word-processor" element={
+              <ProtectedRoute>
+                <Layout>
+                  <WordProcessor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/word-processor/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <WordProcessor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/presentations" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PresentationEditor />
                 </Layout>
               </ProtectedRoute>
             } />

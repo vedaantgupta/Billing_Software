@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video, Globe } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video, Globe, Table, FileSpreadsheet, FileEdit, MonitorPlay } from 'lucide-react';
 import './Layout.css';
 import AIAssistant from './AIAssistant';
 import { getDB, getItems } from '../utils/db';
@@ -123,6 +123,12 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           </NavLink>
           <NavLink to="/documents" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <FileText size={20} /> Documents
+          </NavLink>
+          <NavLink to="/editor" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', background: 'linear-gradient(135deg, #6366f1, #7c3aed)', borderRadius: '6px', color: 'white', marginRight: '-4px' }}>
+              <FileEdit size={15} />
+            </div>
+            Editor
           </NavLink>
           <NavLink to="/products" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <Package size={20} /> Inventory

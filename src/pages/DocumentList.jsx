@@ -9,7 +9,7 @@ import PrintViewModal from '../components/PrintViewModal';
 import { getDB } from '../utils/db';
 import { getAllContactBalances } from '../utils/ledger';
 
-const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note', 'Job Work'];
+const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note', 'Job Work', 'Letter'];
 
 const DocumentList = () => {
   const [documents, setDocuments] = useState([]);
@@ -102,6 +102,8 @@ const DocumentList = () => {
       navigate(`/documents/sale-order/edit/${doc.id}`);
     } else if (doc.docType === 'Proforma Invoice') {
       navigate(`/documents/proforma/edit/${doc.id}`);
+    } else if (doc.docType === 'Letter') {
+      navigate(`/documents/letters/edit/${doc.id}`);
     } else if (doc.docType === 'Sale Invoice' || doc.docType === 'Invoice') {
       navigate(`/documents/sale/edit/${doc.id}`);
     } else {
@@ -145,7 +147,8 @@ const DocumentList = () => {
     'Sale Order': '/documents/sale-order/new',
     'Credit Note': '/documents/credit-note/new',
     'Debit Note': '/documents/debit-note/new',
-    'Job Work': '/documents/job-work/new'
+    'Job Work': '/documents/job-work/new',
+    'Letter': '/documents/letters/new'
   };
 
   if (loading && user) {

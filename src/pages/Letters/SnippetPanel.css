@@ -1,0 +1,46 @@
+/* SnippetPanel.css */
+.snippet-panel {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.snippet-panel h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.snippet-help {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.snippets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.snippet-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-main);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.snippet-item:hover {
+  background: #f8fafc;
+  border-color: var(--primary-color);
+}
+
+.snippet-item span {
+  font-weight: 500;
+}

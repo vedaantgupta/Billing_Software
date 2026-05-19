@@ -1,0 +1,42 @@
+/* VariablePanel.css */
+.variable-panel {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.variable-panel h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.variable-help {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.variables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.variable-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-main);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.variable-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}

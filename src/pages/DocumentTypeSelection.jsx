@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText, ShoppingCart, FileEdit, Truck, FileCheck,
   ClipboardList, Briefcase, FileMinus, FilePlus,
-  ArrowDownCircle, ArrowUpCircle, BadgePercent
+  ArrowDownCircle, ArrowUpCircle, BadgePercent, Mail
 } from 'lucide-react';
 import './DocumentTypeSelection.css';
 
@@ -34,6 +34,7 @@ const categories = [
     color: 'slate',
     items: [
       { id: 'job-work', label: 'Job Work', icon: Briefcase, color: '#64748b', desc: 'Production and processing' },
+      { id: 'letter', label: 'Letter', icon: Mail, color: '#475569', desc: 'Custom letters & templates' },
     ]
   },
   {
@@ -66,6 +67,8 @@ const DocumentTypeSelection = () => {
       navigate('/documents/proforma/new');
     } else if (type.id === 'job-work') {
       navigate('/documents/job-work/new');
+    } else if (type.id === 'letter') {
+      navigate('/documents/letters/new');
     } else if (type.id === 'credit-note') {
       navigate('/documents/credit-note/new');
     } else if (type.id === 'debit-note') {

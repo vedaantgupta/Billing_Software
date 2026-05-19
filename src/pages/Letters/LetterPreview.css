@@ -1,0 +1,151 @@
+/* LetterPreview.css */
+.letter-preview-scroll-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.a4-preview-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transform-origin: top center;
+  /* Scale down the preview to fit the sidebar */
+  transform: scale(0.42); 
+  height: 480px; /* Adjust height to account for scaling */
+  margin-bottom: -320px; /* Pull content up to compensate for scale height */
+}
+
+.a4-paper {
+  background: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  color: #1e293b;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+/* Portrait Dimensions */
+.a4-paper.portrait.letter {
+  width: 21.59cm;
+  min-height: 27.94cm;
+}
+
+.a4-paper.portrait.legal {
+  width: 21.59cm;
+  min-height: 35.56cm;
+}
+
+.a4-paper.portrait.tabloid {
+  width: 27.94cm;
+  min-height: 43.18cm;
+}
+
+.a4-paper.portrait.a3 {
+  width: 29.7cm;
+  min-height: 42cm;
+}
+
+.a4-paper.portrait.a4 {
+  width: 21cm;
+  min-height: 29.7cm;
+}
+
+.a4-paper.portrait.a5 {
+  width: 14.8cm;
+  min-height: 21cm;
+}
+
+/* Landscape Dimensions */
+.a4-paper.landscape.letter {
+  width: 27.94cm;
+  min-height: 21.59cm;
+}
+
+.a4-paper.landscape.legal {
+  width: 35.56cm;
+  min-height: 21.59cm;
+}
+
+.a4-paper.landscape.tabloid {
+  width: 43.18cm;
+  min-height: 27.94cm;
+}
+
+.a4-paper.landscape.a3 {
+  width: 42cm;
+  min-height: 29.7cm;
+}
+
+.a4-paper.landscape.a4 {
+  width: 29.7cm;
+  min-height: 21cm;
+}
+
+.a4-paper.landscape.a5 {
+  width: 21cm;
+  min-height: 14.8cm;
+}
+
+/* Margins */
+.a4-paper.normal {
+  padding: 2.54cm;
+}
+
+.a4-paper.narrow {
+  padding: 1.27cm;
+}
+
+.a4-paper.moderate {
+  padding: 2.54cm 1.91cm;
+}
+
+.a4-paper.wide {
+  padding: 2.54cm 5.08cm;
+}
+
+.tiptap-preview {
+  font-size: 14px; /* Scaled text size */
+}
+
+.tiptap-preview h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #0f172a;
+}
+
+.tiptap-preview h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #1e293b;
+}
+
+.tiptap-preview p {
+  margin-bottom: 12px;
+}
+
+.tiptap-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+.tiptap-preview table td, 
+.tiptap-preview table th {
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  text-align: left;
+}
+
+.tiptap-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
