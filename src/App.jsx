@@ -294,6 +294,13 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/presentations/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PresentationEditor />
+                </Layout>
+              </ProtectedRoute>
+            } />
             <Route path="/documents/credit-note/new" element={
               <ProtectedRoute>
                 <Layout>
