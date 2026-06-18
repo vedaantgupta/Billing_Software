@@ -1,0 +1,104 @@
+.home-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  color: #f0f0f0;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #1e3a8a, #6366f1);
+  padding: 4rem 2rem;
+  text-align: center;
+  border-bottom-left-radius: 1.5rem;
+  border-bottom-right-radius: 1.5rem;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.hero-section p {
+  font-size: 1.2rem;
+  color: #e0e0ff;
+  margin-bottom: 1.5rem;
+}
+
+.start-btn {
+  background: #ff69b4;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.start-btn:hover {
+  background: #ff85c1;
+  transform: translateY(-2px);
+}
+
+.recent-section {
+  flex: 1;
+  padding: 2rem;
+  background: #111827;
+}
+
+.recent-section h2 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.recent-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1f2937;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.recent-table th,
+.recent-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  color: #d1d5db;
+}
+
+.recent-table th {
+  background: #111827;
+  font-weight: 600;
+}
+
+.recent-table tr:nth-child(even) {
+  background: #111827;
+}
+
+.actions button {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.actions button:hover {
+  color: #fff;
+}
+
+.loading {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.empty-state {
+  color: #9ca3af;
+  font-style: italic;
+  text-align: center;
+  margin-top: 2rem;
+}

@@ -37,6 +37,8 @@ import SpreadsheetEditor from './pages/SpreadsheetEditor';
 import WordProcessor from './pages/WordProcessor';
 import PresentationEditor from './pages/PresentationEditor';
 import EditorHub from './pages/EditorHub';
+import BusinessCardEditor from './pages/BusinessCardEditor';
+import CardBuilderHome from './pages/CardBuilderHome';
 import Staff from './pages/Staff';
 import StaffAccount from './pages/StaffAccount';
 import ContactProfile from './pages/ContactProfile';
@@ -273,6 +275,20 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/editor/business-card" element={
+            <ProtectedRoute>
+              <Layout noWrapper={true}>
+                <CardBuilderHome />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/editor/business-card/editor" element={
+            <ProtectedRoute>
+              <Layout noWrapper={true}>
+                <BusinessCardEditor />
+              </Layout>
+            </ProtectedRoute>
+          } />
             <Route path="/word-processor" element={
               <ProtectedRoute>
                 <Layout>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video, Globe, Table, FileSpreadsheet, FileEdit, MonitorPlay } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video, Globe, Table, FileSpreadsheet, FileEdit, MonitorPlay, IdCard } from 'lucide-react';
 import './Layout.css';
 import AIAssistant from './AIAssistant';
 import { getDB, getItems } from '../utils/db';
@@ -129,6 +129,9 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               <FileEdit size={15} />
             </div>
             Editor
+          </NavLink>
+          <NavLink to="/editor/business-card" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+            <IdCard size={20} /> Card Builder
           </NavLink>
           <NavLink to="/products" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <Package size={20} /> Inventory

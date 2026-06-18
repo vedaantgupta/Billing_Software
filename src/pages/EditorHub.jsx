@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getItems, deleteItem } from '../utils/db';
 import { useAuth } from '../hooks/useAuth';
-import { FileSpreadsheet, FileText, Monitor, Trash2, Edit, Clock, Plus } from 'lucide-react';
+import { FileSpreadsheet, FileText, Monitor, Trash2, Edit, Clock, Plus, IdCard } from 'lucide-react';
 import './EditorHub.css';
 
 const editors = [
@@ -81,7 +81,8 @@ export default function EditorHub() {
       const filtered = items.filter(d => 
         d.docType === 'Spreadsheet' || 
         d.docType === 'Word Document' || 
-        d.docType === 'Presentation'
+        d.docType === 'Presentation' ||
+        d.docType === 'Business Card'
       );
       setDocuments(filtered.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)));
     } catch (e) {
@@ -110,12 +111,15 @@ export default function EditorHub() {
       navigate(`/word-processor/edit/${doc.id}`);
     } else if (doc.docType === 'Presentation') {
       navigate(`/presentations/edit/${doc.id}`);
+    } else if (doc.docType === 'Business Card') {
+      navigate(`/editor/business-card/edit/${doc.id}`);
     }
   };
 
   const getDocIcon = (type) => {
     if (type === 'Spreadsheet') return <FileSpreadsheet size={16} style={{ color: '#10b981' }} />;
     if (type === 'Word Document') return <FileText size={16} style={{ color: '#3b82f6' }} />;
+    if (type === 'Business Card') return <IdCard size={16} style={{ color: '#f59e0b' }} />;
     return <Monitor size={16} style={{ color: '#7c3aed' }} />;
   };
 
