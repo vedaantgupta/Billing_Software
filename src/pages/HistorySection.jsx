@@ -19,9 +19,9 @@ import {
     Save,
     RotateCcw
 } from "lucide-react";
-import { AuthContext } from "../contexts/AuthContext";
-import { getItems, addItem, updateItem, deleteItem } from "../utils/db";
-import "./history.css";
+import { AuthContext } from "@/contexts/AuthContext";
+import { getItems, addItem, updateItem, deleteItem } from "@/utils/db";
+import "@/pages/history.css";
 
 const COLORS = [
     { name: 'white', value: '#ffffff' },

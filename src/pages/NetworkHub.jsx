@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { 
   MessageSquare, 
@@ -24,7 +24,7 @@ import {
   Check,
   ChevronDown
 } from 'lucide-react';
-import './NetworkHub.css';
+import '@/pages/NetworkHub.css';
 
 // Helper to render Business Logo Box
 const BusinessLogo = ({ name, image, size = 'md', className = '' }) => {

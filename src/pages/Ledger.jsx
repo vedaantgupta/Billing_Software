@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getItems, addItem } from '../utils/db';
-import { useAuth } from '../hooks/useAuth';
-import { useLanguage } from '../contexts/LanguageContext';
-import { getContactBalance, postToLedger } from '../utils/ledger';
+import { getItems, addItem } from '@/utils/db';
+import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getContactBalance, postToLedger } from '@/utils/ledger';
 import { Search, UserPlus, ArrowDownLeft, ArrowUpRight, ChevronRight, BookOpen, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ContactModal from '../components/ContactModal';
-import '../Ledger.css';
+import ContactModal from '@/features/contacts/components/ContactModal';
+import '@/Ledger.css';
 
 const Ledger = () => {
   const { user } = useAuth();

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getItems, deleteItem } from '../utils/db';
-import { useAuth } from '../hooks/useAuth';
+import { getItems, deleteItem } from '@/utils/db';
+import { useAuth } from '@/hooks/useAuth';
 import { FileSpreadsheet, FileText, Monitor, Trash2, Edit, Clock, Plus, IdCard } from 'lucide-react';
-import './EditorHub.css';
+import '@/pages/EditorHub.css';
 
 const editors = [
   {

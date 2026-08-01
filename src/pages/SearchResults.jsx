@@ -17,9 +17,9 @@ import {
     TrendingUp,
     Layers
 } from 'lucide-react';
-import { getItems } from '../utils/db';
-import { useAuth } from '../hooks/useAuth';
-import './SearchResults.css';
+import { getItems } from '@/utils/db';
+import { useAuth } from '@/hooks/useAuth';
+import '@/pages/SearchResults.css';
 
 const SearchResults = () => {
     const [searchParams] = useSearchParams();

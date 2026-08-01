@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { MapPin, Mail, Phone, ExternalLink, Package, MessageSquare, BookOpen, Briefcase, Award, CheckCircle, ShoppingBag, Star, Share2, Globe, MessageCircle, Heart, History, Clock, Truck, RotateCcw, Zap, Users, Info, ShieldCheck, TrendingUp, HelpCircle, Tag } from 'lucide-react';
-import './PublicProfile.css';
+import '@/pages/PublicProfile.css';
 
 const PublicProfile = () => {
   const { id } = useParams();

@@ -1,4 +1,4 @@
-import { addItem, getItems } from './db';
+import { addItem, getItems } from '@/utils/db';
 
 /**
  * Post a transaction to the digital ledger.

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import mapData from "../data/indiaMapData";
+import mapData from "@/features/dashboard/pages/indiaMapData";
 import { Plus, Minus, RotateCcw, Move } from "lucide-react";
 
 const IndiaMap = ({ salesData = [] }) => {

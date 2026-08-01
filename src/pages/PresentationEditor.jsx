@@ -18,9 +18,9 @@ import {
   ResponsiveContainer, BarChart, Bar, LineChart, Line,
   PieChart, Pie, Cell, XAxis, YAxis, Tooltip
 } from 'recharts';
-import { getItems, addItem, updateItem } from '../utils/db';
-import { useAuth } from '../hooks/useAuth';
-import './PresentationEditor.css';
+import { getItems, addItem, updateItem } from '@/utils/db';
+import { useAuth } from '@/hooks/useAuth';
+import '@/pages/PresentationEditor.css';
 
 // Curated Design System Themes
 const THEMES = {
