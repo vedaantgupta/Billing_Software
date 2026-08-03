@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { X, CheckCircle, Package, FileText, Image as ImageIcon, Search, ShieldCheck, Plus, Trash2, Video, FileDown, DollarSign } from 'lucide-react';
+import { CATEGORIES_TAXONOMY, getSubcategories } from '@/data/categoriesData';
 
 const StorePublishModal = ({ isOpen, onClose, productData, onPublish }) => {
   const [activeTab, setActiveTab] = useState('basic');
@@ -194,15 +195,41 @@ const StorePublishModal = ({ isOpen, onClose, productData, onPublish }) => {
                   <div className="grid grid-cols-3 gap-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                     <div className="form-group mb-0">
                       <label className="form-label">HSN/SAC Code</label>
-                      <input name="hsn" className="form-input" value={formData.hsn} onChange={handleChange} />
+                      <input name="hsn" className="form-input" value={formData.hsn} onChange={handleChange} placeholder="e.g. 8471" />
                     </div>
                     <div className="form-group mb-0">
-                      <label className="form-label">Category</label>
-                      <input name="productGroup" className="form-input" value={formData.productGroup} onChange={handleChange} />
+                      <label className="form-label">Main Category</label>
+                      <select 
+                        name="productGroup" 
+                        className="form-input" 
+                        value={formData.productGroup || 'Electronics & Gadgets'} 
+                        onChange={(e) => {
+                          const cat = e.target.value;
+                          const subs = getSubcategories(cat);
+                          setFormData(prev => ({
+                            ...prev,
+                            productGroup: cat,
+                            subCategory: subs[0] || 'General Products'
+                          }));
+                        }}
+                      >
+                        {CATEGORIES_TAXONOMY.map(cat => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="form-group mb-0">
                       <label className="form-label">Sub-Category</label>
-                      <input name="subCategory" className="form-input" value={formData.subCategory} onChange={handleChange} />
+                      <select 
+                        name="subCategory" 
+                        className="form-input" 
+                        value={formData.subCategory || ''} 
+                        onChange={handleChange}
+                      >
+                        {getSubcategories(formData.productGroup).map(sub => (
+                          <option key={sub} value={sub}>{sub}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   <div className="form-group mb-0">

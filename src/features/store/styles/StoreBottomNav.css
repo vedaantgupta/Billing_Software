@@ -1,0 +1,101 @@
+/* Flipkart / Amazon Inspired Bottom Navigation Bar */
+.flipkart-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  padding: 6px 0;
+  transition: transform 0.3s ease;
+}
+
+.bottom-nav-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 1rem;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.bottom-nav-item:hover {
+  color: #0f172a;
+}
+
+.bottom-nav-item.active {
+  color: #2874f0; /* Flipkart Iconic Blue */
+  font-weight: 700;
+}
+
+.bottom-nav-item.active .nav-icon-box {
+  transform: translateY(-2px);
+  color: #2874f0;
+}
+
+.nav-icon-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bottom-cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #ff6161; /* Flipkart Red Alert Badge */
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(255, 97, 97, 0.4);
+}
+
+/* Add padding to page container so bottom nav doesn't cover content */
+.store-container,
+.cat-page,
+.account-page-container {
+  padding-bottom: 70px !important;
+}
+
+@media (min-width: 1024px) {
+  .flipkart-bottom-nav {
+    border-radius: 20px 20px 0 0;
+    max-width: 800px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 1px solid rgba(226, 232, 240, 0.9);
+    border-right: 1px solid rgba(226, 232, 240, 0.9);
+  }
+}

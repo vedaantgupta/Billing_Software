@@ -2,24 +2,32 @@
 
 :root {
   --primary-color: #6366f1;
-  /* Indigo */
+  /* Premium Electric Indigo */
   --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
   --secondary-color: #f43f5e;
   /* Rose */
   --bg-color: #f8fafc;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
+  
+  /* Rich Dark Sidebar Tokens */
   --sidebar-bg: #1e1b4b;
   /* Deep Indigo */
-  --sidebar-text: #e0e7ff;
-  --sidebar-hover: #312e81;
-  --card-bg: rgba(255, 255, 255, 0.7);
+  --sidebar-bg-gradient: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+  --sidebar-text: #cbd5e1;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-active-bg: linear-gradient(135deg, #6366f1, #4f46e5);
+  --sidebar-active-text: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  
+  --card-bg: rgba(255, 255, 255, 0.85);
   --border-color: #e2e8f0;
   --success-color: #10b981;
   --warning-color: #f59e0b;
 
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+  --glass-border: 1px solid rgba(226, 232, 240, 0.8);
   --glass-blur: blur(12px);
 }
 
@@ -142,10 +150,10 @@ h2 {
   background-color: white;
 }
 
-/* Scrollbar */
+/* Global Modern Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -154,11 +162,16 @@ h2 {
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 /* Layout Classes */

@@ -73,13 +73,16 @@ const PublicProfile = () => {
   const handlePostReview = async (e) => {
     e.preventDefault();
     try {
+      const reviewerName = currentUser?.firstName 
+        ? `${currentUser.firstName} ${currentUser.lastName}` 
+        : currentUser?.username || 'Anonymous Client';
       const response = await fetch('http://localhost:5000/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetUserId: id,
-          reviewerId: 'guest', // In real app, use logged in user id
-          reviewerName: 'Verified Client',
+          reviewerId: currentUser?.id || 'guest',
+          reviewerName: reviewerName,
           rating: newReview.rating,
           text: newReview.text
         })

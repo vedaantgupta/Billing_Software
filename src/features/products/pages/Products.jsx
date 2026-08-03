@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, AlertTriangle, Package, Briefcase, Trash2, Camera, Barcode as BarcodeIcon, ExternalLink, Search, Upload, Download, CheckCircle, Share2 } from 'lucide-react';
 import Barcode from 'react-barcode';
 import StorePublishModal from '@/components/ui/StorePublishModal';
+import { CATEGORIES_TAXONOMY, getSubcategories } from '@/data/categoriesData';
 
 const UNITS = ['Pieces (PCS)', 'Numbers (NOS)', 'Kilograms (KGS)', 'Grams (GMS)', 'Meters (MTR)', 'Centimeters (CMS)', 'Liters (LTR)', 'Milliliters (MLT)', 'Boxes (BOX)', 'Packets (PAC)', 'Dozens (DZN)', 'Rolls (ROL)', 'Tons (TON)'];
 const TAX_RATES = ['0', '5', '12', '18', '28'];
 const INVENTORY_TYPES = ['Normal', 'Batch-wise', 'Serial Number-wise'];
-const PRODUCT_GROUPS = ['Electronics', 'FMCG', 'Apparel', 'Services', 'Furniture', 'Hardware', 'Software', 'Others'];
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -36,7 +36,8 @@ const Products = () => {
     inventoryType: 'Normal',
     openingStock: '0',
     lowStockAlert: '5',
-    productGroup: 'Others',
+    productGroup: 'Electronics & Gadgets',
+    subCategory: 'Laptops & Computers',
     batch: '',
     expiry: '',
     barcodeStr: '',
@@ -516,15 +517,39 @@ const Products = () => {
                           <label className="form-label">{formData.itemType === 'product' ? 'Product' : 'Service'} Description / Notes</label>
                           <textarea className="form-input" rows="2" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder={`Additional Details about this ${formData.itemType}`}></textarea>
                         </div>
-                        <div className="flex gap-4">
-                           <div className="form-group w-full mb-0">
+                        <div className="flex gap-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                           <div className="form-group mb-0">
                              <label className="form-label">{formData.itemType === 'product' ? 'HSN Code' : 'SAC Code'}</label>
-                             <input className="form-input" value={formData.hsn} onChange={e => setFormData({...formData, hsn: e.target.value})} />
+                             <input className="form-input" value={formData.hsn} onChange={e => setFormData({...formData, hsn: e.target.value})} placeholder="e.g. 8471" />
                            </div>
-                           <div className="form-group w-full mb-0">
-                             <label className="form-label">Product Group</label>
-                             <select className="form-input" value={formData.productGroup} onChange={e => setFormData({...formData, productGroup: e.target.value})}>
-                                {PRODUCT_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+                           <div className="form-group mb-0">
+                             <label className="form-label">Main Category</label>
+                             <select 
+                               className="form-input" 
+                               value={formData.productGroup} 
+                               onChange={e => {
+                                 const selectedCat = e.target.value;
+                                 const availableSubs = getSubcategories(selectedCat);
+                                 setFormData({
+                                   ...formData, 
+                                   productGroup: selectedCat,
+                                   subCategory: availableSubs[0] || 'General Products'
+                                 });
+                               }}
+                             >
+                                {CATEGORIES_TAXONOMY.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
+                             </select>
+                           </div>
+                           <div className="form-group mb-0">
+                             <label className="form-label">Sub-Category</label>
+                             <select 
+                               className="form-input" 
+                               value={formData.subCategory || ''} 
+                               onChange={e => setFormData({...formData, subCategory: e.target.value})}
+                             >
+                                {getSubcategories(formData.productGroup).map(sub => (
+                                  <option key={sub} value={sub}>{sub}</option>
+                                ))}
                              </select>
                            </div>
                         </div>

@@ -7,10 +7,7 @@ import {
   Share2, 
   ImageIcon, 
   Send, 
-  User, 
-  Home, 
   Users, 
-  ShoppingBag, 
   Briefcase, 
   Bell, 
   Search,
@@ -19,12 +16,12 @@ import {
   Star,
   Paperclip,
   Smile,
-  Gift,
   X,
   Check,
-  ChevronDown
+  ChevronDown,
+  ShoppingBag
 } from 'lucide-react';
-import '@/pages/NetworkHub.css';
+import '@/features/network/styles/NetworkHub.css';
 
 // Helper to render Business Logo Box
 const BusinessLogo = ({ name, image, size = 'md', className = '' }) => {
@@ -67,9 +64,7 @@ const NetworkHub = () => {
   const [newPostContent, setNewPostContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
-  const [marketplaceProducts, setMarketplaceProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMarketplaceLoading, setIsMarketplaceLoading] = useState(false);
   
   // Messaging States
   const [conversations, setConversations] = useState([]);
@@ -83,15 +78,35 @@ const NetworkHub = () => {
   const [isNewMessageFlow, setIsNewMessageFlow] = useState(false);
   const [convSearchQuery, setConvSearchQuery] = useState('');
 
+  // Saved Sellers (IndiaMART B2B Network)
+  const [savedSellers, setSavedSellers] = useState([]);
+  const [isSavedLoading, setIsSavedLoading] = useState(false);
+
   useEffect(() => {
     if (activeTab === 'home') {
       fetchFeed();
-    } else if (activeTab === 'store') {
-      fetchMarketplaceProducts();
     } else if (activeTab === 'messaging') {
       fetchConversations();
+    } else if (activeTab === 'network') {
+      fetchSavedSellers();
     }
   }, [activeTab]);
+
+  const fetchSavedSellers = async () => {
+    if (!user?.id) return;
+    setIsSavedLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/marketplace/saved-sellers?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSavedSellers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching saved sellers:', error);
+    } finally {
+      setIsSavedLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedConversation && selectedConversation._id) {
@@ -154,9 +169,7 @@ const NetworkHub = () => {
         setNewMessage('');
         
         if (selectedConversation.isNew) {
-          // If it was a new conversation, refresh list and select the real conversation object
           await fetchConversations();
-          // Find the newly created conversation in the refreshed list
           const refreshedConvs = await (await fetch(`http://localhost:5000/api/network/conversations/${user.id}`)).json();
           const newConv = refreshedConvs.find(c => c.otherUser.id === selectedConversation.otherUser.id);
           if (newConv) {
@@ -192,7 +205,6 @@ const NetworkHub = () => {
   };
 
   const startNewConversation = (recipient) => {
-    // Check if conversation already exists
     const existing = conversations.find(c => c.otherUser.id === recipient.id);
     if (existing) {
       setSelectedConversation(existing);
@@ -207,46 +219,8 @@ const NetworkHub = () => {
     }
   };
 
-  const fetchMarketplaceProducts = async (query = '') => {
-    setIsMarketplaceLoading(true);
-    try {
-      const url = `http://localhost:5000/api/marketplace/products?userId=${user.id}${query ? `&search=${query}` : ''}`;
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setMarketplaceProducts(data);
-      }
-    } catch (error) {
-      console.error('Error fetching marketplace products:', error);
-    } finally {
-      setIsMarketplaceLoading(false);
-    }
-  };
-
-  const trackInteraction = async (productId, productGroup, type = 'view') => {
-    try {
-      await fetch('http://localhost:5000/api/marketplace/interact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          productId,
-          productGroup,
-          type
-        })
-      });
-    } catch (error) {
-      console.error('Error tracking interaction:', error);
-    }
-  };
-
   const handleSearch = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    if (activeTab === 'store') {
-      // Debounce search in real app, but for now just call it
-      fetchMarketplaceProducts(query);
-    }
+    setSearchQuery(e.target.value);
   };
 
   const fetchFeed = async () => {
@@ -285,7 +259,7 @@ const NetworkHub = () => {
 
       if (response.ok) {
         setNewPostContent('');
-        fetchFeed(); // Refresh feed
+        fetchFeed();
       }
     } catch (error) {
       console.error('Error posting:', error);
@@ -308,19 +282,18 @@ const NetworkHub = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
   const tabs = [
     { id: 'home', label: 'Home', icon: <BusinessLogo name={user.firstName ? `${user.firstName} ${user.lastName}` : user.username} image={user.professionalProfile?.profilePicture} size="xs" /> },
     { id: 'network', label: 'My Network', icon: <Users size={18} /> },
-    { id: 'store', label: 'Store', icon: <ShoppingBag size={18} /> },
     { id: 'jobs', label: 'Jobs', icon: <Briefcase size={18} /> },
     { id: 'messaging', label: 'Messaging', icon: <MessageSquare size={18} /> },
     { id: 'notifications', label: 'Notifications', icon: <Bell size={18} /> },
   ];
+
+  const filteredPosts = posts.filter(post => 
+    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.authorName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="network-hub-container">
@@ -328,13 +301,13 @@ const NetworkHub = () => {
         <div className="header-top">
           <div>
             <h2>Business Network Hub</h2>
-            <p>Connect with other businesses, share updates, and discover products.</p>
+            <p>Connect with other businesses, share updates, and discover collaborations.</p>
           </div>
           <div className="header-search">
             <Search size={18} />
             <input 
               type="text" 
-              placeholder={activeTab === 'store' ? "Search products, categories, keywords..." : "Search the network..."} 
+              placeholder="Search the network..." 
               value={searchQuery}
               onChange={handleSearch}
             />
@@ -386,14 +359,14 @@ const NetworkHub = () => {
               <div className="feed-posts">
                 {isLoading ? (
                   <div className="loading-feed">Loading network updates...</div>
-                ) : posts.length === 0 ? (
+                ) : filteredPosts.length === 0 ? (
                   <div className="empty-feed glass">
                     <MessageSquare size={48} color="#cbd5e1" />
-                    <h3>No updates yet</h3>
-                    <p>Be the first to share an update with the network!</p>
+                    <h3>No updates found</h3>
+                    <p>Try resetting your search or be the first to share an update!</p>
                   </div>
                 ) : (
-                  posts.map(post => (
+                  filteredPosts.map(post => (
                     <div key={post._id} className="post-card glass">
                       <div className="post-header">
                         <div
@@ -438,59 +411,6 @@ const NetworkHub = () => {
                 )}
               </div>
             </>
-          ) : activeTab === 'store' ? (
-            <div className="marketplace-feed">
-              <div className="marketplace-header mb-4">
-                <h3>Recommended for Your Business</h3>
-                <p className="text-muted">Products and services based on your interests and industry profile.</p>
-              </div>
-
-              {isMarketplaceLoading ? (
-                <div className="loading-feed">Discovering best products for you...</div>
-              ) : marketplaceProducts.length === 0 ? (
-                <div className="empty-feed glass">
-                  <ShoppingBag size={48} color="#cbd5e1" />
-                  <h3>No products found</h3>
-                  <p>{searchQuery ? `No products matching "${searchQuery}"` : "The marketplace is quiet today. Check back soon!"}</p>
-                </div>
-              ) : (
-                <div className="marketplace-grid">
-                  {marketplaceProducts.map(p => (
-                    <div 
-                      key={p._id} 
-                      className="marketplace-card glass clickable"
-                      onClick={() => {
-                        trackInteraction(p._id, p.data?.productGroup, 'click');
-                        navigate(`/product/${p._id || p.data?.id}`);
-                      }}
-                    >
-                      <div className="product-image-container">
-                        {p.data?.image ? (
-                          <img src={p.data.image} alt={p.data.name} />
-                        ) : (
-                          <div className="image-placeholder">
-                            <ShoppingBag size={32} />
-                          </div>
-                        )}
-                        {p.recommendationScore > 20 && (
-                          <div className="recommendation-badge">Recommended</div>
-                        )}
-                      </div>
-                      <div className="product-info">
-                        <div className="product-category">{p.data?.productGroup || 'General'}</div>
-                        <h4 className="product-name">{p.data?.name}</h4>
-                        <div className="product-price">₹{Number(p.data?.sellingPrice).toLocaleString()}</div>
-                        
-                        <div className="seller-info-mini">
-                          <BusinessLogo name={p.sellerName} image={p.sellerLogo} size="xs" />
-                          <span className="seller-name">{p.sellerName}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           ) : activeTab === 'messaging' ? (
             <div className="messaging-container glass">
               <div className="messaging-sidebar">
@@ -531,20 +451,20 @@ const NetworkHub = () => {
                       )
                       .map(conv => (
                         <div 
-                          key={conv._id} 
-                          className={`conversation-item ${selectedConversation?._id === conv._id ? 'active' : ''}`}
-                          onClick={() => setSelectedConversation(conv)}
+                           key={conv._id} 
+                           className={`conversation-item ${selectedConversation?._id === conv._id ? 'active' : ''}`}
+                           onClick={() => setSelectedConversation(conv)}
                         >
-                        <BusinessLogo name={conv.otherUser.name} image={conv.otherUser.image} size="sm" />
-                        <div className="conversation-info">
-                          <div className="conv-header">
-                            <span className="conv-name">{conv.otherUser.name}</span>
-                            <span className="conv-date">{formatDate(conv.lastUpdated)}</span>
+                          <BusinessLogo name={conv.otherUser.name} image={conv.otherUser.image} size="sm" />
+                          <div className="conversation-info">
+                            <div className="conv-header">
+                              <span className="conv-name">{conv.otherUser.name}</span>
+                              <span className="conv-date">{formatDate(conv.lastUpdated)}</span>
+                            </div>
+                            <p className="conv-last-msg">{conv.lastMessage}</p>
                           </div>
-                          <p className="conv-last-msg">{conv.lastMessage}</p>
                         </div>
-                      </div>
-                    ))
+                      ))
                   )}
                 </div>
               </div>
@@ -559,7 +479,7 @@ const NetworkHub = () => {
                     <div className="recipient-search-container">
                       <input 
                         type="text" 
-                        placeholder="Type a name or multiple names" 
+                        placeholder="Type a name" 
                         value={recipientSearch}
                         onChange={(e) => searchUsers(e.target.value)}
                         autoFocus
@@ -648,7 +568,6 @@ const NetworkHub = () => {
                           >
                             Send
                           </button>
-                          <button className="icon-btn-small"><MoreHorizontal size={18} /></button>
                         </div>
                       </div>
                     </div>
@@ -660,6 +579,81 @@ const NetworkHub = () => {
                   </div>
                 )}
               </div>
+            </div>
+          ) : activeTab === 'network' ? (
+            <div className="saved-suppliers-network-view glass" style={{ padding: '1.5rem', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>My B2B Suppliers ({savedSellers.length})</h3>
+                  <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>IndiaMART Network: Saved vendors, private payment notes & quick messaging</p>
+                </div>
+                <button className="btn btn-primary" onClick={() => navigate('/store')}>
+                  + Discover More Suppliers in Marketplace
+                </button>
+              </div>
+
+              {isSavedLoading ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>Loading your B2B supplier network...</div>
+              ) : savedSellers.length === 0 ? (
+                <div style={{ padding: '4rem 2rem', textAlign: 'center', background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                  <Users size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+                  <h4 style={{ margin: 0, color: '#1e293b' }}>No Saved Suppliers Yet</h4>
+                  <p style={{ color: '#64748b', fontSize: '0.85rem', maxWidth: '360px', margin: '0.5rem auto 1.5rem auto' }}>
+                    Bookmark sellers in the Marketplace Store or Product pages to add them to your IndiaMART supplier directory.
+                  </p>
+                  <button className="btn btn-primary" onClick={() => navigate('/store')}>
+                    Browse Marketplace
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                  {savedSellers.map(doc => {
+                    const seller = doc.seller || {};
+                    return (
+                      <div key={doc._id} className="post-card glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                        <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
+                          <BusinessLogo name={seller.name || seller.companyName} image={seller.image} size="md" />
+                          <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {seller.companyName || seller.name}
+                            </h4>
+                            <span style={{ display: 'inline-block', fontSize: '0.7rem', fontWeight: 800, color: '#0d8abc', background: 'rgba(13,138,188,0.1)', padding: '2px 8px', borderRadius: '12px', marginTop: '2px' }}>
+                              ⭐ {doc.relationshipTag || 'Saved Supplier'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {doc.customNotes && (
+                          <div style={{ background: '#f8fafc', borderLeft: '3px solid #0d8abc', padding: '0.5rem 0.75rem', borderRadius: '0 6px 6px 0', fontSize: '0.8rem', color: '#334155' }}>
+                            <span style={{ fontWeight: 700, color: '#64748b', fontSize: '0.7rem', display: 'block' }}>Private Note:</span>
+                            {doc.customNotes}
+                          </div>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: 'auto' }}>
+                          <button 
+                            className="btn btn-primary btn-sm"
+                            onClick={() => {
+                              startNewConversation({ id: seller.id, name: seller.companyName || seller.name, image: seller.image });
+                              setActiveTab('messaging');
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '0.78rem' }}
+                          >
+                            <MessageSquare size={14} /> Message
+                          </button>
+                          <button 
+                            className="btn btn-outline btn-sm"
+                            onClick={() => navigate(`/store`)}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '0.78rem' }}
+                          >
+                            <ShoppingBag size={14} /> Products ({seller.totalProducts || 0})
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : (
             <div className="tab-placeholder glass">
@@ -687,36 +681,6 @@ const NetworkHub = () => {
               <button className="btn btn-outline" onClick={() => navigate(`/p/${user.id}`)} style={{ width: '100%', marginTop: '10px' }}>
                 View Profile
               </button>
-            </div>
-          </div>
-
-          <div className="glass sidebar-widget trending-widget">
-            <h3>Trending Marketplace</h3>
-            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Discover top products from other businesses.</p>
-            <div className="trending-products-list">
-              {marketplaceProducts.slice(0, 3).map(p => (
-                <div 
-                  key={`trending-${p._id}`} 
-                  className="trending-item clickable"
-                  onClick={() => {
-                    trackInteraction(p._id, p.data?.productGroup, 'click');
-                    navigate(`/product/${p._id || p.data?.id}`);
-                  }}
-                >
-                  <div className="trending-img">
-                    {p.data?.image ? <img src={p.data.image} alt="" /> : <ShoppingBag size={14} />}
-                  </div>
-                  <div className="trending-details">
-                    <span className="trending-name">{p.data?.name}</span>
-                    <span className="trending-price">₹{Number(p.data?.sellingPrice).toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
-              {marketplaceProducts.length === 0 && (
-                <div className="empty-trending">
-                  <p>More products coming soon...</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

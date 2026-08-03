@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, UserCog, Wallet, Banknote, Landmark, History, Briefcase, Video, Globe, Table, FileSpreadsheet, FileEdit, MonitorPlay, IdCard } from 'lucide-react';
+import { 
+  LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, 
+  Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet, 
+  Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag
+} from 'lucide-react';
 import '@/components/layout/Layout.css';
 import AIAssistant from '@/features/dashboard/components/AIAssistant';
 import { getDB, getItems } from '@/utils/db';
-
 import { useAuth } from '@/hooks/useAuth';
 
 const Layout = ({ children, noWrapper = false, extended = false }) => {
@@ -12,6 +15,10 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isExpensesOpen, setIsExpensesOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return localStorage.getItem('g_sidebar_collapsed') === 'true';
+  });
+
   const navigate = useNavigate();
   const companyInfo = getDB().company || { name: user?.firstName ? `${user.firstName} ${user.lastName}` : (user?.username || 'Guest User') };
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +27,14 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchRef = useRef(null);
   const inputRef = useRef(null);
+
+  const toggleSidebar = () => {
+    setIsCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('g_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   const handleLogout = () => {
     logout();
@@ -111,62 +126,91 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
   };
 
   return (
-    <div className="layout-container">
-      <div className="sidebar">
+    <div className={`layout-container ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+        <button 
+          className="sidebar-toggle-floating-btn" 
+          onClick={toggleSidebar}
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+        </button>
+
         <div className="sidebar-logo">
-          <div className="logo-icon">GB</div>
-          <h2>GoGSTBill<span style={{ color: 'var(--primary-color)' }}>.pro</span></h2>
+          <div className="logo-brand">
+            <div className="logo-icon">GB</div>
+            {!isCollapsed && (
+              <h2>GoGSTBill<span className="logo-highlight">.pro</span></h2>
+            )}
+          </div>
         </div>
+
         <nav className="sidebar-nav">
-          <NavLink to="/" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <LayoutDashboard size={20} /> Dashboard
+          {!isCollapsed && <div className="nav-section-title">Core</div>}
+          <NavLink to="/" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Dashboard">
+            <LayoutDashboard size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Dashboard</span>}
           </NavLink>
-          <NavLink to="/documents" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <FileText size={20} /> Documents
+          <NavLink to="/documents" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Documents">
+            <FileText size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Documents</span>}
           </NavLink>
-          <NavLink to="/editor" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', background: 'linear-gradient(135deg, #6366f1, #7c3aed)', borderRadius: '6px', color: 'white', marginRight: '-4px' }}>
-              <FileEdit size={15} />
-            </div>
-            Editor
+          <NavLink to="/editor" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Document Editor">
+            <FileEdit size={19} className="nav-icon" />
+            {!isCollapsed && <span>Editor</span>}
           </NavLink>
-          <NavLink to="/editor/business-card" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <IdCard size={20} /> Card Builder
+          <NavLink to="/editor/business-card" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Business Card Builder">
+            <IdCard size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Card Builder</span>}
           </NavLink>
-          <NavLink to="/products" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <Package size={20} /> Inventory
+
+          {!isCollapsed && <div className="nav-section-title">Operations</div>}
+          <NavLink to="/products" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Inventory Management">
+            <Package size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Inventory</span>}
           </NavLink>
-          <NavLink to="/contacts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <Users size={20} /> Contacts
+          <NavLink to="/contacts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Contacts & Customers">
+            <Users size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Contacts</span>}
           </NavLink>
-          <NavLink to="/staff" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <UserCog size={20} /> Staff
+          <NavLink to="/staff" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Staff Management">
+            <UserCog size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Staff</span>}
           </NavLink>
-          <NavLink to="/ledger" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <CreditCard size={20} /> Digital Ledger
+          <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Projects">
+            <Briefcase size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Projects</span>}
           </NavLink>
-          <NavLink to="/loans" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <Banknote size={20} /> Loan Manager
+
+          {!isCollapsed && <div className="nav-section-title">Finance & Banking</div>}
+          <NavLink to="/ledger" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Digital Ledger">
+            <CreditCard size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Digital Ledger</span>}
           </NavLink>
-          <NavLink to="/banks" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <Landmark size={20} /> Bank Accounts
+          <NavLink to="/loans" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Loan Manager">
+            <Banknote size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Loan Manager</span>}
           </NavLink>
-          <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <Briefcase size={20} /> Projects
-          </NavLink>
-          <NavLink to="/meet" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <Video size={20} /> Meet & Connect
-          </NavLink>
-          <NavLink to="/network" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <Globe size={20} /> Network Hub
+          <NavLink to="/banks" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Bank Accounts">
+            <Landmark size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Bank Accounts</span>}
           </NavLink>
 
           <div className="nav-group">
-            <button className={`nav-item ${isPaymentOpen ? 'group-active' : ''}`} onClick={() => setIsPaymentOpen(!isPaymentOpen)} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <CreditCard size={20} /> Payment
-              <span style={{ marginLeft: 'auto' }}>{isPaymentOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</span>
+            <button 
+              className={`nav-item ${isPaymentOpen ? 'group-active' : ''}`} 
+              onClick={() => setIsPaymentOpen(!isPaymentOpen)} 
+              title="Payment Management"
+            >
+              <CreditCard size={19} className="nav-icon" /> 
+              {!isCollapsed && (
+                <>
+                  <span>Payment</span>
+                  <span className="nav-chevron">{isPaymentOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}</span>
+                </>
+              )}
             </button>
-            {isPaymentOpen && (
+            {isPaymentOpen && !isCollapsed && (
               <div className="nav-sub-menu">
                 <NavLink to="/payments/inward" className={({ isActive }) => isActive ? "nav-sub-item active" : "nav-sub-item"}>
                   Inward Payment
@@ -182,11 +226,20 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           </div>
 
           <div className="nav-group">
-            <button className={`nav-item ${isExpensesOpen ? 'group-active' : ''}`} onClick={() => setIsExpensesOpen(!isExpensesOpen)} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <Wallet size={20} /> Income & Expenses
-              <span style={{ marginLeft: 'auto' }}>{isExpensesOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</span>
+            <button 
+              className={`nav-item ${isExpensesOpen ? 'group-active' : ''}`} 
+              onClick={() => setIsExpensesOpen(!isExpensesOpen)}
+              title="Income & Expenses"
+            >
+              <Wallet size={19} className="nav-icon" /> 
+              {!isCollapsed && (
+                <>
+                  <span>Income & Expenses</span>
+                  <span className="nav-chevron">{isExpensesOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}</span>
+                </>
+              )}
             </button>
-            {isExpensesOpen && (
+            {isExpensesOpen && !isCollapsed && (
               <div className="nav-sub-menu">
                 <NavLink to="/expenses/daily" className={({ isActive }) => isActive ? "nav-sub-item active" : "nav-sub-item"}>
                   Daily Expenses
@@ -198,20 +251,35 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
             )}
           </div>
 
-          <NavLink to="/reports" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <BarChart3 size={20} /> Reports
+          <NavLink to="/reports" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Analytics & Reports">
+            <BarChart3 size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Reports</span>}
           </NavLink>
-          <NavLink
-            to="/history"
-            className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
-          >
-            <History size={20} /> History
+
+          {!isCollapsed && <div className="nav-section-title">Hub & Tools</div>}
+          <NavLink to="/meet" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Meet & Connect">
+            <Video size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Meet & Connect</span>}
           </NavLink>
-          <NavLink to="/compliance" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <FileText size={20} /> Compliance
+          <NavLink to="/network" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Network Hub">
+            <Globe size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Network Hub</span>}
           </NavLink>
-          <NavLink to="/settings" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-            <SettingsIcon size={20} /> Settings
+          <NavLink to="/store" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Marketplace Store">
+            <ShoppingBag size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Marketplace Store</span>}
+          </NavLink>
+          <NavLink to="/history" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Audit History">
+            <History size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>History</span>}
+          </NavLink>
+          <NavLink to="/compliance" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Compliance">
+            <FileText size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Compliance</span>}
+          </NavLink>
+          <NavLink to="/settings" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Settings">
+            <SettingsIcon size={19} className="nav-icon" /> 
+            {!isCollapsed && <span>Settings</span>}
           </NavLink>
         </nav>
       </div>

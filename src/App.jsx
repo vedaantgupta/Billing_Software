@@ -66,7 +66,10 @@ import SearchResults from '@/pages/SearchResults';
 import Projects from '@/features/projects/pages/Projects';
 import ProjectDetails from '@/features/projects/pages/ProjectDetails';
 import Meet from '@/features/projects/pages/Meet';
-import NetworkHub from '@/pages/NetworkHub';
+import NetworkHub from '@/features/network/pages/NetworkHub';
+import Store from '@/features/store/pages/Store';
+import CategoriesPage from '@/features/store/pages/CategoriesPage';
+import AccountPage from '@/features/store/pages/AccountPage';
 import PublicProfile from '@/pages/PublicProfile';
 import PublicProductDetail from '@/features/products/pages/PublicProductDetail';
 
@@ -620,6 +623,34 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <NetworkHub />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/store" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Store />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/categories" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CategoriesPage />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/store/account" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AccountPage />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AccountPage />
                 </Layout>
               </ProtectedRoute>
             } />
