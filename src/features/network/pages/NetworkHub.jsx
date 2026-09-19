@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/config/api';
 import { 
   MessageSquare, 
   Heart, 
@@ -96,7 +97,7 @@ const NetworkHub = () => {
     if (!user?.id) return;
     setIsSavedLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/saved-sellers?userId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/marketplace/saved-sellers?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setSavedSellers(data);
@@ -119,7 +120,7 @@ const NetworkHub = () => {
   const fetchConversations = async () => {
     setIsConversationsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/network/conversations/${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/network/conversations/${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setConversations(data);
@@ -137,7 +138,7 @@ const NetworkHub = () => {
   const fetchMessages = async (convId) => {
     setIsMessagesLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/network/messages/${convId}`);
+      const response = await fetch(`${API_BASE_URL}/network/messages/${convId}`);
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
@@ -153,7 +154,7 @@ const NetworkHub = () => {
     if (!newMessage.trim() || !selectedConversation?.otherUser?.id) return;
     
     try {
-      const response = await fetch('http://localhost:5000/api/network/messages/send', {
+      const response = await fetch(`${API_BASE_URL}/network/messages/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -170,7 +171,7 @@ const NetworkHub = () => {
         
         if (selectedConversation.isNew) {
           await fetchConversations();
-          const refreshedConvs = await (await fetch(`http://localhost:5000/api/network/conversations/${user.id}`)).json();
+          const refreshedConvs = await (await fetch(`${API_BASE_URL}/network/conversations/${user.id}`)).json();
           const newConv = refreshedConvs.find(c => c.otherUser.id === selectedConversation.otherUser.id);
           if (newConv) {
             setSelectedConversation(newConv);
@@ -194,7 +195,7 @@ const NetworkHub = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/api/network/users/search?query=${query}&currentUserId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/network/users/search?query=${query}&currentUserId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setUserSearchResults(data);
@@ -225,7 +226,7 @@ const NetworkHub = () => {
 
   const fetchFeed = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/network/feed');
+      const response = await fetch(`${API_BASE_URL}/network/feed`);
       if (response.ok) {
         const data = await response.json();
         setPosts(data);
@@ -251,7 +252,7 @@ const NetworkHub = () => {
         comments: []
       };
 
-      const response = await fetch('http://localhost:5000/api/network/post', {
+      const response = await fetch(`${API_BASE_URL}/network/post`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData)
@@ -268,7 +269,7 @@ const NetworkHub = () => {
 
   const handleLike = async (postId) => {
     try {
-      const response = await fetch('http://localhost:5000/api/network/like', {
+      const response = await fetch(`${API_BASE_URL}/network/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId, userId: user.id })

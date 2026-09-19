@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { MapPin, Mail, Phone, ExternalLink, Package, MessageSquare, BookOpen, Briefcase, Award, CheckCircle, ShoppingBag, Star, Share2, Globe, MessageCircle, Heart, History, Clock, Truck, RotateCcw, Zap, Users, Info, ShieldCheck, TrendingUp, HelpCircle, Tag } from 'lucide-react';
 import '@/pages/PublicProfile.css';
+import { API_BASE_URL } from '@/config/api';
 
 const PublicProfile = () => {
   const { id } = useParams();
@@ -22,7 +23,7 @@ const PublicProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/public/profile/${id}`);
+        const response = await fetch(`${API_BASE_URL}/public/profile/${id}`);
         if (response.ok) {
           const data = await response.json();
           setProfileData(data);
@@ -43,7 +44,7 @@ const PublicProfile = () => {
 
   const fetchFeed = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/network/feed`);
+      const response = await fetch(`${API_BASE_URL}/network/feed`);
       if (response.ok) {
         const data = await response.json();
         // Filter posts by this user and mock product tags
@@ -60,7 +61,7 @@ const PublicProfile = () => {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/reviews/${id}`);
+      const response = await fetch(`${API_BASE_URL}/reviews/${id}`);
       if (response.ok) {
         const data = await response.json();
         setReviews(data);
@@ -76,7 +77,7 @@ const PublicProfile = () => {
       const reviewerName = currentUser?.firstName 
         ? `${currentUser.firstName} ${currentUser.lastName}` 
         : currentUser?.username || 'Anonymous Client';
-      const response = await fetch('http://localhost:5000/api/reviews', {
+      const response = await fetch(`${API_BASE_URL}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

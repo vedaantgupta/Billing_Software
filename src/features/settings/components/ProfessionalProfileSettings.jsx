@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Save, Plus, Trash2, BookOpen, Briefcase, Award } from 'lucide-react';
+import { API_BASE_URL } from '@/config/api';
 
 const ProfessionalProfileSettings = () => {
   const { user } = useAuth();
@@ -31,7 +32,7 @@ const ProfessionalProfileSettings = () => {
     // Fetch current profile data to populate the form
     const fetchProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/public/profile/${user.id}`);
+        const response = await fetch(`${API_BASE_URL}/public/profile/${user.id}`);
         if (response.ok) {
           const data = await response.json();
           if (data.user && data.user.professionalProfile) {
@@ -95,7 +96,7 @@ const ProfessionalProfileSettings = () => {
         lastName: profile.lastName
       };
 
-      const response = await fetch(`http://localhost:5000/api/user/profile/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/user/profile/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

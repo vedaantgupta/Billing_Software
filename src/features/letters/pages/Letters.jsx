@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { replaceVariables } from '@/features/letters/pages/letterVariables';
 import { exportPDF } from '@/utils/pdfExport';
 import { useReactToPrint } from 'react-to-print';
+import { API_BASE_URL } from '@/config/api';
 
 import TemplateSidebar from '@/features/letters/components/TemplateSidebar';
 import LetterEditor from '@/features/letters/pages/LetterEditor';
@@ -215,7 +216,7 @@ const Letters = () => {
 
     setIsAIGenerating(true);
     try {
-      const response = await fetch('http://localhost:5000/api/ai/chat', {
+      const response = await fetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

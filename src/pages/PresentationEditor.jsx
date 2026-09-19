@@ -20,6 +20,7 @@ import {
 } from 'recharts';
 import { getItems, addItem, updateItem } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
+import { SOCKET_URL } from '@/config/api';
 import '@/pages/PresentationEditor.css';
 
 // Curated Design System Themes
@@ -381,8 +382,6 @@ export default function PresentationEditor() {
 
   // Sync presentation themes
   // --- LIVE MEET & WEBRTC LOGIC ---
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const SOCKET_URL = isLocal ? `http://${window.location.hostname}:5000` : window.location.origin;
 
   const setupPeer = (targetUserId, targetUserName, stream) => {
     const pc = new RTCPeerConnection({

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { X, CheckCircle, Package, FileText, Image as ImageIcon, Search, ShieldCheck, Plus, Trash2, Video, FileDown, DollarSign } from 'lucide-react';
 import { CATEGORIES_TAXONOMY, getSubcategories } from '@/data/categoriesData';
+import { API_BASE_URL } from '@/config/api';
 
 const StorePublishModal = ({ isOpen, onClose, productData, onPublish }) => {
   const [activeTab, setActiveTab] = useState('basic');
@@ -72,7 +73,7 @@ const StorePublishModal = ({ isOpen, onClose, productData, onPublish }) => {
     uploadData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:5000/api/upload', {
+      const response = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: uploadData
       });

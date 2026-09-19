@@ -13,9 +13,10 @@ import {
 } from 'lucide-react';
 import '@/Ledger.css';
 import { io } from "socket.io-client";
+import { API_BASE_URL, SOCKET_URL } from '@/config/api';
 
 // Initialize socket with websocket transport only for sub-1sec delivery
-const socket = io("http://localhost:5000", {
+const socket = io(SOCKET_URL, {
   transports: ["websocket"],
   upgrade: false
 });
@@ -96,7 +97,7 @@ const ProjectDetails = () => {
     if (!project?.projectId) return;
     try {
       const recipientId = activeChatUser ? activeChatUser.userId : 'group';
-      const response = await fetch(`http://localhost:5000/api/chat/${project.projectId}?userId=${user.id}&recipientId=${recipientId}`);
+      const response = await fetch(`${API_BASE_URL}/chat/${project.projectId}?userId=${user.id}&recipientId=${recipientId}`);
       const data = await response.json();
       setMessages(data);
     } catch (err) {
@@ -114,7 +115,7 @@ const ProjectDetails = () => {
     if (!project?.projectId) return;
     try {
       // First, join the project globally
-      const joinRes = await fetch('http://localhost:5000/api/project-members/join', {
+      const joinRes = await fetch(`${API_BASE_URL}/project-members/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -127,7 +128,7 @@ const ProjectDetails = () => {
       setMyRole(myMemberInfo.role || 'Member');
 
       // Then fetch all members
-      const response = await fetch(`http://localhost:5000/api/project-members/${project.projectId}`);
+      const response = await fetch(`${API_BASE_URL}/project-members/${project.projectId}`);
       const data = await response.json();
       setMembers(data);
     } catch (err) {
@@ -237,7 +238,7 @@ const ProjectDetails = () => {
 
     // Save to DB for persistence via global API
     try {
-      await fetch('http://localhost:5000/api/chat', {
+      await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(msgData)
@@ -256,7 +257,7 @@ const ProjectDetails = () => {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData
       });
@@ -277,7 +278,7 @@ const ProjectDetails = () => {
         setMessages(prev => [...prev, msgData]);
         socket.emit("send_message", msgData);
 
-        await fetch('http://localhost:5000/api/chat', {
+        await fetch(`${API_BASE_URL}/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(msgData)
@@ -320,7 +321,7 @@ const ProjectDetails = () => {
         setIsUploading(true);
 
         try {
-          const res = await fetch('http://localhost:5000/api/upload', {
+          const res = await fetch(`${API_BASE_URL}/upload`, {
             method: 'POST',
             body: formData
           });
@@ -338,7 +339,7 @@ const ProjectDetails = () => {
             };
             setMessages(prev => [...prev, msgData]);
             socket.emit("send_message", msgData);
-            await fetch('http://localhost:5000/api/chat', {
+            await fetch(`${API_BASE_URL}/chat`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(msgData)
@@ -543,7 +544,7 @@ const ProjectDetails = () => {
   const handleUpdateRole = async (targetUserId, newRole) => {
     if (myRole !== 'Admin') return alert('Only Admins can change roles');
     try {
-      await fetch('http://localhost:5000/api/project-members/role', {
+      await fetch(`${API_BASE_URL}/project-members/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: project.projectId, userId: targetUserId, newRole })
@@ -561,7 +562,7 @@ const ProjectDetails = () => {
     const type = choice ? 'full' : 'chat';
     if (!choice && !window.confirm('Confirm: Block this person from Chat only?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/project-members/${project.projectId}/${targetUserId}?removedBy=${user.firstName}&type=${type}`, {
+      const res = await fetch(`${API_BASE_URL}/project-members/${project.projectId}/${targetUserId}?removedBy=${user.firstName}&type=${type}`, {
         method: 'DELETE'
       });
       if (!res.ok) {
@@ -579,7 +580,7 @@ const ProjectDetails = () => {
   const handleRestoreMember = async (targetUserId) => {
     if (myRole !== 'Admin') return alert('Only Admins can restore members');
     try {
-      await fetch('http://localhost:5000/api/project-members/unblock', {
+      await fetch(`${API_BASE_URL}/project-members/unblock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: project.projectId, userId: targetUserId })

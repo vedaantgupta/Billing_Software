@@ -3,6 +3,7 @@ import '@/features/dashboard/styles/AIAssistant.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '@/hooks/useAuth';
+import { API_BASE_URL } from '@/config/api';
 
 const AIAssistant = () => {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ const AIAssistant = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/chat', {
+      const response = await fetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

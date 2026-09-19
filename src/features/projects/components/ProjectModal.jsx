@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, User, Calendar, Briefcase, IndianRupee, Info } from 'lucide-react';
 import { addItem, updateItem, getItems } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
+import { API_BASE_URL } from '@/config/api';
 
 const ProjectModal = ({ isOpen, onClose, onSave, editingId, initialData }) => {
   const { user } = useAuth();
@@ -90,7 +91,7 @@ const ProjectModal = ({ isOpen, onClose, onSave, editingId, initialData }) => {
         const result = await addItem('projects', formData, user.id);
         // Register as Global Admin for this Project ID
         if (formData.projectId) {
-          await fetch('http://localhost:5000/api/project-members/join', {
+          await fetch(`${API_BASE_URL}/project-members/join`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

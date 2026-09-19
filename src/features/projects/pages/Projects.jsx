@@ -3,6 +3,7 @@ import { getItems, deleteItem } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
 import { Search, Briefcase, Plus, Edit2, Trash2, ChevronRight, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/config/api';
 import ProjectModal from '@/features/projects/components/ProjectModal';
 import '@/Ledger.css';
 
@@ -41,7 +42,7 @@ const Projects = () => {
     try {
       // Check global membership if project ID exists
       if (projectId) {
-        const memRes = await fetch(`http://localhost:5000/api/project-members/${projectId}`);
+        const memRes = await fetch(`${API_BASE_URL}/project-members/${projectId}`);
         const members = await memRes.json();
         const originalAdmin = members.find(m => m.isOriginalAdmin);
         

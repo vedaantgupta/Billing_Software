@@ -3,11 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Video, MessageSquare, Copy, Check, Send, LogOut, User, Zap, ShieldCheck, Users, Lock, UserPlus, Phone, VideoOff, Mic, MicOff, PhoneOff, X, Plus, File, Image, Music, Film, MapPin, Download, Paperclip } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuth } from '@/hooks/useAuth';
+import { API_BASE_URL, SOCKET_URL } from '@/config/api';
 import '@/features/projects/styles/Meet.css';
-
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const SOCKET_URL = isLocal ? `http://${window.location.hostname}:5000` : window.location.origin;
-const API_BASE_URL = '/api';
 
 const Meet = () => {
   const { user } = useAuth();

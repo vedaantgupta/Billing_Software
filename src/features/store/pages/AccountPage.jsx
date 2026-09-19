@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { API_BASE_URL } from '@/config/api';
 import { 
   User, 
   Users, 
@@ -84,7 +85,7 @@ export default function AccountPage() {
 
   const fetchCart = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/cart?userId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setCartItems(data);
@@ -96,7 +97,7 @@ export default function AccountPage() {
 
   const fetchWishlist = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/wishlist?userId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/marketplace/wishlist?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setWishlistItems(data);
@@ -108,7 +109,7 @@ export default function AccountPage() {
 
   const fetchSavedSellers = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/saved-sellers?userId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/marketplace/saved-sellers?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setSavedSellers(data);
@@ -121,7 +122,7 @@ export default function AccountPage() {
   const handleSaveSeller = async (sellerId, relationshipTag = 'Trusted Seller', customNotes = '') => {
     if (!user?.id) return;
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace/saved-sellers', {
+      const response = await fetch(`${API_BASE_URL}/marketplace/saved-sellers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, sellerId, relationshipTag, customNotes })
@@ -141,7 +142,7 @@ export default function AccountPage() {
   const handleRemoveSavedSeller = async (sellerId) => {
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/saved-sellers?userId=${user.id}&sellerId=${sellerId}`, {
+      const response = await fetch(`${API_BASE_URL}/marketplace/saved-sellers?userId=${user.id}&sellerId=${sellerId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -157,7 +158,7 @@ export default function AccountPage() {
     const newQty = currentQty + delta;
     if (!user?.id || newQty < 1) return;
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace/cart', {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, productId, quantity: newQty })
@@ -173,7 +174,7 @@ export default function AccountPage() {
   const handleRemoveFromCart = async (productId) => {
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/cart?userId=${user.id}&productId=${productId}`, {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart?userId=${user.id}&productId=${productId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -188,7 +189,7 @@ export default function AccountPage() {
   const handleToggleWishlist = async (productId) => {
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/wishlist?userId=${user.id}&productId=${productId}`, {
+      const response = await fetch(`${API_BASE_URL}/marketplace/wishlist?userId=${user.id}&productId=${productId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -203,13 +204,13 @@ export default function AccountPage() {
   const handleMoveWishlistToCart = async (productId) => {
     if (!user?.id) return;
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace/cart', {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, productId, quantity: 1 })
       });
       if (response.ok) {
-        await fetch(`http://localhost:5000/api/marketplace/wishlist?userId=${user.id}&productId=${productId}`, {
+        await fetch(`${API_BASE_URL}/marketplace/wishlist?userId=${user.id}&productId=${productId}`, {
           method: 'DELETE'
         });
         showToast('Moved to cart!', 'success');
@@ -224,7 +225,7 @@ export default function AccountPage() {
   const handleClearCart = async () => {
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/cart/clear?userId=${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart/clear?userId=${user.id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -243,7 +244,7 @@ export default function AccountPage() {
         const uniqueSellerIds = [...new Set(cartItems.map(item => item.product?.userId).filter(Boolean))];
         for (const sellerId of uniqueSellerIds) {
           try {
-            await fetch('http://localhost:5000/api/marketplace/saved-sellers', {
+            await fetch(`${API_BASE_URL}/marketplace/saved-sellers`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

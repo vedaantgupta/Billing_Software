@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/config/api';
 import { 
   ShoppingBag, 
   Search, 
@@ -91,7 +92,7 @@ const Store = () => {
 
   const fetchCart = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/cart?userId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setCartItems(data);
@@ -103,7 +104,7 @@ const Store = () => {
 
   const fetchWishlist = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/wishlist?userId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/marketplace/wishlist?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setWishlistItems(data);
@@ -116,7 +117,7 @@ const Store = () => {
   const fetchSavedSellers = async () => {
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/saved-sellers?userId=${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/marketplace/saved-sellers?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setSavedSellers(data);
@@ -133,7 +134,7 @@ const Store = () => {
       return;
     }
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace/saved-sellers', {
+      const response = await fetch(`${API_BASE_URL}/marketplace/saved-sellers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, sellerId, relationshipTag, customNotes })
@@ -156,7 +157,7 @@ const Store = () => {
     if (e) e.stopPropagation();
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/saved-sellers?userId=${user.id}&sellerId=${sellerId}`, {
+      const response = await fetch(`${API_BASE_URL}/marketplace/saved-sellers?userId=${user.id}&sellerId=${sellerId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -180,7 +181,7 @@ const Store = () => {
     const prodImg = productDetail?.data?.image || null;
 
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace/cart', {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, productId, quantity })
@@ -210,7 +211,7 @@ const Store = () => {
 
     try {
       if (isWishlisted) {
-        const response = await fetch(`http://localhost:5000/api/marketplace/wishlist?userId=${user.id}&productId=${productId}`, {
+        const response = await fetch(`${API_BASE_URL}/marketplace/wishlist?userId=${user.id}&productId=${productId}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -220,7 +221,7 @@ const Store = () => {
           showToast('Failed to remove from wishlist', 'error');
         }
       } else {
-        const response = await fetch('http://localhost:5000/api/marketplace/wishlist', {
+        const response = await fetch(`${API_BASE_URL}/marketplace/wishlist`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, productId })
@@ -242,7 +243,7 @@ const Store = () => {
     const newQty = currentQty + delta;
     if (!user?.id) return;
     try {
-      const response = await fetch('http://localhost:5000/api/marketplace/cart', {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, productId, quantity: newQty })
@@ -258,7 +259,7 @@ const Store = () => {
   const handleRemoveFromCart = async (productId) => {
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/cart?userId=${user.id}&productId=${productId}`, {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart?userId=${user.id}&productId=${productId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -273,7 +274,7 @@ const Store = () => {
   const handleClearCart = async () => {
     if (!user?.id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/cart/clear?userId=${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/marketplace/cart/clear?userId=${user.id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -290,14 +291,14 @@ const Store = () => {
     if (!user?.id) return;
     try {
       // Add to wishlist
-      const wishlistRes = await fetch('http://localhost:5000/api/marketplace/wishlist', {
+      const wishlistRes = await fetch(`${API_BASE_URL}/marketplace/wishlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, productId })
       });
       // Remove from cart
       if (wishlistRes.ok) {
-        await fetch(`http://localhost:5000/api/marketplace/cart?userId=${user.id}&productId=${productId}`, {
+        await fetch(`${API_BASE_URL}/marketplace/cart?userId=${user.id}&productId=${productId}`, {
           method: 'DELETE'
         });
         showToast('Moved to wishlist for later!', 'success');
@@ -317,7 +318,7 @@ const Store = () => {
         const uniqueSellerIds = [...new Set(cartItems.map(item => item.product?.userId).filter(Boolean))];
         for (const sellerId of uniqueSellerIds) {
           try {
-            await fetch('http://localhost:5000/api/marketplace/saved-sellers', {
+            await fetch(`${API_BASE_URL}/marketplace/saved-sellers`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -343,7 +344,7 @@ const Store = () => {
   const fetchMarketplaceProducts = async (query = '') => {
     setIsLoading(true);
     try {
-      const url = `http://localhost:5000/api/marketplace/products?userId=${user?.id || ''}${query ? `&search=${query}` : ''}`;
+      const url = `${API_BASE_URL}/marketplace/products?userId=${user?.id || ''}${query ? `&search=${query}` : ''}`;
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -359,7 +360,7 @@ const Store = () => {
   const trackInteraction = async (productId, productGroup, type = 'view') => {
     if (!user?.id) return;
     try {
-      await fetch('http://localhost:5000/api/marketplace/interact', {
+      await fetch(`${API_BASE_URL}/marketplace/interact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
