@@ -44,7 +44,7 @@ const Card = ({ icon: Icon, title, action, onAction, children, style }) => (
   <div className="cp-card" style={style}>
     <div className="cp-card-header">
       <div className="cp-card-title-wrap">
-        <div className="cp-card-icon-wrap"><Icon size={14} /></div>
+        <div className="cp-card-icon-wrap"><Icon size={15} /></div>
         <span className="cp-card-label">{title}</span>
       </div>
       {action && <button className="cp-card-action" onClick={onAction}>{action}</button>}
@@ -70,8 +70,6 @@ const ContactProfile = () => {
       const found    = contacts.find(c => (c._dbId === id || c.id === id));
       setContact(found || null);
 
-      // IMPORTANT: The ledger and previous systems use the timestamp 'id' as the key.
-      // If we found a contact, use its 'id' field for ledger lookups.
       const ledgerId = found ? (found.id || id) : id;
       const info = await getContactBalance(ledgerId, user.id);
       setBalanceInfo(info);
@@ -98,8 +96,8 @@ const ContactProfile = () => {
   if (!contact) return (
     <div className="cp-page">
       <div className="cp-loading">
-        <AlertCircle size={52} style={{ color: '#f43f5e', opacity: 0.6 }} />
-        <div className="cp-loading-text">Contact not found</div>
+        <AlertCircle size={52} style={{ color: '#ef4444', opacity: 0.8 }} />
+        <div className="cp-loading-text" style={{ color: '#1e293b' }}>Contact not found</div>
         <button className="cp-btn primary" onClick={() => navigate('/contacts')} style={{ marginTop: '0.5rem' }}>
           Back to Contacts
         </button>
@@ -116,7 +114,6 @@ const ContactProfile = () => {
   const custom   = contact.customFields     || {};
   const extra    = contact.additionalDetails || {};
 
-  // Consistent ID for ledger navigation
   const ledgerId = contact.id || id;
 
   const billingAddr  = [billing.address,  billing.landmark,  billing.city,  billing.state,  billing.pincode,  billing.country ].filter(Boolean).join(', ');
@@ -131,24 +128,24 @@ const ContactProfile = () => {
   const quickActions = [
     { 
       icon: BookOpen,      
-      bg: 'rgba(99,102,241,0.2)',  
-      color: '#a78bfa', 
+      bg: '#e0e7ff',  
+      color: '#4f46e5', 
       title: 'View Ledger',             
-      sub: 'Full transaction history & balance',             
+      sub: 'Full transaction history & balance statement',             
       onClick: () => navigate(`/ledger/${ledgerId}`)         
     },
     { 
       icon: FilePlus,      
-      bg: 'rgba(16,185,129,0.2)',  
-      color: '#34d399', 
+      bg: '#d1fae5',  
+      color: '#059669', 
       title: 'New Document',      
       sub: 'Create invoice, order, or quote',                  
       onClick: () => navigate('/documents/select', { state: { contactId: ledgerId, contactName: name } })
     },
     { 
       icon: MessageCircle, 
-      bg: 'rgba(20,184,166,0.2)',  
-      color: '#2dd4bf', 
+      bg: '#ccfbf1',  
+      color: '#0d9488', 
       title: contact.phone ? `Call ${contact.phone}` : 'No Phone Saved', 
       sub: contact.phone ? 'Tap to open dialer' : 'Add phone to call', 
       onClick: () => contact.phone && window.open(`tel:${contact.phone}`) 
@@ -168,19 +165,12 @@ const ContactProfile = () => {
         </div>
 
         {/* ════════════════════════════════════════
-            HERO
+            HERO CARD (Vibrant Light Header)
         ════════════════════════════════════════ */}
         <div className="cp-hero">
-          <div className="cp-hero-gradient" />
-          <div className="cp-hero-shimmer" />
-          <div className="cp-hero-orb1" />
-          <div className="cp-hero-orb2" />
-          <div className="cp-hero-orb3" />
-
           <div className="cp-hero-body">
             {/* Avatar */}
             <div className="cp-avatar-wrapper">
-              <div className="cp-avatar-ring" />
               <div className="cp-hero-avatar">{initial}</div>
             </div>
 
@@ -194,8 +184,8 @@ const ContactProfile = () => {
                   <span className="cp-chip reg">{contact.registrationType}</span>
                 )}
                 {extra.isEnabled !== false && (
-                  <span className="cp-chip" style={{ background: 'rgba(16,185,129,0.25)', color: '#6ee7b7', borderColor: 'rgba(16,185,129,0.2)' }}>
-                    <CheckCircle size={10} /> Active
+                  <span className="cp-chip active">
+                    <CheckCircle size={11} /> Active Contact
                   </span>
                 )}
               </div>
@@ -203,17 +193,17 @@ const ContactProfile = () => {
               <div className="cp-hero-contact-info">
                 {contact.phone && (
                   <a href={`tel:${contact.phone}`} className="cp-hero-contact-item">
-                    <Phone size={13} /> {contact.phone}
+                    <Phone size={14} /> {contact.phone}
                   </a>
                 )}
                 {contact.email && (
                   <a href={`mailto:${contact.email}`} className="cp-hero-contact-item">
-                    <Mail size={13} /> {contact.email}
+                    <Mail size={14} /> {contact.email}
                   </a>
                 )}
                 {billing.city && (
                   <div className="cp-hero-contact-item">
-                    <MapPin size={13} /> {billing.city}{billing.state ? `, ${billing.state}` : ''}
+                    <MapPin size={14} /> {billing.city}{billing.state ? `, ${billing.state}` : ''}
                   </div>
                 )}
               </div>
@@ -225,27 +215,27 @@ const ContactProfile = () => {
                 <BookOpen size={15} /> View Ledger
               </button>
               <button className="cp-btn ghost" onClick={() => navigate('/contacts', { state: { editId: id } })}>
-                <Edit2 size={15} /> Edit
+                <Edit2 size={15} /> Edit Contact
               </button>
             </div>
           </div>
         </div>
 
         {/* ════════════════════════════════════════
-            STAT CARDS
+            STAT CARDS (Light Metric Grid)
         ════════════════════════════════════════ */}
         <div className="cp-stats">
           {/* Balance */}
           <div className="cp-stat balance">
             <div className="cp-stat-deco">
-              <Wallet size={100} />
+              <Wallet size={90} />
             </div>
-            <div className="cp-stat-icon-box"><Wallet size={18} /></div>
-            <div className="cp-stat-label">Outstanding</div>
+            <div className="cp-stat-icon-box"><Wallet size={20} /></div>
+            <div className="cp-stat-label">Net Balance (Outstanding)</div>
             <div className="cp-stat-value">₹{netBalance.toLocaleString()}</div>
             <div className="cp-stat-sub">
-              {balanceInfo.position === 'Dr' && '↑ Receivable — they owe you'}
-              {balanceInfo.position === 'Cr' && '↓ Payable — you owe them'}
+              {balanceInfo.position === 'Dr' && '↑ Receivable — contact owes you'}
+              {balanceInfo.position === 'Cr' && '↓ Payable — you owe contact'}
               {!balanceInfo.position && 'Account fully settled ✓'}
             </div>
           </div>
@@ -253,9 +243,9 @@ const ContactProfile = () => {
           {/* Received */}
           <div className="cp-stat recv">
             <div className="cp-stat-deco">
-              <ArrowDownLeft size={100} />
+              <ArrowDownLeft size={90} />
             </div>
-            <div className="cp-stat-icon-box"><ArrowDownLeft size={18} /></div>
+            <div className="cp-stat-icon-box"><ArrowDownLeft size={20} /></div>
             <div className="cp-stat-label">Total Received</div>
             <div className="cp-stat-value">₹{totalRecv.toLocaleString()}</div>
             <div className="cp-stat-sub">Payments in / credits recorded</div>
@@ -264,9 +254,9 @@ const ContactProfile = () => {
           {/* Given */}
           <div className="cp-stat give">
             <div className="cp-stat-deco">
-              <ArrowUpRight size={100} />
+              <ArrowUpRight size={90} />
             </div>
-            <div className="cp-stat-icon-box"><ArrowUpRight size={18} /></div>
+            <div className="cp-stat-icon-box"><ArrowUpRight size={20} /></div>
             <div className="cp-stat-label">Total Given</div>
             <div className="cp-stat-value">₹{totalGiven.toLocaleString()}</div>
             <div className="cp-stat-sub">Invoices raised / debits recorded</div>
@@ -278,18 +268,18 @@ const ContactProfile = () => {
           <div className="cp-info-grid">
             <InfoRow icon={Building2} label="Company / Business Name" value={contact.companyName} />
             <InfoRow icon={User}      label="Contact Person"          value={contact.contactName} />
-            <InfoRow icon={Phone}     label="Phone"                   value={contact.phone} />
-            <InfoRow icon={Mail}      label="Email"                   value={contact.email} />
-            <InfoRow icon={CreditCard} label="Type"
+            <InfoRow icon={Phone}     label="Phone Number"            value={contact.phone} />
+            <InfoRow icon={Mail}      label="Email Address"           value={contact.email} />
+            <InfoRow icon={CreditCard} label="Contact Type"
               chip={<span className={`cp-type-pill ${type}`}>{type.toUpperCase()}</span>} />
-            <InfoRow icon={Shield}    label="Registration"            value={contact.registrationType} />
-            <InfoRow icon={Hash}      label="PAN Number"              value={contact.pan} />
+            <InfoRow icon={Shield}    label="GST Registration Type"   value={contact.registrationType} />
+            <InfoRow icon={Hash}      label="PAN Card Number"         value={contact.pan} />
             {contact.gstin && (
               <div className="cp-info-row">
                 <div className="cp-info-icon-wrap"><Shield size={15} /></div>
                 <div style={{ flex: 1 }}>
                   <div className="cp-info-label">GSTIN</div>
-                  <span className="cp-gstin-chip"><Shield size={10} /> {contact.gstin}</span>
+                  <span className="cp-gstin-chip"><Shield size={11} /> {contact.gstin}</span>
                 </div>
               </div>
             )}
@@ -307,7 +297,7 @@ const ContactProfile = () => {
               <div style={{ gridColumn: 'span 2' }}>
                 <div className="cp-section-divider">
                   <div className="cp-section-divider-line" />
-                  <span className="cp-section-divider-label">Shipping</span>
+                  <span className="cp-section-divider-label">Shipping Details</span>
                   <div className="cp-section-divider-line" />
                 </div>
                 <div className="cp-info-grid">
@@ -325,25 +315,25 @@ const ContactProfile = () => {
             {quickActions.map((qa, i) => (
               <button key={i} className="cp-qa-item" onClick={qa.onClick}>
                 <div className="cp-qa-icon-box" style={{ background: qa.bg, color: qa.color }}>
-                  <qa.icon size={17} />
+                  <qa.icon size={18} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div className="cp-qa-title">{qa.title}</div>
                   <div className="cp-qa-sub">{qa.sub}</div>
                 </div>
-                <ChevronRight size={15} className="cp-qa-arrow" />
+                <ChevronRight size={16} className="cp-qa-arrow" />
               </button>
             ))}
           </Card>
 
-          {/* Financials + Custom */}
-          <Card icon={Wallet} title="Financial & Custom" style={{ marginBottom: 0 }}>
+          {/* Financials & Custom */}
+          <Card icon={Wallet} title="Financial & Additional Info" style={{ marginBottom: 0 }}>
             <InfoRow icon={Wallet} label="Opening Balance"
               value={contact.openingBalance
                 ? `₹${contact.openingBalance}  •  ${contact.balanceType || 'Credit'}`
                 : null} />
             <InfoRow icon={CreditCard} label="Credit Limit" value={extra.creditLimit ? `₹${extra.creditLimit}` : null} />
-            <InfoRow icon={FileText} label="Due Days" value={extra.dueDays ? `${extra.dueDays} days` : null} />
+            <InfoRow icon={FileText} label="Payment Due Days" value={extra.dueDays ? `${extra.dueDays} days` : null} />
             {custom.licenseNo && <InfoRow icon={Hash} label="License No." value={custom.licenseNo} />}
             {custom.field1 && <InfoRow icon={Hash} label="Custom Field 1" value={custom.field1} />}
           </Card>
@@ -353,9 +343,9 @@ const ContactProfile = () => {
         <Card
           icon={Receipt}
           title="Recent Transactions"
-          action="View All →"
+          action="View Full Ledger →"
           onAction={() => navigate(`/ledger/${ledgerId}`)}
-          style={{ marginBottom: 0 }}
+          style={{ marginTop: '1.5rem', marginBottom: 0 }}
         >
           {sortedTx.length > 0 ? (
             <table className="cp-tx-table">
@@ -374,8 +364,8 @@ const ContactProfile = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div className={`cp-tx-icon ${tx.type === 'dr' ? 'dr' : 'cr'}`}>
                           {tx.type === 'dr'
-                            ? <ArrowUpRight size={14} />
-                            : <ArrowDownLeft size={14} />}
+                            ? <ArrowUpRight size={15} />
+                            : <ArrowDownLeft size={15} />}
                         </div>
                         <div>
                           <div className="cp-tx-desc">
@@ -395,13 +385,13 @@ const ContactProfile = () => {
               </tbody>
             </table>
           ) : (
-            <div className="cp-empty" style={{ padding: '2rem' }}>
-              <Receipt size={44} style={{ opacity: 0.2 }} />
-              <div className="cp-empty-title">No transactions yet</div>
-              <div className="cp-empty-sub">Go to Ledger to record entries for this contact.</div>
-              <button className="cp-btn primary" style={{ marginTop: '0.75rem', fontSize: '0.82rem', padding: '0.55rem 1.1rem' }}
+            <div className="cp-empty" style={{ padding: '2.5rem 2rem' }}>
+              <Receipt size={48} style={{ color: '#cbd5e1' }} />
+              <div className="cp-empty-title">No transactions recorded yet</div>
+              <div className="cp-empty-sub">Open the contact ledger to add payments, invoices, or manual entries.</div>
+              <button className="cp-btn primary" style={{ marginTop: '0.75rem', fontSize: '0.82rem', padding: '0.6rem 1.2rem' }}
                 onClick={() => navigate(`/ledger/${ledgerId}`)}>
-                <BookOpen size={14} /> Open Ledger
+                <BookOpen size={15} /> Open Contact Ledger
               </button>
             </div>
           )}

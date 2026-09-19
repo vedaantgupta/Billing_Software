@@ -17,10 +17,13 @@ import {
     Type,
     Palette,
     Save,
-    RotateCcw
+    RotateCcw,
+    Calculator,
+    Edit2
 } from "lucide-react";
 import { AuthContext } from "@/contexts/AuthContext";
 import { getItems, addItem, updateItem, deleteItem } from "@/utils/db";
+import HistoryCalculator from "@/pages/HistoryCalculator";
 import "@/pages/history.css";
 
 const COLORS = [
@@ -56,6 +59,21 @@ export default function HistorySection() {
     const loadNotes = async () => {
         const data = await getItems("historyNotes", user.id);
         setNotes(data || []);
+    };
+
+    const handleSaveCalculationAsNote = async (calcTitle, calcContent) => {
+        if (!user?.id) return;
+        const noteData = {
+            title: calcTitle,
+            content: calcContent,
+            color: "white",
+            pinned: false,
+            trashed: false,
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+        };
+        await addItem("historyNotes", noteData, user.id);
+        loadNotes();
     };
 
     const handleSave = async () => {
@@ -184,6 +202,9 @@ export default function HistorySection() {
                 <div className={`nav-link-item ${activeTab === 'trash' ? 'active' : ''}`} onClick={() => setActiveTab('trash')}>
                     <Trash2 size={20} /> Trash
                 </div>
+                <div className={`nav-link-item ${activeTab === 'calculator' ? 'active' : ''}`} onClick={() => setActiveTab('calculator')}>
+                    <Calculator size={20} /> Calculator
+                </div>
 
                 <div style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     {notes.length} total entries
@@ -192,82 +213,96 @@ export default function HistorySection() {
 
             {/* Main Content Area */}
             <div className="history-content">
-                <header className="history-header">
-                    <div className="search-wrapper">
-                        <Search size={18} className="search-icon" />
-                        <input
-                            type="text"
-                            className="history-search-input"
-                            placeholder="Search in history..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="view-controls">
-                        <div className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}>
-                            <ListIcon size={20} />
-                        </div>
-                        <div className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}>
-                            <Grid size={20} />
-                        </div>
-                    </div>
-                </header>
-
-                {activeTab === 'trash' && filteredNotes.length > 0 && (
-                    <div className="trash-warning">
-                        <Trash2 size={16} />
-                        <span>Notes in trash are kept here. You can restore them or delete permanently.</span>
-                    </div>
-                )}
-
-                <main className={`notes-container ${viewMode === 'list' ? 'list-view' : ''}`}>
-                    <div className="notes-scroll-container">
-                        {filteredNotes.map(note => (
-                            <div
-                                key={note.id}
-                                className={`sticky-note color-${note.color} ${note.pinned ? 'pinned' : ''}`}
-                                onClick={() => openEditor(note)}
-                            >
-                                <div className="note-title">{note.title || "Untitled Entry"}</div>
-                                <div
-                                    className="note-preview"
-                                    dangerouslySetInnerHTML={{ __html: note.content }}
+                {activeTab === 'calculator' ? (
+                    <HistoryCalculator onSaveAsNote={handleSaveCalculationAsNote} />
+                ) : (
+                    <>
+                        <header className="history-header">
+                            <div className="search-wrapper">
+                                <Search size={18} className="search-icon" />
+                                <input
+                                    type="text"
+                                    className="history-search-input"
+                                    placeholder="Search in history..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
                                 />
-                                <div className="note-footer">
-                                    <span>{new Date(note.updatedAt || note.createdAt).toLocaleDateString()}</span>
-                                    <div className="note-actions">
-                                        {!note.trashed ? (
-                                            <>
-                                                <Star
-                                                    size={16}
-                                                    className="action-icon"
-                                                    fill={note.pinned ? "var(--warning-color)" : "none"}
-                                                    color={note.pinned ? "var(--warning-color)" : "currentColor"}
-                                                    onClick={(e) => togglePin(e, note)}
-                                                />
-                                                <Trash2 size={16} className="action-icon" onClick={(e) => moveToTrash(e, note)} />
-                                            </>
-                                        ) : (
-                                            <>
-                                                <RotateCcw size={16} className="action-icon" onClick={(e) => restoreNote(e, note)} />
-                                                <X size={16} className="action-icon" onClick={(e) => deletePermanently(e, note)} />
-                                            </>
-                                        )}
-                                    </div>
+                            </div>
+
+                            <div className="view-controls">
+                                <div className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}>
+                                    <ListIcon size={20} />
+                                </div>
+                                <div className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}>
+                                    <Grid size={20} />
                                 </div>
                             </div>
-                        ))}
+                        </header>
 
-                        {filteredNotes.length === 0 && (
-                            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
-                                <h3>No entries found</h3>
-                                <p>Start saving your data by clicking the Compose button.</p>
+                        {activeTab === 'trash' && filteredNotes.length > 0 && (
+                            <div className="trash-warning">
+                                <Trash2 size={16} />
+                                <span>Notes in trash are kept here. You can restore them or delete permanently.</span>
                             </div>
                         )}
-                    </div>
-                </main>
+
+                        <main className={`notes-container ${viewMode === 'list' ? 'list-view' : ''}`}>
+                            <div className="notes-scroll-container">
+                                {filteredNotes.map(note => (
+                                    <div
+                                        key={note.id}
+                                        className={`sticky-note color-${note.color} ${note.pinned ? 'pinned' : ''}`}
+                                        onClick={() => openEditor(note)}
+                                    >
+                                        <div className="note-title">{note.title || "Untitled Entry"}</div>
+                                        <div
+                                            className="note-preview"
+                                            dangerouslySetInnerHTML={{ __html: note.content }}
+                                        />
+                                        <div className="note-footer">
+                                            <span>{new Date(note.updatedAt || note.createdAt).toLocaleDateString()}</span>
+                                            <div className="note-actions">
+                                                {!note.trashed ? (
+                                                    <>
+                                                        <Edit2
+                                                            size={16}
+                                                            className="action-icon"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openEditor(note);
+                                                            }}
+                                                        />
+                                                        <Star
+                                                            size={16}
+                                                            className="action-icon"
+                                                            fill={note.pinned ? "var(--warning-color)" : "none"}
+                                                            color={note.pinned ? "var(--warning-color)" : "currentColor"}
+                                                            onClick={(e) => togglePin(e, note)}
+                                                        />
+                                                        <Trash2 size={16} className="action-icon" onClick={(e) => moveToTrash(e, note)} />
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <RotateCcw size={16} className="action-icon" onClick={(e) => restoreNote(e, note)} />
+                                                        <X size={16} className="action-icon" onClick={(e) => deletePermanently(e, note)} />
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {filteredNotes.length === 0 && (
+                                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+                                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
+                                        <h3>No entries found</h3>
+                                        <p>Start saving your data by clicking the Compose button.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </main>
+                    </>
+                )}
             </div>
 
             {/* Word-style Editor Modal */}

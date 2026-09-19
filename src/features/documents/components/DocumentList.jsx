@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getItems, addItem, deleteItem } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Printer, Copy, RefreshCw, Send, X, Edit, Trash2 } from 'lucide-react';
+import { Plus, Printer, Copy, RefreshCw, Send, X, Edit, Trash2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import '@/features/documents/styles/DocumentList.css';
 import { QRCodeSVG } from 'qrcode.react';
 import PrintTemplate from '@/features/letters/components/PrintTemplate';
 import PrintViewModal from '@/components/ui/PrintViewModal';
@@ -156,9 +157,12 @@ const DocumentList = () => {
   }
 
   return (
-    <div>
-      <div className="print-hide page-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-        <h1 className="page-title">Document Management</h1>
+    <div className="document-list-page">
+      <div className="print-hide page-header">
+        <div>
+          <h1 className="page-title">Document Management</h1>
+          <p className="page-subtitle">Manage, duplicate, share, and track all your billing documents.</p>
+        </div>
         <div className="flex gap-2">
           <button className="btn" style={{ backgroundColor: '#2563eb', color: 'white' }} onClick={() => navigate(tabToRoute[activeTab] || '/documents/select')}>
             <Plus size={18} /> Create {activeTab}
@@ -169,7 +173,7 @@ const DocumentList = () => {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4 print-hide" style={{ overflowX: 'auto', paddingBottom: '0.5rem' }}>
+      <div className="flex gap-2 mb-4 print-hide tabs-scroll" style={{ overflowX: 'auto', paddingBottom: '0.5rem' }}>
         {docTypes.map(type => (
           <button
             key={type}
@@ -182,7 +186,7 @@ const DocumentList = () => {
         ))}
       </div>
 
-      <div className="glass print-hide" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+      <div className="glass print-hide table-card" style={{ padding: '1.5rem', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
@@ -210,45 +214,53 @@ const DocumentList = () => {
 
                     if (balance > 0) {
                       return (
-                        <span style={{ background: '#ffedd5', color: '#9a3412', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                        <span className="outstanding-badge dr">
                           ₹{balance.toFixed(2)} {position}
                         </span>
                       );
                     }
                     return (
-                      <span style={{ background: '#d1fae5', color: '#065f46', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                      <span className="outstanding-badge paid">
                         ₹0.00
                       </span>
                     );
                   })()}
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
-                  <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Print / Print with QR" onClick={() => setPrintDoc(doc)}>
+                  <button className="btn btn-secondary action-btn" style={{ padding: '0.5rem' }} title="Print / Print with QR" onClick={() => setPrintDoc(doc)}>
                     <Printer size={16} />
                   </button>
-                  <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Send via WhatsApp/Email" onClick={() => setSendDoc(doc)}>
+                  <button className="btn btn-secondary action-btn" style={{ padding: '0.5rem' }} title="Send via WhatsApp/Email" onClick={() => setSendDoc(doc)}>
                     <Send size={16} />
                   </button>
-                  <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Edit Document" onClick={() => handleEdit(doc)}>
+                  <button className="btn btn-secondary action-btn" style={{ padding: '0.5rem' }} title="Edit Document" onClick={() => handleEdit(doc)}>
                     <Edit size={16} />
                   </button>
-                  <button className="btn btn-secondary" style={{ padding: '0.5rem' }} title="Duplicate" onClick={() => handleDuplicate(doc)}>
+                  <button className="btn btn-secondary action-btn" style={{ padding: '0.5rem' }} title="Duplicate" onClick={() => handleDuplicate(doc)}>
                     <Copy size={16} />
                   </button>
                   {doc.docType !== 'Sale Invoice' && doc.docType !== 'Invoice' && (
-                    <button className="btn btn-secondary" style={{ padding: '0.5rem', color: 'var(--primary-color)' }} title="Convert to Sale Invoice" onClick={() => handleConvertToInvoice(doc)}>
+                    <button className="btn btn-secondary action-btn" style={{ padding: '0.5rem', color: 'var(--primary-color)' }} title="Convert to Sale Invoice" onClick={() => handleConvertToInvoice(doc)}>
                       <RefreshCw size={16} />
                     </button>
                   )}
-                  <button className="btn btn-danger" style={{ padding: '0.5rem', background: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }} title="Delete" onClick={() => handleDelete(doc.id)}>
+                  <button className="btn btn-danger action-btn" style={{ padding: '0.5rem', background: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }} title="Delete" onClick={() => handleDelete(doc.id)}>
                     <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
             ))}
             {filteredDocs.length === 0 && (
-              <tr>
-                <td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No {activeTab}s found.</td>
+              <tr className="empty-state-row">
+                <td colSpan="6">
+                  <div className="empty-state-wrapper">
+                    <div className="empty-state-icon">
+                      <FileText size={32} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="empty-state-title">No {activeTab}s Found</h3>
+                    <p className="empty-state-desc">Create your first {activeTab} to manage your transactions and print invoices.</p>
+                  </div>
+                </td>
               </tr>
             )}
           </tbody>

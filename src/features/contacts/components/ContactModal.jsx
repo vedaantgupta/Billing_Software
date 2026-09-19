@@ -2,13 +2,29 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { addItem, updateItem } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
-import { X, User, MapPin, CreditCard, PlusCircle, Globe, Shield, Save } from 'lucide-react';
+import { X, User, MapPin, CreditCard, PlusCircle, Save, Sparkles } from 'lucide-react';
 import '@/features/contacts/styles/ContactModal.css';
+
+const STATE_CODES = {
+  '01': 'Jammu & Kashmir', '02': 'Himachal Pradesh', '03': 'Punjab', '04': 'Chandigarh',
+  '05': 'Uttarakhand', '06': 'Haryana', '07': 'Delhi', '08': 'Rajasthan', '09': 'Uttar Pradesh',
+  '10': 'Bihar', '11': 'Sikkim', '12': 'Arunachal Pradesh', '13': 'Nagaland', '14': 'Manipur',
+  '15': 'Mizoram', '16': 'Tripura', '17': 'Meghalaya', '18': 'Assam', '19': 'West Bengal',
+  '20': 'Jharkhand', '21': 'Odisha', '22': 'Chhattisgarh', '23': 'Madhya Pradesh', '24': 'Gujarat',
+  '26': 'Dadra & Nagar Haveli', '27': 'Maharashtra', '28': 'Andhra Pradesh', '29': 'Karnataka',
+  '30': 'Goa', '31': 'Lakshadweep', '32': 'Kerala', '33': 'Tamil Nadu', '34': 'Puducherry',
+  '35': 'Andaman & Nicobar', '36': 'Telangana', '37': 'Andhra Pradesh', '38': 'Ladakh'
+};
 
 const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData = null }) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showShipping, setShowShipping] = useState(false);
+
+  const defaultBilling = { address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' };
+  const defaultShipping = { name: '', contactPerson: '', phone: '', email: '', address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' };
+  const defaultCustomFields = { licenseNo: '', field1: '', field2: '' };
+  const defaultAdditional = { fax: '', website: '', creditLimit: '', dueDays: '', note: '', isEnabled: true };
 
   const [formData, setFormData] = useState({
     type: 'customer',
@@ -19,43 +35,12 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
     email: '',
     registrationType: 'Regular',
     pan: '',
-    billing: {
-      address: '',
-      landmark: '',
-      city: '',
-      country: 'India',
-      state: 'Maharashtra',
-      pincode: '',
-      ewayBillDistance: ''
-    },
-    shipping: {
-      name: '',
-      contactPerson: '',
-      phone: '',
-      email: '',
-      address: '',
-      landmark: '',
-      city: '',
-      country: 'India',
-      state: 'Maharashtra',
-      pincode: '',
-      ewayBillDistance: ''
-    },
+    billing: defaultBilling,
+    shipping: defaultShipping,
     openingBalance: '0',
     balanceType: 'Credit',
-    customFields: {
-      licenseNo: '',
-      field1: '',
-      field2: ''
-    },
-    additionalDetails: {
-      fax: '',
-      website: '',
-      creditLimit: '',
-      dueDays: '',
-      note: '',
-      isEnabled: true
-    }
+    customFields: defaultCustomFields,
+    additionalDetails: defaultAdditional
   });
 
   // Body scroll lock
@@ -69,12 +54,6 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
       document.body.style.overflow = 'auto';
     };
   }, [isOpen]);
-
-  // Default sub-objects to avoid stale-closure issues
-  const defaultBilling = { address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' };
-  const defaultShipping = { name: '', contactPerson: '', phone: '', email: '', address: '', landmark: '', city: '', country: 'India', state: 'Maharashtra', pincode: '', ewayBillDistance: '' };
-  const defaultCustomFields = { licenseNo: '', field1: '', field2: '' };
-  const defaultAdditional = { fax: '', website: '', creditLimit: '', dueDays: '', note: '', isEnabled: true };
 
   // Load initial data for editing or reset for new
   useEffect(() => {
@@ -108,35 +87,69 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
       });
       setShowShipping(false);
     }
-  }, [initialData, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialData, isOpen]);
 
   const handleChange = (e, section = null, subSection = null) => {
     const { name, value, type, checked } = e.target;
     const val = type === 'checkbox' ? checked : value;
+    const targetKey = subSection || name;
 
-    if (section && subSection) {
+    if (section) {
       setFormData(prev => ({
         ...prev,
-        [section]: { ...prev[section], [subSection]: val }
-      }));
-    } else if (section) {
-      setFormData(prev => ({
-        ...prev,
-        [section]: { ...prev[section], [name]: val }
+        [section]: {
+          ...(prev[section] || {}),
+          [targetKey]: val
+        }
       }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: val }));
+      setFormData(prev => ({
+        ...prev,
+        [targetKey]: val
+      }));
     }
   };
 
   const handleAutofillGSTIN = () => {
-    if (!formData.gstin) return;
-    // Simulated GSTIN Autofill logic
+    const rawGst = (formData.gstin || '').trim().toUpperCase();
+    if (!rawGst) return;
+
+    let detectedState = formData.billing.state;
+    const stateCode = rawGst.substring(0, 2);
+    if (STATE_CODES[stateCode]) {
+      detectedState = STATE_CODES[stateCode];
+    }
+
+    let extractedPan = formData.pan;
+    if (rawGst.length >= 12) {
+      extractedPan = rawGst.substring(2, 12);
+    }
+
     setFormData(prev => ({
       ...prev,
-      companyName: 'Auto-filled Business Name',
-      registrationType: prev.gstin.startsWith('27') ? 'Regular' : 'Interstate',
-      billing: { ...prev.billing, state: 'Maharashtra', city: 'Mumbai', address: 'Auto-filled GST Address' }
+      gstin: rawGst,
+      pan: extractedPan || prev.pan,
+      registrationType: 'Regular',
+      billing: {
+        ...prev.billing,
+        state: detectedState
+      }
+    }));
+  };
+
+  const handleCopyBillingToShipping = () => {
+    setFormData(prev => ({
+      ...prev,
+      shipping: {
+        ...prev.shipping,
+        address: prev.billing.address || '',
+        landmark: prev.billing.landmark || '',
+        city: prev.billing.city || '',
+        state: prev.billing.state || '',
+        pincode: prev.billing.pincode || '',
+        country: prev.billing.country || 'India',
+        ewayBillDistance: prev.billing.ewayBillDistance || ''
+      }
     }));
   };
 
@@ -218,7 +231,12 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
             <div className="form-grid">
               <div className="form-group">
                 <label className="form-label">GSTIN</label>
-                <input name="gstin" className="form-input" placeholder="Enter GSTIN" value={formData.gstin} onChange={handleChange} />
+                <div className="gstin-group">
+                  <input name="gstin" className="form-input uppercase-input" placeholder="Enter GSTIN" value={formData.gstin} onChange={handleChange} />
+                  <button type="button" className="autofill-btn" onClick={handleAutofillGSTIN}>
+                    Auto Fill
+                  </button>
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Business Name *</label>
@@ -247,7 +265,7 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
               </div>
               <div className="form-group">
                 <label className="form-label">PAN No.</label>
-                <input name="pan" className="form-input" placeholder="PAN" value={formData.pan} onChange={handleChange} />
+                <input name="pan" className="form-input uppercase-input" placeholder="PAN" value={formData.pan} onChange={handleChange} />
               </div>
             </div>
           </div>
@@ -282,6 +300,12 @@ const ContactModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
 
             {showShipping && (
               <div className="mt-4 p-4 rounded bg-gray-50/50">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569' }}>Shipping Details</span>
+                  <button type="button" className="autofill-btn" onClick={handleCopyBillingToShipping} style={{ background: '#e0e7ff', color: '#4338ca' }}>
+                    Copy Billing Address
+                  </button>
+                </div>
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">Contact Person</label>
