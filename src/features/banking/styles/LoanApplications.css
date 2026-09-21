@@ -1,0 +1,165 @@
+/* Loan Applications Styling */
+.la-container {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: inherit;
+  color: #1e293b;
+}
+
+.la-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.la-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.la-title-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.la-stage-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.la-stage-pill.submitted { background: #e0e7ff; color: #4338ca; }
+.la-stage-pill.kyc_pending { background: #fef3c7; color: #b45309; }
+.la-stage-pill.verification { background: #e0f2fe; color: #0369a1; }
+.la-stage-pill.underwriting { background: #f3e8ff; color: #7e22ce; }
+.la-stage-pill.approved { background: #dcfce7; color: #15803d; }
+.la-stage-pill.sanctioned { background: #ccfbf1; color: #0f766e; }
+.la-stage-pill.disbursed { background: #d1fae5; color: #065f46; font-weight: 800; }
+.la-stage-pill.rejected { background: #fee2e2; color: #b91c1c; }
+
+.la-stepper {
+  display: flex;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  gap: 0.5rem;
+}
+
+.la-step-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.la-step-item.active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+.la-step-item.completed {
+  color: #059669;
+}
+
+.la-table-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.la-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.la-table th {
+  background: #f8fafc;
+  padding: 0.9rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.la-table td {
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.la-table tr:hover td {
+  background: #fafafa;
+}
+
+.la-underwrite-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+}
+
+.la-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.la-rule-box {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.la-rule-box.pass {
+  border-left: 4px solid #10b981;
+}
+
+.la-rule-box.fail {
+  border-left: 4px solid #ef4444;
+}

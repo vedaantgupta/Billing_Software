@@ -57,6 +57,13 @@ import LoanTransactions from '@/features/banking/pages/LoanTransactions';
 import PaymentDetails from '@/features/documents/pages/PaymentDetails';
 import CreditReport from '@/features/banking/pages/CreditReport';
 import AdvancedLoanCalculator from '@/features/banking/pages/AdvancedLoanCalculator';
+import LoanApplications from '@/features/banking/pages/LoanApplications';
+import LoanProducts from '@/features/banking/pages/LoanProducts';
+import LoanLeads from '@/features/banking/pages/LoanLeads';
+import Customer360 from '@/features/banking/pages/Customer360';
+import LoanCollections from '@/features/banking/pages/LoanCollections';
+import PortfolioAnalytics from '@/features/banking/pages/PortfolioAnalytics';
+import LoanLedger from '@/features/banking/pages/LoanLedger';
 import BankManager from '@/features/banking/pages/BankManager';
 import BankDetails from '@/features/banking/pages/BankDetails';
 import BankingReport from '@/features/reports/pages/BankingReport';
@@ -537,10 +544,66 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/credit-report" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreditReport />
+                </Layout>
+              </ProtectedRoute>
+            } />
             <Route path="/loans/new" element={
               <ProtectedRoute>
                 <Layout>
                   <AddLoan />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/applications" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanApplications />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/products" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanProducts />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/leads" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanLeads />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/collections" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanCollections />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/analytics" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PortfolioAnalytics />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/ledger" element={
+              <ProtectedRoute>
+                <Layout>
+                  <LoanLedger />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/loans/customers/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Customer360 />
                 </Layout>
               </ProtectedRoute>
             } />

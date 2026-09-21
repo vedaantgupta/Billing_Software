@@ -1,0 +1,71 @@
+/* Loan Ledger Styling */
+.llg-container {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: inherit;
+  color: #1e293b;
+}
+
+.llg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.llg-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.llg-title-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.llg-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.llg-summary-card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.llg-type-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.llg-type-badge.disbursement { background: #fee2e2; color: #b91c1c; }
+.llg-type-badge.repayment_principal { background: #dcfce7; color: #15803d; }
+.llg-type-badge.repayment_interest { background: #e0e7ff; color: #4338ca; }
+.llg-type-badge.fee_assessment { background: #fef3c7; color: #b45309; }
+.llg-type-badge.penalty_assessment { background: #ffedd5; color: #c2410c; }
+.llg-type-badge.waiver { background: #f3e8ff; color: #7e22ce; }
+.llg-type-badge.payment_reversal { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
