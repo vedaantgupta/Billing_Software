@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, Users, FileText, Package, BarChart3, Settings as SettingsIcon, 
+  LayoutDashboard, Sparkles, Users, FileText, Package, BarChart3, Settings as SettingsIcon, 
   Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet, 
   Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag
 } from 'lucide-react';
@@ -20,6 +20,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
   const companyInfo = getDB().company || { name: user?.firstName ? `${user.firstName} ${user.lastName}` : (user?.username || 'Guest User') };
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -150,6 +151,15 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           <NavLink to="/" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Dashboard">
             <LayoutDashboard size={19} className="nav-icon" /> 
             {!isCollapsed && <span>Dashboard</span>}
+          </NavLink>
+          <NavLink to="/ai" className={({ isActive }) => isActive ? "nav-item active ai-copilot-nav" : "nav-item ai-copilot-nav"} title="AI Copilot">
+            <Sparkles size={19} className="nav-icon" style={{ color: '#818cf8' }} /> 
+            {!isCollapsed && (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span>AI Copilot</span>
+                <span style={{ fontSize: '0.62rem', background: 'linear-gradient(135deg, #6366f1, #a855f7)', color: '#fff', padding: '1px 6px', borderRadius: '8px', fontWeight: 700 }}>AI</span>
+              </span>
+            )}
           </NavLink>
           <NavLink to="/documents" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Documents">
             <FileText size={19} className="nav-icon" /> 
@@ -372,7 +382,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           )}
         </main>
       </div>
-      <AIAssistant />
+      {location.pathname !== '/ai' && <AIAssistant />}
     </div>
   );
 };
