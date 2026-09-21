@@ -5,12 +5,9 @@ const isLocalhost = typeof window !== 'undefined' && (
 );
 
 export const BACKEND_URL = (
-  (isLocalhost ? 'http://localhost:5000' : null) ||
   import.meta.env.VITE_BACKEND_URL ||
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD 
-    ? 'https://billing-software-backend-nzi8.onrender.com' 
-    : 'http://localhost:5000')
+  (isLocalhost ? 'http://localhost:5000' : 'https://billing-software-backend-nzi8.onrender.com')
 ).replace(/\/+$/, '');
 
 export const API_BASE_URL = `${BACKEND_URL}/api`;

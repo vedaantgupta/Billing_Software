@@ -71,14 +71,15 @@ const AIPage = () => {
   // Sync messages to store
   useEffect(() => {
     if (messages.length > 0) {
-      aiChatStore.saveMessages(messages);
+      aiChatStore.saveMessages(messages, 'page');
       setSessions(aiChatStore.getSessions());
     }
   }, [messages]);
 
   // Listen to store updates
   useEffect(() => {
-    const handleUpdate = () => {
+    const handleUpdate = (e) => {
+      if (e.detail?.source === 'page') return;
       const active = aiChatStore.getActiveSession();
       if (active) {
         setMessages(active.messages || []);

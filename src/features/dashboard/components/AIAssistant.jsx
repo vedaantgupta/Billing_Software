@@ -63,13 +63,14 @@ const AIAssistant = () => {
   // Sync messages to aiChatStore whenever messages update
   useEffect(() => {
     if (messages.length > 0) {
-      aiChatStore.saveMessages(messages);
+      aiChatStore.saveMessages(messages, 'modal');
     }
   }, [messages]);
 
   // Listen to external store updates (e.g. from AIPage or other tabs)
   useEffect(() => {
-    const handleMessagesUpdate = () => {
+    const handleMessagesUpdate = (e) => {
+      if (e.detail?.source === 'modal') return;
       const active = aiChatStore.getActiveSession();
       if (active && active.messages) {
         setMessages(active.messages);

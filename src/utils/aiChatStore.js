@@ -77,7 +77,7 @@ export const aiChatStore = {
     return sessions.find(s => s.id === activeId) || sessions[0] || this.createNewSession();
   },
 
-  saveMessages(messages) {
+  saveMessages(messages, source = null) {
     try {
       const sessions = this.getSessions();
       const activeId = this.getActiveSessionId();
@@ -114,7 +114,7 @@ export const aiChatStore = {
       }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newSessions));
-      window.dispatchEvent(new CustomEvent('ai-messages-updated', { detail: { activeId, messages } }));
+      window.dispatchEvent(new CustomEvent('ai-messages-updated', { detail: { activeId, messages, source } }));
     } catch (e) {
       console.warn('Failed to save AI messages:', e);
     }
