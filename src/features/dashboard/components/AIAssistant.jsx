@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '@/features/dashboard/styles/AIAssistant.css';
-import '@/styles/AntigravityAI.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '@/hooks/useAuth';
 import { API_BASE_URL } from '@/config/api';
 import { aiChatStore } from '@/utils/aiChatStore';
+import { geminiStore, AVAILABLE_MODELS } from '@/utils/geminiStore';
+import { getConnectedGoogleAccount } from '@/config/firebase';
+import GeminiConnectModal from '@/components/ai/GeminiConnectModal';
 import AntigravityAskingModal from '@/components/ui/AntigravityAskingModal';
 import {
-  Sparkles, Maximize2, Send, Mic, MicOff, Volume2, VolumeX,
-  Copy, Check, Sun, Moon, X, ShieldAlert, ShieldCheck,
+  Sparkles, Send, Mic, MicOff, Volume2, VolumeX,
+  Copy, Check, X, ShieldAlert, ShieldCheck,
   CheckCircle, XCircle, Loader2, ArrowRight,
-  FileText, Package, UserCheck, Users, Briefcase, DollarSign, BookOpen
+  FileText, Package, UserCheck, Users, Briefcase, DollarSign, BookOpen,
+  Bell, HelpCircle, Terminal, GraduationCap, Moon, Sun, Plus,
+  RotateCcw, Maximize2, Bug, ChevronDown
 } from 'lucide-react';
+import '@/features/dashboard/styles/AIAssistant.css';
 
 const AIAssistant = () => {
   const { user } = useAuth();
@@ -21,8 +25,11 @@ const AIAssistant = () => {
 
   // Floating window visibility
   const [isOpen, setIsOpen] = useState(false);
+  const [isGeminiModalOpen, setIsGeminiModalOpen] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [showKpiStrip, setShowKpiStrip] = useState(false);
 
-  // Theme synced with aiChatStore
+  // Theme
   const [theme, setTheme] = useState(() => aiChatStore.getTheme());
 
   // Conversation synced with active session in aiChatStore
@@ -36,18 +43,24 @@ const AIAssistant = () => {
   const [executingActionId, setExecutingActionId] = useState(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
 
+  // Active Model
+  const [selectedModel, setSelectedModel] = useState(() => geminiStore.getModel() || 'gemini-2.0-flash');
+
+  // Google User
+  const [googleUser, setGoogleUser] = useState(() => getConnectedGoogleAccount());
+
   // Voice State (Speech-to-Text & Text-to-Speech)
   const [isRecording, setIsRecording] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState(null);
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
-  const quickActions = [
-    "Check today's sales & revenue",
-    "What items are low on stock?",
-    "Create invoice for Sharma Traders ₹15,000",
-    "Add new product Wireless Mouse selling 650",
-    "Create a new ERP project"
+  // Exact suggestion pills matching Image 1 ("Gemini in Firebase")
+  const image1Pills = [
+    "How can you help me with Firebase?",
+    "How does realtime work in Remote Config?",
+    "What's the difference between crash-free users and crash-free sessions?"
   ];
 
   const scrollToBottom = () => {
@@ -57,17 +70,17 @@ const AIAssistant = () => {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
+      setGoogleUser(getConnectedGoogleAccount());
+      setSelectedModel(geminiStore.getModel() || 'gemini-2.0-flash');
     }
   }, [messages, isLoading, executingActionId, isOpen]);
 
-  // Sync messages to aiChatStore whenever messages update
   useEffect(() => {
     if (messages.length > 0) {
       aiChatStore.saveMessages(messages, 'modal');
     }
   }, [messages]);
 
-  // Listen to external store updates (e.g. from AIPage or other tabs)
   useEffect(() => {
     const handleMessagesUpdate = (e) => {
       if (e.detail?.source === 'modal') return;
@@ -77,11 +90,12 @@ const AIAssistant = () => {
       }
     };
 
-    const handleSessionChange = () => {
-      const active = aiChatStore.getActiveSession();
-      if (active && active.messages) {
-        setMessages(active.messages);
-      }
+    const handleGoogleChange = (e) => {
+      setGoogleUser(e.detail);
+    };
+
+    const handleGeminiChange = (e) => {
+      if (e.detail?.model) setSelectedModel(e.detail.model);
     };
 
     const handleThemeChange = (e) => {
@@ -89,12 +103,14 @@ const AIAssistant = () => {
     };
 
     window.addEventListener('ai-messages-updated', handleMessagesUpdate);
-    window.addEventListener('ai-session-change', handleSessionChange);
+    window.addEventListener('google-account-changed', handleGoogleChange);
+    window.addEventListener('gemini-config-changed', handleGeminiChange);
     window.addEventListener('ai-theme-change', handleThemeChange);
 
     return () => {
       window.removeEventListener('ai-messages-updated', handleMessagesUpdate);
-      window.removeEventListener('ai-session-change', handleSessionChange);
+      window.removeEventListener('google-account-changed', handleGoogleChange);
+      window.removeEventListener('gemini-config-changed', handleGeminiChange);
       window.removeEventListener('ai-theme-change', handleThemeChange);
     };
   }, []);
@@ -103,6 +119,12 @@ const AIAssistant = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
     aiChatStore.setTheme(nextTheme);
+  };
+
+  const handleModelSelect = (modelId) => {
+    setSelectedModel(modelId);
+    geminiStore.setModel(modelId);
+    setShowModelDropdown(false);
   };
 
   // Voice Input: Speech-to-Text
@@ -115,7 +137,7 @@ const AIAssistant = () => {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Voice speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      alert("Voice speech recognition is not supported in this browser. Please use Chrome or Edge.");
       return;
     }
 
@@ -126,19 +148,13 @@ const AIAssistant = () => {
       recognition.interimResults = false;
 
       recognition.onstart = () => setIsRecording(true);
-
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         if (transcript) {
-          setInput(prev => (prev ? (prev + ' ' + transcript) : transcript));
+          setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
         }
       };
-
-      recognition.onerror = (event) => {
-        console.warn("Speech recognition error:", event.error);
-        setIsRecording(false);
-      };
-
+      recognition.onerror = () => setIsRecording(false);
       recognition.onend = () => setIsRecording(false);
 
       recognitionRef.current = recognition;
@@ -149,12 +165,9 @@ const AIAssistant = () => {
     }
   };
 
-  // Voice Output: Text-to-Speech ("Hear")
+  // Voice Output: Text-to-Speech
   const handleSpeak = (text, index) => {
-    if (!window.speechSynthesis) {
-      alert("Text-to-speech is not supported in this browser.");
-      return;
-    }
+    if (!window.speechSynthesis) return;
 
     if (speakingIndex === index) {
       window.speechSynthesis.cancel();
@@ -179,14 +192,18 @@ const AIAssistant = () => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Copy text to clipboard
   const handleCopy = (text, index) => {
     navigator.clipboard?.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  // Find most recent pending action across messages
+  const handleNewChat = () => {
+    aiChatStore.createNewSession();
+    setMessages([]);
+    inputRef.current?.focus();
+  };
+
   const getLatestPendingAction = () => {
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].action && messages[i].action.status === 'pending') {
@@ -196,6 +213,7 @@ const AIAssistant = () => {
     return null;
   };
 
+  // Send message
   const handleSend = async (directInput = null) => {
     const textToSend = directInput || input;
     if (!textToSend.trim() || isLoading) return;
@@ -207,7 +225,6 @@ const AIAssistant = () => {
     const pendingAction = getLatestPendingAction();
     const hasActiveQ = messages.some(m => m.question && m.question.status === 'active');
 
-    // Dismiss active question when user responds
     setMessages(prev =>
       prev.map(m => (m.question?.status === 'active' ? { ...m, question: { ...m.question, status: 'answered' } } : m)).concat([userMessage])
     );
@@ -215,18 +232,17 @@ const AIAssistant = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(API_BASE_URL + '/ai/chat', {
+      const response = await fetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: textToSend,
           history: messages,
           userId: user?.id,
-          userName: user?.name || user?.email || 'You',
+          userName: googleUser?.name || 'Vedaant',
           pendingAction,
-          hasActiveQuestion: hasActiveQ
+          hasActiveQuestion: hasActiveQ,
+          geminiModel: selectedModel
         }),
       });
 
@@ -260,40 +276,36 @@ const AIAssistant = () => {
       } else {
         setMessages(prev => [
           ...prev,
-          { role: 'ai', content: data.message || 'Sorry, I encountered an error communicating with AI. Please try again.' }
+          { role: 'ai', content: data.message || 'Error communicating with Gemini assistant.' }
         ]);
       }
     } catch (error) {
       console.error('AI Error:', error);
       setMessages(prev => [
         ...prev,
-        { role: 'ai', content: 'Connection error. Make sure the backend server is running.' }
+        { role: 'ai', content: 'Connection error. Make sure the backend server is running on port 5000.' }
       ]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle explicit UI button confirmation
   const handleExecuteAction = async (msgIndex, action) => {
     if (!action || executingActionId) return;
     setExecutingActionId(action.actionId);
 
     try {
-      const res = await fetch(API_BASE_URL + '/ai/action/execute', {
+      const res = await fetch(`${API_BASE_URL}/ai/action/execute`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id,
           action,
-          userName: user?.name || user?.email || 'You'
+          userName: googleUser?.name || 'Vedaant'
         })
       });
 
       const result = await res.json();
-
       if (res.ok && result.success) {
         setMessages(prev => {
           const updated = [...prev];
@@ -319,16 +331,12 @@ const AIAssistant = () => {
     }
   };
 
-  // Handle explicit UI cancellation
   const handleCancelAction = (msgIndex, action) => {
     setMessages(prev => {
       const updated = [...prev];
       updated[msgIndex] = {
         ...updated[msgIndex],
-        action: {
-          ...action,
-          status: 'cancelled'
-        }
+        action: { ...action, status: 'cancelled' }
       };
       return updated;
     });
@@ -347,335 +355,427 @@ const AIAssistant = () => {
     });
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       handleSend();
     }
   };
 
   const getActionIcon = (type) => {
     switch (type) {
-      case 'create_document': return <FileText size={17} className="ai-badge-icon doc" />;
-      case 'create_product': return <Package size={17} className="ai-badge-icon prod" />;
-      case 'create_contact': return <UserCheck size={17} className="ai-badge-icon contact" />;
-      case 'create_staff': return <Users size={17} className="ai-badge-icon staff" />;
-      case 'create_project':
-      case 'create_project_task': return <Briefcase size={17} className="ai-badge-icon proj" />;
-      case 'create_expense': return <DollarSign size={17} className="ai-badge-icon exp" />;
-      case 'create_ledger_entry': return <BookOpen size={17} className="ai-badge-icon ledger" />;
-      default: return <Sparkles size={17} className="ai-badge-icon default" />;
+      case 'create_document': return <FileText size={16} className="ai-badge-icon doc" />;
+      case 'create_product': return <Package size={16} className="ai-badge-icon prod" />;
+      case 'create_contact': return <UserCheck size={16} className="ai-badge-icon contact" />;
+      case 'create_staff': return <Users size={16} className="ai-badge-icon staff" />;
+      case 'create_project': return <Briefcase size={16} className="ai-badge-icon proj" />;
+      case 'create_expense': return <DollarSign size={16} className="ai-badge-icon exp" />;
+      case 'create_ledger_entry': return <BookOpen size={16} className="ai-badge-icon ledger" />;
+      default: return <Sparkles size={16} className="ai-badge-icon default" />;
     }
   };
 
-  const renderActionCard = (msg, index) => {
-    const { action } = msg;
-    if (!action) return null;
+  // User display name & initial
+  const userName = googleUser?.name || 'Vedaant';
+  const firstName = googleUser?.firstName || userName.split(' ')[0] || 'Vedaant';
+  const userInitial = (firstName || 'V').charAt(0).toUpperCase();
 
-    const data = action.data || {};
-    const isPending = action.status === 'pending';
-    const isExecuted = action.status === 'executed';
-    const isCancelled = action.status === 'cancelled';
-    const isCurrentExecuting = executingActionId === action.actionId;
-
-    return (
-      <div className={'ai-action-card ' + action.status}>
-        <div className="ai-action-card-header">
-          <div className="ai-action-type-tag">
-            {getActionIcon(action.type)}
-            <span>{action.label || 'Action Proposed'}</span>
-          </div>
-          {isPending && (
-            <span className="ai-perm-badge">
-              <ShieldAlert size={12} /> Needs Permission
-            </span>
-          )}
-        </div>
-
-        {/* Highlight details preview */}
-        <div className="ai-action-details-box">
-          {action.type === 'create_document' && (
-            <div className="ai-action-kv-grid">
-              <div><span className="kv-lbl">Doc Type:</span> <b>{data.docType || 'Sale Invoice'}</b></div>
-              <div><span className="kv-lbl">Customer:</span> <b>{data.customerName || 'Customer'}</b></div>
-              <div><span className="kv-lbl">Date:</span> <b>{data.date}</b></div>
-              <div><span className="kv-lbl">Items:</span> <b>{data.items?.length || 0} items</b></div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <span className="kv-lbl">Total:</span> <b className="kv-total">₹{Number(data.grandTotal || data.total || 0).toLocaleString()}</b>
-              </div>
-            </div>
-          )}
-
-          {action.type === 'create_product' && (
-            <div className="ai-action-kv-grid">
-              <div><span className="kv-lbl">Product:</span> <b>{data.name}</b></div>
-              <div><span className="kv-lbl">Selling:</span> <b>₹{Number(data.sellingPrice || 0).toLocaleString()}</b></div>
-              <div><span className="kv-lbl">Stock:</span> <b>{data.stock} {data.unit || 'PCS'}</b></div>
-              <div><span className="kv-lbl">GST:</span> <b>{data.tax}%</b></div>
-            </div>
-          )}
-
-          {action.type === 'create_contact' && (
-            <div className="ai-action-kv-grid">
-              <div><span className="kv-lbl">Contact:</span> <b>{data.name || data.companyName}</b></div>
-              <div><span className="kv-lbl">Phone:</span> <b>{data.phone || 'N/A'}</b></div>
-              <div><span className="kv-lbl">Type:</span> <b style={{ textTransform: 'capitalize' }}>{data.type || 'Customer'}</b></div>
-              <div><span className="kv-lbl">GSTIN:</span> <b>{data.gstin || 'N/A'}</b></div>
-            </div>
-          )}
-
-          {action.type === 'create_staff' && (
-            <div className="ai-action-kv-grid">
-              <div><span className="kv-lbl">Staff:</span> <b>{data.name || (data.firstName + ' ' + data.lastName)}</b></div>
-              <div><span className="kv-lbl">Role:</span> <b>{data.role}</b></div>
-              <div><span className="kv-lbl">Salary:</span> <b>₹{Number(data.salary || 0).toLocaleString()}</b></div>
-              <div><span className="kv-lbl">Status:</span> <b>{data.status || 'Active'}</b></div>
-            </div>
-          )}
-
-          {action.type === 'create_project' && (
-            <div className="ai-action-kv-grid">
-              <div><span className="kv-lbl">Project:</span> <b>{data.name}</b></div>
-              <div><span className="kv-lbl">Budget:</span> <b>₹{Number(data.budget || 0).toLocaleString()}</b></div>
-              <div><span className="kv-lbl">Priority:</span> <b>{data.priority || 'Medium'}</b></div>
-              <div><span className="kv-lbl">Status:</span> <b>{data.status || 'Planned'}</b></div>
-            </div>
-          )}
-
-          {action.type === 'create_expense' && (
-            <div className="ai-action-kv-grid">
-              <div><span className="kv-lbl">Category:</span> <b>{data.category}</b></div>
-              <div><span className="kv-lbl">Amount:</span> <b className="kv-total">₹{Number(data.amount || 0).toLocaleString()}</b></div>
-              <div><span className="kv-lbl">Mode:</span> <b>{data.paymentMode || 'Cash'}</b></div>
-              <div><span className="kv-lbl">Date:</span> <b>{data.date}</b></div>
-            </div>
-          )}
-        </div>
-
-        {/* Buttons */}
-        {isPending && (
-          <div className="ai-action-actions">
-            <button
-              className="ai-btn-confirm"
-              onClick={() => handleExecuteAction(index, action)}
-              disabled={isCurrentExecuting}
-            >
-              {isCurrentExecuting ? (
-                <>
-                  <Loader2 size={14} className="ai-spin" /> Executing...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck size={14} /> Authorize & Save
-                </>
-              )}
-            </button>
-            <button
-              className="ai-btn-cancel"
-              onClick={() => handleCancelAction(index, action)}
-              disabled={isCurrentExecuting}
-              title="Reject this action"
-            >
-              <X size={14} /> I don't want this
-            </button>
-          </div>
-        )}
-
-        {isExecuted && (
-          <div className="ai-action-result executed">
-            <div className="ai-result-label">
-              <CheckCircle size={15} color="#10b981" />
-              <span>Confirmed & Executed to DB</span>
-            </div>
-            {action.route && (
-              <button
-                className="ai-view-link-btn"
-                onClick={() => navigate(action.route)}
-                title="Navigate to module directly"
-              >
-                Open in module <ArrowRight size={13} />
-              </button>
-            )}
-          </div>
-        )}
-
-        {isCancelled && (
-          <div className="ai-action-result cancelled">
-            <XCircle size={15} color="#ef4444" />
-            <span>Cancelled by user</span>
-          </div>
-        )}
-      </div>
-    );
+  // Model Short Name
+  const getModelShortLabel = (modelId) => {
+    if (modelId.includes('2.0')) return '2.0 Flash';
+    if (modelId.includes('1.5-pro')) return '1.5 Pro';
+    return 'Flash';
   };
 
   return (
     <div className="ai-assistant-container">
       {isOpen && (
-        <div className={'ai-chat-window theme-' + theme}>
-          {/* Header */}
-          <div className="ai-chat-header">
-            <div className="ai-header-brand">
-              <div className="ai-status-dot"></div>
-              <div className="ai-header-titles">
-                <span className="ai-title-text">Business AI Copilot</span>
-                <span className="ai-hf-badge">Llama 3.3 70B</span>
-              </div>
-            </div>
-
-            <div className="ai-header-controls">
-              {/* Theme Toggle */}
+        <div className={`quick-firebase-panel theme-${theme}`}>
+          {/* 1. LEFT VERTICAL DOCK RAIL (Exact Match to Image 1) */}
+          <aside className="quick-dock-rail">
+            <div className="quick-dock-top">
+              {/* User Avatar Circle */}
               <button
                 type="button"
-                onClick={toggleTheme}
-                className="ai-icon-tool-btn"
+                className="quick-dock-avatar-btn"
+                onClick={() => setIsGeminiModalOpen(true)}
+                title={`Connected: ${userName} (Google Account)`}
+              >
+                {googleUser?.photoURL ? (
+                  <img src={googleUser.photoURL} alt={userName} className="quick-dock-photo" />
+                ) : (
+                  <span className="quick-dock-avatar-letter">{userInitial}</span>
+                )}
+              </button>
+
+              {/* Notification Bell */}
+              <button type="button" className="quick-dock-icon-btn" title="Notifications" onClick={() => setShowKpiStrip(!showKpiStrip)}>
+                <Bell size={18} />
+              </button>
+
+              {/* Blue Glowing Sparkle Button */}
+              <button type="button" className="quick-dock-sparkle-active" title="Google Gemini in Firebase">
+                <Sparkles size={18} />
+              </button>
+
+              {/* Help Circle (?) */}
+              <button 
+                type="button" 
+                className="quick-dock-icon-btn" 
+                title="Help" 
+                onClick={() => handleSend("How can you help me with Firebase?")}
+              >
+                <HelpCircle size={18} />
+              </button>
+
+              {/* Terminal Code [>_] */}
+              <button 
+                type="button" 
+                className="quick-dock-icon-btn" 
+                title="System Diagnostics" 
+                onClick={() => setShowKpiStrip(!showKpiStrip)}
+              >
+                <Terminal size={17} />
+              </button>
+
+              {/* Graduation Cap / Library */}
+              <button 
+                type="button" 
+                className="quick-dock-icon-btn" 
+                title="Documentation & Prompts"
+                onClick={() => handleSend("What's the difference between crash-free users and crash-free sessions?")}
+              >
+                <GraduationCap size={19} />
+              </button>
+            </div>
+
+            {/* Bottom: Moon Theme Toggle */}
+            <div className="quick-dock-bottom">
+              <button 
+                type="button" 
+                className="quick-dock-icon-btn theme-toggle" 
+                onClick={toggleTheme} 
                 title={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"}
               >
-                {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
-              </button>
-
-              {/* Open Full Page Workspace */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  navigate('/ai');
-                }}
-                className="ai-icon-tool-btn"
-                title="Expand to Full Page AI Command Center"
-              >
-                <Maximize2 size={15} />
-              </button>
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="ai-close-btn"
-                aria-label="Close Assistant"
-              >
-                &times;
+                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
               </button>
             </div>
-          </div>
+          </aside>
 
-          {/* Messages Body */}
-          <div className="ai-chat-messages">
-            {messages.map((msg, index) => (
-              <div key={index} className={'message ' + msg.role}>
-                {msg.role === 'ai' ? (
-                  <>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}
-                    </ReactMarkdown>
+          {/* 2. MAIN FIREBASE PANEL (Exact Match to Image 1) */}
+          <div className="quick-firebase-main">
+            {/* Topbar: Gemini in Firebase  +  History  ⛶  Bug  ✕ */}
+            <header className="quick-firebase-topbar">
+              <div className="quick-firebase-brand">
+                <span className="quick-brand-gemini">Gemini</span>
+                <span className="quick-brand-firebase">in Firebase</span>
+              </div>
 
-                    {/* AI Message Action Bar (Hear & Copy) */}
-                    <div className="ai-msg-actions">
-                      <button
-                        type="button"
-                        className={'ai-msg-btn ' + (speakingIndex === index ? 'speaking' : '')}
-                        onClick={() => handleSpeak(msg.content, index)}
-                        title={speakingIndex === index ? "Stop speaking" : "Listen to answer (Hear)"}
-                      >
-                        {speakingIndex === index ? <VolumeX size={12} /> : <Volume2 size={12} />}
-                        <span>{speakingIndex === index ? "Stop" : "Hear"}</span>
-                      </button>
+              <div className="quick-firebase-actions">
+                {/* New Chat (+) */}
+                <button type="button" className="quick-top-btn" onClick={handleNewChat} title="New chat">
+                  <Plus size={18} />
+                </button>
 
-                      <button
-                        type="button"
-                        className="ai-msg-btn"
-                        onClick={() => handleCopy(msg.content, index)}
-                        title="Copy text"
-                      >
-                        {copiedIndex === index ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
-                        <span>{copiedIndex === index ? "Copied" : "Copy"}</span>
-                      </button>
+                {/* History Clock */}
+                <button 
+                  type="button" 
+                  className="quick-top-btn" 
+                  onClick={handleNewChat} 
+                  title="Reset / History"
+                >
+                  <RotateCcw size={16} />
+                </button>
+
+                {/* Maximize to Full Page (Image 2) */}
+                <button 
+                  type="button" 
+                  className="quick-top-btn" 
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/ai');
+                  }} 
+                  title="Expand to Full Page Gemini"
+                >
+                  <Maximize2 size={16} />
+                </button>
+
+                {/* Bug / Diagnostics Toggle */}
+                <button 
+                  type="button" 
+                  className="quick-top-btn" 
+                  onClick={() => setShowKpiStrip(!showKpiStrip)} 
+                  title="Diagnostics"
+                >
+                  <Bug size={17} />
+                </button>
+
+                {/* Close Button */}
+                <button 
+                  type="button" 
+                  className="quick-top-btn close" 
+                  onClick={() => setIsOpen(false)} 
+                  title="Close"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </header>
+
+            {/* Optional KPI Strip */}
+            {showKpiStrip && (
+              <div className="quick-kpi-banner">
+                <span>Google Firebase: <code>business-software-b3844</code></span>
+                <span>Active Model: <strong>{selectedModel}</strong></span>
+              </div>
+            )}
+
+            {/* Body */}
+            <div className="quick-firebase-body">
+              {messages.length === 0 ? (
+                /* HERO GREETING STATE (Matching Image 1 Exactly) */
+                <div className="quick-hero-view">
+                  <div className="quick-hero-headings">
+                    <h1 className="quick-hero-title">
+                      <span className="text-blue">Hello, </span>
+                      <span className="text-gradient">{firstName}</span>
+                    </h1>
+                    <h2 className="quick-hero-subtitle">How can I help you?</h2>
+                  </div>
+
+                  <div className="quick-prompt-section">
+                    <p className="quick-prompt-label">Get started with a prompt</p>
+                    <div className="quick-pills-list">
+                      {image1Pills.map((pillText, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="quick-prompt-pill"
+                          onClick={() => handleSend(pillText)}
+                        >
+                          {pillText}
+                        </button>
+                      ))}
                     </div>
+                  </div>
+                </div>
+              ) : (
+                /* ACTIVE CHAT STREAM */
+                <div className="quick-chat-stream">
+                  {messages.map((msg, index) => (
+                    <div key={index} className={`quick-msg-row ${msg.role}`}>
+                      {msg.role === 'ai' && (
+                        <div className="quick-ai-avatar">
+                          <Sparkles size={16} color="#1a73e8" />
+                        </div>
+                      )}
 
-                    {/* Interactive Clarification Modal Card */}
-                    {msg.question && msg.question.status === 'active' && (
-                      <AntigravityAskingModal
-                        question={msg.question}
-                        onSubmit={(answer) => handleSend(answer)}
-                        onCancel={() => handleDismissQuestion(index)}
-                      />
-                    )}
+                      <div className={`quick-msg-bubble ${msg.role}`}>
+                        {msg.role === 'ai' ? (
+                          <>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)}
+                            </ReactMarkdown>
 
-                    {/* Autonomous Action Proposal Card */}
-                    {msg.action && renderActionCard(msg, index)}
-                  </>
-                ) : (
-                  msg.content
-                )}
-              </div>
-            ))}
+                            {/* Message Action Bar (Hear & Copy) */}
+                            <div className="quick-msg-actions">
+                              <button
+                                type="button"
+                                className={`quick-sub-btn ${speakingIndex === index ? 'speaking' : ''}`}
+                                onClick={() => handleSpeak(msg.content, index)}
+                                title={speakingIndex === index ? "Stop voice" : "Listen (Hear)"}
+                              >
+                                {speakingIndex === index ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                                <span>{speakingIndex === index ? "Stop" : "Hear"}</span>
+                              </button>
 
-            {!isLoading && messages.length <= 1 && (
-              <div className="quick-actions">
-                <div className="quick-actions-title">Try asking or commanding:</div>
-                {quickActions.map((action, i) => (
+                              <button
+                                type="button"
+                                className="quick-sub-btn"
+                                onClick={() => handleCopy(msg.content, index)}
+                                title="Copy text"
+                              >
+                                {copiedIndex === index ? <Check size={12} color="#16a34a" /> : <Copy size={12} />}
+                                <span>{copiedIndex === index ? "Copied" : "Copy"}</span>
+                              </button>
+                            </div>
+
+                            {/* Interactive Clarification Modal Card */}
+                            {msg.question && msg.question.status === 'active' && (
+                              <AntigravityAskingModal
+                                question={msg.question}
+                                onSubmit={(answer) => handleSend(answer)}
+                                onCancel={() => handleDismissQuestion(index)}
+                              />
+                            )}
+
+                            {/* Autonomous Action Proposal Card */}
+                            {msg.action && (
+                              <div className={`ai-action-card ${msg.action.status}`}>
+                                <div className="ai-action-card-header">
+                                  <div className="ai-action-type-tag">
+                                    {getActionIcon(msg.action.type)}
+                                    <span>{msg.action.label || 'Action Proposed'}</span>
+                                  </div>
+                                  {msg.action.status === 'pending' && (
+                                    <span className="ai-perm-badge">
+                                      <ShieldAlert size={12} /> Needs Permission
+                                    </span>
+                                  )}
+                                </div>
+
+                                {msg.action.status === 'pending' && (
+                                  <div className="ai-action-actions">
+                                    <button
+                                      className="ai-btn-confirm"
+                                      onClick={() => handleExecuteAction(index, msg.action)}
+                                      disabled={executingActionId === msg.action.actionId}
+                                    >
+                                      {executingActionId === msg.action.actionId ? (
+                                        <><Loader2 size={13} className="ai-spin" /> Saving...</>
+                                      ) : (
+                                        <><ShieldCheck size={13} /> Authorize & Save</>
+                                      )}
+                                    </button>
+                                    <button
+                                      className="ai-btn-cancel"
+                                      onClick={() => handleCancelAction(index, msg.action)}
+                                    >
+                                      <X size={13} /> Reject
+                                    </button>
+                                  </div>
+                                )}
+
+                                {msg.action.status === 'executed' && (
+                                  <div className="ai-action-result executed">
+                                    <CheckCircle size={14} color="#16a34a" />
+                                    <span>Confirmed & Saved to Database</span>
+                                  </div>
+                                )}
+
+                                {msg.action.status === 'cancelled' && (
+                                  <div className="ai-action-result cancelled">
+                                    <XCircle size={14} color="#dc2626" />
+                                    <span>Cancelled by user</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {isLoading && (
+                    <div className="quick-msg-row ai">
+                      <div className="quick-ai-avatar">
+                        <Sparkles size={16} color="#1a73e8" className="ai-spin" />
+                      </div>
+                      <div className="quick-msg-bubble ai loading">
+                        <Loader2 size={14} className="ai-spin" />
+                        <span>Gemini is generating...</span>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* BOTTOM SEARCH CAPSULE WITH MODEL DROPDOWN (Matching Image 1 + Requirement) */}
+            <div className="quick-firebase-bottom">
+              <div className="quick-search-capsule">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="quick-search-input"
+                  placeholder={isRecording ? "Listening to your voice..." : "Ask Gemini"}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                />
+
+                {/* Model Selector Dropdown Chip on Search Bar */}
+                <div className="quick-model-chip-wrapper">
                   <button
-                    key={i}
-                    onClick={() => handleSend(action)}
-                    className="action-chip"
+                    type="button"
+                    className="quick-model-chip-btn"
+                    onClick={() => setShowModelDropdown(!showModelDropdown)}
+                    title="Change active Google Gemini model"
                   >
-                    {action}
+                    <span>{getModelShortLabel(selectedModel)}</span>
+                    <ChevronDown size={14} />
                   </button>
-                ))}
+
+                  {showModelDropdown && (
+                    <div className="quick-model-dropdown-menu">
+                      {AVAILABLE_MODELS.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          className={`quick-model-menu-item ${selectedModel === m.id ? 'active' : ''}`}
+                          onClick={() => handleModelSelect(m.id)}
+                        >
+                          <span className="item-name">{m.name.split(' (')[0]}</span>
+                          <span className="item-badge">{m.badge}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Mic Voice Dictation */}
+                <button
+                  type="button"
+                  className={`quick-mic-btn ${isRecording ? 'recording' : ''}`}
+                  onClick={toggleRecording}
+                  title={isRecording ? "Stop dictation" : "Voice input"}
+                >
+                  {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+                </button>
+
+                {/* Send Button */}
+                <button
+                  type="button"
+                  className={`quick-send-btn ${input.trim() ? 'active' : ''}`}
+                  onClick={() => handleSend()}
+                  disabled={isLoading || !input.trim()}
+                  aria-label="Send message"
+                >
+                  <Send size={15} />
+                </button>
               </div>
-            )}
 
-            {isLoading && (
-              <div className="ai-typing">
-                <Loader2 size={13} className="ai-spin" /> Thinking with Llama 3.3 70B...
+              {/* Disclaimer Matching Image 1 */}
+              <div className="quick-disclaimer">
+                <span>Gemini can make mistakes, so double-check it</span>
+                <HelpCircle size={13} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: 4 }} />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Area with Voice Dictation */}
-          <div className="ai-chat-input-area">
-            <input
-              type="text"
-              placeholder={isRecording ? "Listening to your voice..." : "Ask questions or command actions (e.g. create invoice)..."}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={isLoading}
-            />
-
-            {/* Voice Dictation (Mic) Button */}
-            <button
-              type="button"
-              className={'ai-mic-btn ' + (isRecording ? 'recording' : '')}
-              onClick={toggleRecording}
-              title={isRecording ? "Stop listening" : "Dictate via voice"}
-            >
-              {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
-            </button>
-
-            {/* Send Button */}
-            <button
-              type="button"
-              className="ai-send-btn"
-              onClick={() => handleSend()}
-              disabled={isLoading || !input.trim()}
-              aria-label="Send message"
-            >
-              <Send size={16} />
-            </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Floating Launcher Trigger */}
+      {/* Floating Trigger Launcher */}
       <button
-        className={'ai-toggle-btn ' + (isOpen ? 'active' : '')}
+        className={`ai-toggle-btn ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Business AI Copilot"
-        title="Business AI Copilot"
+        aria-label="Toggle Gemini in Firebase Assistant"
+        title="Gemini in Firebase"
       >
-        {isOpen ? '✕' : <Sparkles size={24} />}
+        {isOpen ? <X size={24} /> : <Sparkles size={24} />}
       </button>
+
+      {/* Google Gemini Connection Modal */}
+      <GeminiConnectModal
+        isOpen={isGeminiModalOpen}
+        onClose={() => setIsGeminiModalOpen(false)}
+      />
     </div>
   );
 };

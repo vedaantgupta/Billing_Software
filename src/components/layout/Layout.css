@@ -494,6 +494,12 @@
   padding: 2rem;
 }
 
+.content-area.no-padding {
+  padding: 0;
+  overflow: hidden;
+  height: calc(100vh - 70px);
+}
+
 /* Page Card Wrappers */
 .page-container {
   max-width: 1400px;

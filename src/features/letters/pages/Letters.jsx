@@ -10,6 +10,7 @@ import { replaceVariables } from '@/features/letters/pages/letterVariables';
 import { exportPDF } from '@/utils/pdfExport';
 import { useReactToPrint } from 'react-to-print';
 import { API_BASE_URL } from '@/config/api';
+import { geminiStore } from '@/utils/geminiStore';
 
 import TemplateSidebar from '@/features/letters/components/TemplateSidebar';
 import LetterEditor from '@/features/letters/pages/LetterEditor';
@@ -221,7 +222,9 @@ const Letters = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: `Generate a professional letter body for: "${prompt}". Return HTML.`,
-          userId: user.id
+          userId: user.id,
+          userGeminiKey: geminiStore.getApiKey(),
+          geminiModel: geminiStore.getModel()
         })
       });
       const data = await response.json();

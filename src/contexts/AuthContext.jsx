@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/config/api';
+import { signInWithGoogleAccount } from '@/config/firebase';
 
 export const AuthContext = createContext();
 
@@ -14,7 +15,16 @@ export const AuthProvider = ({ children }) => {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+
+    const handleGoogleAuth = (e) => {
+      if (e.detail) {
+        setUser(e.detail);
+      }
+    };
+    window.addEventListener('google-auth-changed', handleGoogleAuth);
+
     setLoading(false);
+    return () => window.removeEventListener('google-auth-changed', handleGoogleAuth);
   }, []);
 
   const login = async (identifier, password, rememberMe) => {
@@ -154,13 +164,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   const loginWithProvider = async (provider) => {
-    // Simulate Social OAuth flow
+    if (provider === 'google') {
+      try {
+        const googleUser = await signInWithGoogleAccount();
+        setUser(googleUser);
+        return googleUser;
+      } catch (err) {
+        console.error('Google Sign-In failed:', err);
+        throw err;
+      }
+    }
+
+    // Simulate other social providers if needed
     return new Promise((resolve) => {
       setTimeout(() => {
         const socialUser = {
           id: `social_${Date.now()}`,
-          firstName: provider === 'google' ? 'Google' : 'Facebook',
-          lastName: 'User',
+          firstName: 'User',
+          lastName: '',
           email: `${provider}@example.com`,
           username: `${provider}_user`,
           role: 'user',
@@ -171,7 +192,7 @@ export const AuthProvider = ({ children }) => {
         setUser(socialUser);
         localStorage.setItem('billing_user', JSON.stringify(socialUser));
         resolve(socialUser);
-      }, 1500); // Slightly longer simulation for "redirect/login"
+      }, 1000);
     });
   };
 

@@ -372,7 +372,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           </div>
         </header>
 
-        <main className="content-area">
+        <main className={`content-area ${noWrapper ? 'no-padding' : ''}`}>
           {noWrapper ? (
             children
           ) : (

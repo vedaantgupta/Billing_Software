@@ -106,7 +106,7 @@ function App() {
             {/* Protected Routes */}
             <Route path="/ai" element={
               <ProtectedRoute>
-                <Layout extended={true}>
+                <Layout extended={true} noWrapper={true}>
                   <AIPage />
                 </Layout>
               </ProtectedRoute>

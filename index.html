@@ -23,6 +23,43 @@
 <body>
   <div id="root"></div>
 
+  <!-- Firebase SDK from Google Official CDN (Real Google Sign-In & Firebase App) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCSrThcWumypm8eJ_Kr-QMJOFqOgtknE8",
+      authDomain: "business-software-b3844.firebaseapp.com",
+      projectId: "business-software-b3844",
+      storageBucket: "business-software-b3844.firebasestorage.app",
+      messagingSenderId: "158171778608",
+      appId: "1:158171778608:web:8521a182870edee7c167f5",
+      measurementId: "G-4YMB6SEQWE"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const googleProvider = new GoogleAuthProvider();
+      googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+      window.__FIREBASE_APP__ = app;
+      window.__FIREBASE_AUTH__ = auth;
+      window.__FIREBASE_CONFIG__ = firebaseConfig;
+      window.__FIREBASE_GOOGLE_PROVIDER__ = googleProvider;
+      window.__FIREBASE_SIGN_IN_GOOGLE__ = () => signInWithPopup(auth, googleProvider);
+      window.__FIREBASE_SIGN_OUT__ = () => signOut(auth);
+      window.__FIREBASE_ON_AUTH__ = (cb) => onAuthStateChanged(auth, cb);
+
+      try { getAnalytics(app); } catch (e) {}
+      window.dispatchEvent(new CustomEvent('firebase-initialized', { detail: { app, auth } }));
+    } catch (err) {
+      console.warn('Firebase CDN initialization notice:', err);
+    }
+  </script>
+
   <!-- React Entry -->
   <script type="module" src="/src/main.jsx"></script>
 </body>
