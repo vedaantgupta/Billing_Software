@@ -71,6 +71,11 @@ export const aiChatStore = {
     } catch {}
   },
 
+  switchSession(id) {
+    this.setActiveSessionId(id);
+    return this.getActiveSession();
+  },
+
   getActiveSession() {
     const sessions = this.getSessions();
     const activeId = this.getActiveSessionId();
@@ -125,7 +130,7 @@ export const aiChatStore = {
     const newSession = {
       id: newId,
       title: 'New Conversation',
-      messages: [DEFAULT_GREETING],
+      messages: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -156,6 +161,25 @@ export const aiChatStore = {
       }
       return sessions;
     } catch (e) {
+      return this.getSessions();
+    }
+  },
+
+  renameSession(id, newTitle) {
+    try {
+      const cleanTitle = (newTitle || '').trim();
+      if (!cleanTitle) return this.getSessions();
+      const sessions = this.getSessions().map(s => {
+        if (s.id === id) {
+          return { ...s, title: cleanTitle, updatedAt: new Date().toISOString() };
+        }
+        return s;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      window.dispatchEvent(new CustomEvent('ai-sessions-updated', { detail: sessions }));
+      return sessions;
+    } catch (e) {
+      console.warn('Failed to rename session:', e);
       return this.getSessions();
     }
   }

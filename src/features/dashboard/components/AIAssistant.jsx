@@ -44,7 +44,7 @@ const AIAssistant = () => {
   const [copiedIndex, setCopiedIndex] = useState(null);
 
   // Active Model
-  const [selectedModel, setSelectedModel] = useState(() => geminiStore.getModel() || 'gemini-2.0-flash');
+  const [selectedModel, setSelectedModel] = useState(() => geminiStore.getModel() || 'gemini-3.6-flash');
 
   // Google User
   const [googleUser, setGoogleUser] = useState(() => getConnectedGoogleAccount());
@@ -382,8 +382,12 @@ const AIAssistant = () => {
 
   // Model Short Name
   const getModelShortLabel = (modelId) => {
-    if (modelId.includes('2.0')) return '2.0 Flash';
-    if (modelId.includes('1.5-pro')) return '1.5 Pro';
+    const found = AVAILABLE_MODELS.find(m => m.id === modelId);
+    if (found?.short) return found.short;
+    if (modelId?.includes('lite')) return 'Flash-Lite';
+    if (modelId?.includes('3.6') || modelId?.includes('flash')) return 'Flash';
+    if (modelId?.includes('pro')) return 'Pro';
+    if (modelId?.includes('thinking')) return 'Thinking';
     return 'Flash';
   };
 

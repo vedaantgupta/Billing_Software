@@ -235,8 +235,8 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                         </div>
                         <span className="gemini-model-title-text">{model.name}</span>
                       </div>
-                      <span className={`gemini-model-badge ${model.badge.toLowerCase().replace(/[^a-z]/g, '-')}`}>
-                        {model.badge}
+                      <span className="gemini-model-badge fast-free">
+                        {model.badge || model.short || 'Official'}
                       </span>
                     </div>
                     <p className="gemini-model-desc">{model.desc}</p>

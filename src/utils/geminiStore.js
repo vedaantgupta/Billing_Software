@@ -11,22 +11,34 @@ const MODEL_STORAGE = 'billing_gemini_model';
 
 export const AVAILABLE_MODELS = [
   { 
-    id: 'gemini-2.0-flash', 
-    name: 'Gemini 2.0 Flash (Recommended)', 
-    desc: 'Google\'s newest ultra-fast model with generous free-tier quotas',
-    badge: 'Fast & Free'
+    id: 'gemini-3.5-flash-lite', 
+    apiModel: 'gemini-2.0-flash-lite',
+    name: '3.5 Flash-Lite', 
+    desc: 'Fastest answers',
+    short: 'Flash-Lite'
   },
   { 
-    id: 'gemini-1.5-flash', 
-    name: 'Gemini 1.5 Flash', 
-    desc: 'High-speed, multi-modal balanced intelligence',
-    badge: 'Stable'
+    id: 'gemini-3.6-flash', 
+    apiModel: 'gemini-2.0-flash',
+    name: '3.6 Flash', 
+    desc: 'All-around help',
+    short: 'Flash',
+    isDefault: true
   },
   { 
-    id: 'gemini-1.5-pro', 
-    name: 'Gemini 1.5 Pro', 
-    desc: 'Deep reasoning, complex financials, and large document context',
-    badge: 'Deep Reasoning'
+    id: 'gemini-3.1-pro', 
+    apiModel: 'gemini-1.5-pro',
+    name: '3.1 Pro', 
+    desc: 'Advanced reasoning',
+    short: 'Pro'
+  },
+  { 
+    id: 'gemini-extended-thinking', 
+    apiModel: 'gemini-2.0-flash-thinking-exp-01-21',
+    name: 'Extended thinking', 
+    desc: 'Complex problem solving',
+    short: 'Thinking',
+    isThinking: true
   }
 ];
 
@@ -91,10 +103,23 @@ export const geminiStore = {
    */
   getModel() {
     try {
-      return localStorage.getItem(MODEL_STORAGE) || 'gemini-2.0-flash';
+      const saved = localStorage.getItem(MODEL_STORAGE);
+      if (saved && AVAILABLE_MODELS.some(m => m.id === saved)) {
+        return saved;
+      }
+      return 'gemini-3.6-flash';
     } catch (e) {
-      return 'gemini-2.0-flash';
+      return 'gemini-3.6-flash';
     }
+  },
+
+  /**
+   * Get real API model string recognized by Google Generative AI
+   */
+  getApiModel(modelId = null) {
+    const id = modelId || this.getModel();
+    const found = AVAILABLE_MODELS.find(m => m.id === id);
+    return found?.apiModel || 'gemini-2.0-flash';
   },
 
   /**
