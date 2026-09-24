@@ -36,9 +36,7 @@ export async function signInWithGoogleAccount() {
       };
 
       localStorage.setItem('billing_google_account', JSON.stringify(accountInfo));
-      localStorage.setItem('billing_user', JSON.stringify(accountInfo));
       window.dispatchEvent(new CustomEvent('google-account-changed', { detail: accountInfo }));
-      window.dispatchEvent(new CustomEvent('google-auth-changed', { detail: accountInfo }));
       return accountInfo;
     } catch (err) {
       console.warn('[Firebase Auth]:', err);
@@ -84,7 +82,6 @@ export async function signOutGoogleAccount() {
   }
   localStorage.removeItem('billing_google_account');
   window.dispatchEvent(new CustomEvent('google-account-changed', { detail: null }));
-  window.dispatchEvent(new CustomEvent('google-auth-changed', { detail: null }));
 }
 
 export const signOutGoogle = signOutGoogleAccount;
@@ -108,23 +105,9 @@ export function getConnectedGoogleAccount() {
   try {
     const saved = localStorage.getItem('billing_google_account');
     if (saved) return JSON.parse(saved);
-    return {
-      id: 'google-vedaant-firebase',
-      name: 'Vedaant Gupta',
-      firstName: 'Vedaant',
-      lastName: 'Gupta',
-      email: 'vedaantgupta@gmail.com',
-      photoURL: '',
-      provider: 'google',
-      firebaseProject: 'business-software-b3844',
-      connectedAt: new Date().toISOString()
-    };
+    return null;
   } catch (e) {
-    return {
-      name: 'Vedaant Gupta',
-      firstName: 'Vedaant',
-      email: 'vedaantgupta@gmail.com'
-    };
+    return null;
   }
 }
 

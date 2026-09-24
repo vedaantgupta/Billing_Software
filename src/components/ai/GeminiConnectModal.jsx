@@ -99,8 +99,8 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  const userName = googleUser?.name || 'Vedaant Gupta';
-  const userInitial = userName.charAt(0).toUpperCase() || 'V';
+  const userName = googleUser?.name || 'User';
+  const userInitial = userName.charAt(0).toUpperCase() || 'U';
 
   return (
     <div className="gemini-modal-overlay" onClick={onClose}>
@@ -145,7 +145,7 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                         <CheckCircle2 size={13} color="#16a34a" /> Connected & Verified
                       </span>
                     </div>
-                    <span className="gemini-auth-email">{googleUser.email || 'vedaantgupta@gmail.com'}</span>
+                    <span className="gemini-auth-email">{googleUser.email}</span>
                     <div className="gemini-auth-firebase-info">
                       <ShieldCheck size={12} color="#2563eb" /> Firebase Project: <code>business-software-b3844</code>
                     </div>
@@ -179,9 +179,9 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
               /* Not Signed In: Big Authentic Google Sign In */
               <div className="gemini-auth-prompt-state">
                 <div className="gemini-auth-prompt-copy">
-                  <h3 className="gemini-auth-prompt-title">Sign up with your Google Account</h3>
+                  <h3 className="gemini-auth-prompt-title">Connect Google Account for AI Service</h3>
                   <p className="gemini-auth-prompt-desc">
-                    Connect your personal Google account to unlock official Google Gemini AI integration. 100% free, unlimited requests, and no credit card required.
+                    Connect your Google account to unlock official Google Gemini AI integration. This is used solely for the AI service and will not register you on the billing website.
                   </p>
                 </div>
 

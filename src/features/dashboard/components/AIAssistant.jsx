@@ -301,7 +301,7 @@ const AIAssistant = () => {
         body: JSON.stringify({
           userId: user?.id,
           action,
-          userName: googleUser?.name || 'Vedaant'
+          userName: googleUser?.name || user?.username || 'User'
         })
       });
 
@@ -376,9 +376,9 @@ const AIAssistant = () => {
   };
 
   // User display name & initial
-  const userName = googleUser?.name || 'Vedaant';
-  const firstName = googleUser?.firstName || userName.split(' ')[0] || 'Vedaant';
-  const userInitial = (firstName || 'V').charAt(0).toUpperCase();
+  const userName = googleUser?.name || user?.username || 'User';
+  const firstName = googleUser?.firstName || user?.firstName || userName.split(' ')[0] || 'User';
+  const userInitial = (firstName || 'U').charAt(0).toUpperCase();
 
   // Model Short Name
   const getModelShortLabel = (modelId) => {
