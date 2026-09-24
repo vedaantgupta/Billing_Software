@@ -7,6 +7,7 @@ import '@/features/documents/styles/DocumentList.css';
 import { QRCodeSVG } from 'qrcode.react';
 import PrintTemplate from '@/features/letters/components/PrintTemplate';
 import PrintViewModal from '@/components/ui/PrintViewModal';
+import CommunicationModal from '@/features/communication/components/CommunicationModal';
 import { getDB } from '@/utils/db';
 import { getAllContactBalances } from '@/utils/ledger';
 
@@ -280,32 +281,12 @@ const DocumentList = () => {
 
       {/* Send Modal Implementation */}
       {sendDoc && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} className="print-hide">
-          <div className="glass" style={{ background: 'white', width: '500px', padding: '2rem' }}>
-            <h2 className="mb-4">Instant Sharing</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Send {sendDoc.docType} <strong>{sendDoc.invoiceNumber}</strong> directly to {sendDoc.customerName}.</p>
-
-            <div className="flex gap-4 mt-6 mb-6">
-              <button
-                className="btn w-full flex items-center justify-center gap-2"
-                style={{ background: '#25D366', color: 'white', fontWeight: 600, padding: '1rem' }}
-                onClick={() => handleWhatsApp(sendDoc)}
-              >
-                WhatsApp
-              </button>
-              <button
-                className="btn btn-secondary w-full"
-                style={{ padding: '1rem' }}
-                onClick={() => handleEmail(sendDoc)}
-              >
-                Gmail
-              </button>
-            </div>
-            <div className="flex justify-end">
-              <button className="btn btn-secondary" onClick={() => setSendDoc(null)}>Cancel</button>
-            </div>
-          </div>
-        </div>
+        <CommunicationModal 
+          isOpen={Boolean(sendDoc)} 
+          onClose={() => setSendDoc(null)} 
+          documentData={sendDoc}
+          defaultChannel="whatsapp"
+        />
       )}
 
     </div>

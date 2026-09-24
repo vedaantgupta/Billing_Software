@@ -80,6 +80,7 @@ import CategoriesPage from '@/features/store/pages/CategoriesPage';
 import AccountPage from '@/features/store/pages/AccountPage';
 import PublicProfile from '@/pages/PublicProfile';
 import PublicProductDetail from '@/features/products/pages/PublicProductDetail';
+import CommunicationHub from '@/features/communication/pages/CommunicationHub';
 
 function App() {
   return (
@@ -440,6 +441,13 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Settings />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/communications" element={
+              <ProtectedRoute>
+                <Layout>
+                  <CommunicationHub />
                 </Layout>
               </ProtectedRoute>
             } />

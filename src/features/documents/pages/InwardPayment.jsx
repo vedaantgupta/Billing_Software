@@ -4,8 +4,9 @@ import { getItems, addItem, deleteItem, logActivity } from '@/utils/db';
 import { postToLedger } from '@/utils/ledger';
 import { useAuth } from '@/hooks/useAuth';
 import PrintViewModal from '@/components/ui/PrintViewModal';
+import CommunicationModal from '@/features/communication/components/CommunicationModal';
 
-import { Plus, Search, Filter, Trash2, Edit, X, ArrowDownLeft, Paperclip, Mail, Printer } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, Edit, X, ArrowDownLeft, Paperclip, Mail, Printer, MessageSquare, Send } from 'lucide-react';
 
 const InwardPayment = () => {
   const [payments, setPayments] = useState([]);
@@ -16,6 +17,7 @@ const InwardPayment = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [printDoc, setPrintDoc] = useState(null);
+  const [commDoc, setCommDoc] = useState(null);
 
   const [newPayment, setNewPayment] = useState({
     receiptPrefix: '11',
@@ -217,6 +219,7 @@ const InwardPayment = () => {
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      <button className="btn btn-secondary" style={{ padding: '0.5rem', color: '#16a34a' }} onClick={() => setCommDoc({ ...p, docType: 'Payment Receipt' })} title="1-Click Send Receipt via WhatsApp / Email"><Send size={16} /></button>
                       <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => setPrintDoc({...p, docType: 'Payment In'})} title="Print Receipt"><Printer size={16} /></button>
                       <button className="btn btn-secondary" style={{ padding: '0.5rem' }}><Edit size={16} /></button>
                       <button className="btn btn-danger" style={{ padding: '0.5rem', background: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDelete(p.id)}><Trash2 size={16} /></button>
@@ -350,6 +353,15 @@ const InwardPayment = () => {
         <PrintViewModal 
           doc={printDoc} 
           onClose={() => setPrintDoc(null)} 
+        />
+      )}
+
+      {commDoc && (
+        <CommunicationModal
+          isOpen={Boolean(commDoc)}
+          onClose={() => setCommDoc(null)}
+          documentData={commDoc}
+          defaultChannel="whatsapp"
         />
       )}
 

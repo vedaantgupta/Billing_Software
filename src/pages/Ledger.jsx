@@ -3,9 +3,10 @@ import { getItems, addItem } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getContactBalance, postToLedger } from '@/utils/ledger';
-import { Search, UserPlus, ArrowDownLeft, ArrowUpRight, ChevronRight, BookOpen, Users } from 'lucide-react';
+import { Search, UserPlus, ArrowDownLeft, ArrowUpRight, ChevronRight, BookOpen, Users, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ContactModal from '@/features/contacts/components/ContactModal';
+import CommunicationModal from '@/features/communication/components/CommunicationModal';
 import '@/Ledger.css';
 
 const Ledger = () => {
@@ -20,6 +21,7 @@ const Ledger = () => {
   const [filterType, setFilterType] = useState('all'); // all, customer, vendor
   const [showOutstandingOnly, setShowOutstandingOnly] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [reminderContact, setReminderContact] = useState(null);
 
   const [totals, setTotals] = useState({ dr: 0, cr: 0 });
 
@@ -189,6 +191,27 @@ const Ledger = () => {
                     {bal.position === 'Dr' ? 'RECEIVABLE (Dr)' : bal.position === 'Cr' ? 'PAYABLE (Cr)' : 'SETTLED'}
                   </div>
                 </div>
+                {bal.balance > 0 && bal.position === 'Dr' && (
+                  <button 
+                    className="comm-quick-wa-btn" 
+                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReminderContact({
+                        ...c,
+                        balance: bal.balance,
+                        position: bal.position,
+                        customerName: c.companyName || c.customerName || c.name,
+                        customerPhone: c.phone || '',
+                        customerEmail: c.email || '',
+                        docType: 'Payment Reminder'
+                      });
+                    }}
+                    title="Send 1-Click WhatsApp Payment Reminder"
+                  >
+                    <MessageSquare size={13} /> Remind
+                  </button>
+                )}
                 <div className="l-arrow-icon">
                   <ChevronRight size={24} />
                 </div>
@@ -210,6 +233,15 @@ const Ledger = () => {
         onClose={() => setIsContactModalOpen(false)} 
         onSave={() => loadData()} 
       />
+
+      {reminderContact && (
+        <CommunicationModal
+          isOpen={Boolean(reminderContact)}
+          onClose={() => setReminderContact(null)}
+          documentData={reminderContact}
+          defaultChannel="whatsapp"
+        />
+      )}
     </div>
   );
 };

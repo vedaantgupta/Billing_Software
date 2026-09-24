@@ -3,7 +3,8 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Sparkles, Users, FileText, Package, BarChart3, Settings as SettingsIcon, 
   Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet, 
-  Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag
+  Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag,
+  MessageSquareShare
 } from 'lucide-react';
 import '@/components/layout/Layout.css';
 import AIAssistant from '@/features/dashboard/components/AIAssistant';
@@ -182,6 +183,15 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           <NavLink to="/contacts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Contacts & Customers">
             <Users size={19} className="nav-icon" /> 
             {!isCollapsed && <span>Contacts</span>}
+          </NavLink>
+          <NavLink to="/communications" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="WhatsApp & Email Communication Hub">
+            <MessageSquareShare size={19} className="nav-icon" style={{ color: '#10b981' }} /> 
+            {!isCollapsed && (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span>Communications</span>
+                <span style={{ fontSize: '0.62rem', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', padding: '1px 6px', borderRadius: '8px', fontWeight: 700 }}>WA/Mail</span>
+              </span>
+            )}
           </NavLink>
           <NavLink to="/staff" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Staff Management">
             <UserCog size={19} className="nav-icon" /> 

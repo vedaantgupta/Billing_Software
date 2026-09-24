@@ -19,6 +19,7 @@ import {
   Printer
 } from 'lucide-react';
 import LedgerPrintModal from '@/features/contacts/components/LedgerPrintModal';
+import CommunicationModal from '@/features/communication/components/CommunicationModal';
 import '@/features/contacts/styles/ContactLedger.css'; // Import the new premium UI CSS
 
 const ContactLedger = () => {
@@ -32,6 +33,7 @@ const ContactLedger = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isCommModalOpen, setIsCommModalOpen] = useState(false);
   const [newTx, setNewTx] = useState({ type: 'dr', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,9 +103,7 @@ const ContactLedger = () => {
   };
 
   const handleReminder = () => {
-    const link = generateReminderLink(contact, balanceInfo);
-    if (link) window.open(link, '_blank');
-    else alert('Phone number not available for this contact.');
+    setIsCommModalOpen(true);
   };
 
   if (loading) return <div className="cl-page" style={{ alignItems: 'center', justifyContent: 'center' }}><div className="text-gray-500 font-semibold animate-pulse">Loading Ledger...</div></div>;
@@ -341,6 +341,24 @@ const ContactLedger = () => {
           contact={contact}
           balanceInfo={balanceInfo}
           onClose={() => setIsPrintModalOpen(false)}
+        />
+      )}
+
+      {/* 1-Click WhatsApp & Email Communication Modal */}
+      {isCommModalOpen && (
+        <CommunicationModal
+          isOpen={isCommModalOpen}
+          onClose={() => setIsCommModalOpen(false)}
+          documentData={{
+            ...contact,
+            customerName: contact.companyName || contact.customerName || contact.name,
+            customerPhone: contact.phone || '',
+            customerEmail: contact.email || '',
+            balance: balanceInfo.balance,
+            position: balanceInfo.position,
+            docType: 'Payment Reminder'
+          }}
+          defaultChannel="whatsapp"
         />
       )}
 
