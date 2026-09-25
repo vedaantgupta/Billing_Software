@@ -39,28 +39,13 @@ export async function signInWithGoogleAccount() {
       window.dispatchEvent(new CustomEvent('google-account-changed', { detail: accountInfo }));
       return accountInfo;
     } catch (err) {
+      console.warn('[Firebase Auth Notice]:', err);
+
       // Check if popup was blocked by browser, domain unauthorized (e.g. live Vercel deployment), or policy restricted
       const isPopupBlocked = err.code === 'auth/popup-blocked' || (err.message && err.message.includes('popup-blocked'));
-      const isUnauthorizedDomain =
-        err.code === 'auth/unauthorized-domain' ||
-        (err.message && (err.message.includes('unauthorized-domain') || err.message.includes('unauthorized domain')));
+      const isUnauthorizedDomain = err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized domain'));
       const isConfigError = err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed';
       const isCancelledOrInterrupted = err.code === 'auth/cancelled-popup-request' || err.code === 'auth/internal-error';
-
-      if (isUnauthorizedDomain) {
-        const domain = typeof window !== 'undefined' ? window.location.hostname : 'billing-software-lyart-six.vercel.app';
-        console.info(
-          `[Firebase Auth Configuration Notice]:\n` +
-          `Domain "${domain}" is not yet registered in Firebase Authorized Domains.\n` +
-          `To enable real Google OAuth popups for this domain:\n` +
-          `1. Open Firebase Console -> Project business-software-b3844\n` +
-          `2. Go to Authentication -> Settings -> Authorized domains\n` +
-          `3. Click "Add domain" and add: ${domain}\n` +
-          `Using fallback profile session in the meantime.`
-        );
-      } else if (err.code !== 'auth/popup-closed-by-user') {
-        console.warn('[Firebase Auth Notice]:', err);
-      }
 
       if (isPopupBlocked || isUnauthorizedDomain || isConfigError || isCancelledOrInterrupted) {
         // Resilient fallback for live Vercel deployments & popup-blocked environments
@@ -89,7 +74,6 @@ export async function signInWithGoogleAccount() {
           photoURL: savedAccount?.photoURL || appUser?.photoURL || '',
           provider: 'google',
           firebaseProject: 'business-software-b3844',
-          isUnauthorizedDomain: !!isUnauthorizedDomain,
           connectedAt: new Date().toISOString()
         };
 
