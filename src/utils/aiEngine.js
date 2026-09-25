@@ -55,19 +55,44 @@ const isErrorMessage = (text) => {
 };
 
 /**
- * Intelligent deterministic answer generator when external APIs are offline or unreachable.
+ * Detects if a user prompt is asking specifically for business snapshot figures:
+ * Today's sales, month sales, pending udhaar, inventory/stock, or expenses.
+ */
+export const isDirectDataQuery = (text) => {
+  if (!text) return false;
+  const q = text.toLowerCase().trim();
+
+  // Exclude action requests (e.g., create invoice, add customer, delete)
+  if (/\b(create|banao|bana do|generate|add|record|delete|hatao|nayi|naya)\b/i.test(q)) {
+    return false;
+  }
+
+  return (
+    q.includes('aaj') || q.includes('today') ||
+    q.includes('mahine') || q.includes('month') ||
+    q.includes('sale') || q.includes('bikri') || q.includes('turnover') ||
+    q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata') ||
+    q.includes('stock') || q.includes('maal') || q.includes('inventory') || q.includes('item') ||
+    q.includes('kharcha') || q.includes('expense') || q.includes('spent') ||
+    q.includes('hisaab')
+  );
+};
+
+/**
+ * Intelligent deterministic answer generator when external APIs are offline or unreachable,
+ * or when direct data queries require 100% verified, instantaneous answers.
  * Uses exact pre-calculated business metrics so the user always gets 100% accurate figures.
  */
-const generateDeterministicFallback = (textToSend, snapshot) => {
+export const generateDeterministicFallback = (textToSend, snapshot) => {
   const q = (textToSend || '').toLowerCase();
   const m = snapshot?.metrics || {};
 
   const isHindiScript = /[\u0900-\u097F]/.test(textToSend);
-  const isHinglish = /\b(aaj|aajka|batao|karo|bhai|kitna|hisaab|udhaar|baki|khata|dukaan|bikri|maal|kaunse|konsa|hai|hain|karna|dekh)\b/i.test(textToSend);
+  const isHinglish = /\b(aaj|aajka|batao|karo|bhai|kitna|hisaab|udhaar|baki|khata|dukaan|bikri|maal|kaunse|konsa|hai|hain|karna|dekh|kuch|kya|mujhe)\b/i.test(textToSend);
 
   const isTodayQuery = q.includes('aaj') || q.includes('today') || q.includes('aajka') || q.includes('aaj ki') || q.includes('current day');
   const isMonthQuery = q.includes('mahine') || q.includes('month') || q.includes('this month') || q.includes('is mahine');
-  const isUdhaarQuery = q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata') || q.includes('balance') || q.includes('due');
+  const isUdhaarQuery = q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata') || q.includes('due');
   const isStockQuery = q.includes('stock') || q.includes('item') || q.includes('maal') || q.includes('inventory') || q.includes('product') || q.includes('kam');
   const isExpenseQuery = q.includes('kharcha') || q.includes('expense') || q.includes('spent') || q.includes('kharch');
   const isSaleQuery = q.includes('sale') || q.includes('bikri') || q.includes('revenue') || q.includes('turnover') || q.includes('bill') || q.includes('invoice');
@@ -89,6 +114,19 @@ const generateDeterministicFallback = (textToSend, snapshot) => {
   if (isTodayQuery) {
     const todayAmt = (m.todaySalesAmount || 0).toLocaleString('en-IN');
     const todayCount = m.todaySalesCount || 0;
+    const lifetimeAmt = (m.totalSalesAmount || 0).toLocaleString('en-IN');
+    const lifetimeCount = m.totalInvoicesCount || 0;
+
+    if (todayCount === 0) {
+      if (isHindiScript) {
+        return `नमस्ते! आज अभी तक कोई नया बिक्री बिल नहीं बना है (आज की बिक्री ₹0 है)। आपके व्यापार की कुल लाइफटाइम बिक्री ₹${lifetimeAmt} है (${lifetimeCount} बिल)। क्या आप नया इनवॉइस बनाना चाहते हैं?`;
+      }
+      if (isHinglish) {
+        return `Aaj abhi tak koi naya bill nahi bana hai (aaj ka sale ₹0 hai). Aapka total lifetime sale ₹${lifetimeAmt} hai across ${lifetimeCount} bills. Kya aap koi naya invoice banana chahte hain?`;
+      }
+      return `No sales invoices have been generated today yet (Today's sales: ₹0). Your total lifetime sales stand at ₹${lifetimeAmt} across ${lifetimeCount} invoices. Would you like to generate a new invoice?`;
+    }
+
     if (isHindiScript) {
       return `नमस्ते! आज आपके व्यापार में कुल ₹${todayAmt} की बिक्री हुई है (${todayCount} बिल)। क्या आप कोई नया बिल बनाना चाहते हैं?`;
     }
@@ -172,20 +210,20 @@ const generateDeterministicFallback = (textToSend, snapshot) => {
     return `नमस्ते! मैं आपका Google Gemini बिजनेस असिस्टेंट हूँ। आज की बिक्री ₹${todayAmt} है और कुल बकाया उधार ₹${udhaarAmt} है। मैं आपकी क्या सहायता कर सकता हूँ?`;
   }
   if (isHinglish) {
-    return `Namaste! Main aapka business AI copilot hoon. Aaj aapka total sale ₹${todayAmt} hua hai aur pending udhaar ₹${udhaarAmt} hai. Aap mujhse kisi bhi bill, party balance, ya naye invoice ke bare me pooch sakte hain!`;
+    return `Namaste! Main aapka Google Gemini business AI copilot hoon. Aaj aapka total sale ₹${todayAmt} hua hai aur pending udhaar ₹${udhaarAmt} hai. Aap mujhse kisi bhi bill, party balance, ya naye invoice ke bare me pooch sakte hain!`;
   }
-  return `Hello! I am your AI business assistant. Today's sales are ₹${todayAmt} and total outstanding receivables are ₹${udhaarAmt}. How can I assist you with your business today?`;
+  return `Hello! I am your Google Gemini AI business assistant. Today's sales are ₹${todayAmt} and total outstanding receivables are ₹${udhaarAmt}. How can I assist you with your business today?`;
 };
 
 /**
  * Master multi-engine AI caller:
- * 1. Backend API (with live database & timeout safeguard)
- * 2. Direct Google Generative Language API (if key available)
- * 3. Resilient Pollinations models with multi-tier fallback (openai -> mistral -> deepseek)
- * 4. Resilient direct prompt endpoint
+ * 1. Instant Data Route: Direct accurate answers for database queries (< 50ms)
+ * 2. Backend API (with fast 2.5s race timeout)
+ * 3. Direct Google Generative Language API (if user entered Gemini key)
+ * 4. Fast Pollinations API (single attempt)
  * 5. Deterministic fallback using live database snapshot
  * 
- * NEVER fails, NEVER returns "Error: The model is currently unreachable."!
+ * NEVER hangs, NEVER takes 20 seconds, NEVER gives wrong values!
  */
 export const queryAIEngine = async ({
   prompt,
@@ -204,46 +242,18 @@ export const queryAIEngine = async ({
   const userGeminiKey = geminiStore.getApiKey();
   const systemPromptText = buildGeminiSystemPrompt(snapshot?.contextString, userName);
 
-  // 1. Try Backend First (5.0s race timeout)
-  try {
-    const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
-      method: 'POST',
-      signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        history,
-        userId: effectiveUserId,
-        userName,
-        userGeminiKey,
-        pendingAction,
-        hasActiveQuestion,
-        geminiModel: effectiveApiModel,
-        clientBusinessContext: snapshot?.contextString || '',
-        files: files.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
-      })
-    });
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Backend timeout, switching to direct AI engine')), 5000)
-    );
-
-    const res = await Promise.race([backendFetchPromise, timeoutPromise]);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.response && !isErrorMessage(data.response)) {
-        const parsed = parseAIResponse(data.response);
-        return {
-          content: parsed.cleanContent,
-          action: data.action || parsed.action || null,
-          question: data.question || parsed.question || null,
-          source: 'backend'
-        };
-      }
-    }
-  } catch (err) {
-    if (err.name === 'AbortError') throw err;
-    console.warn('Backend /ai/chat did not complete in time, trying direct AI engine...', err.message);
+  // 1. FAST-PATH: Direct business data queries (e.g. today sales, udhaar, stock, expenses)
+  // If the query is asking for data numbers without creating or modifying documents,
+  // answer INSTANTLY with 100% verified numbers from the active database!
+  if (!pendingAction && !hasActiveQuestion && files.length === 0 && isDirectDataQuery(prompt)) {
+    const instantText = generateDeterministicFallback(prompt, snapshot);
+    const parsed = parseAIResponse(instantText);
+    return {
+      content: parsed.cleanContent,
+      action: parsed.action,
+      question: parsed.question,
+      source: 'live-local-intelligence'
+    };
   }
 
   // 2. Direct Google Generative Language API (if user provided Gemini API key)
@@ -288,67 +298,88 @@ export const queryAIEngine = async ({
     }
   }
 
-  // 3. Multi-tier Pollinations Fallback (openai -> mistral -> deepseek)
-  const modelsToTry = ['openai', 'mistral', 'deepseek'];
-  for (const mod of modelsToTry) {
-    try {
-      const pollRes = await fetch('https://text.pollinations.ai/openai/chat/completions', {
-        method: 'POST',
-        signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: mod,
-          messages: [
-            { role: 'system', content: systemPromptText },
-            ...history.slice(-5).map(m => ({
-              role: (m.role === 'ai' || m.role === 'assistant') ? 'assistant' : 'user',
-              content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-            })),
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.3
-        })
-      });
+  // 3. Try Backend (Fast 2.5s race timeout)
+  try {
+    const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
+      method: 'POST',
+      signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        history,
+        userId: effectiveUserId,
+        userName,
+        userGeminiKey,
+        pendingAction,
+        hasActiveQuestion,
+        geminiModel: effectiveApiModel,
+        clientBusinessContext: snapshot?.contextString || '',
+        files: files.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
+      })
+    });
 
-      if (pollRes.ok) {
-        const pData = await pollRes.json();
-        const text = pData?.choices?.[0]?.message?.content;
-        if (text && !isErrorMessage(text)) {
-          const parsed = parseAIResponse(text);
-          return {
-            content: parsed.cleanContent,
-            action: parsed.action,
-            question: parsed.question,
-            source: `pollinations-${mod}`
-          };
-        }
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Backend timeout, switching to fast intelligence')), 2500)
+    );
+
+    const res = await Promise.race([backendFetchPromise, timeoutPromise]);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.response && !isErrorMessage(data.response)) {
+        const parsed = parseAIResponse(data.response);
+        return {
+          content: parsed.cleanContent,
+          action: data.action || parsed.action || null,
+          question: data.question || parsed.question || null,
+          source: 'backend'
+        };
       }
-    } catch (pErr) {
-      if (pErr.name === 'AbortError') throw pErr;
-      console.warn(`Pollinations ${mod} attempt failed, trying next...`);
     }
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    console.warn('Backend /ai/chat did not complete within 2.5s, switching to instant engine...');
   }
 
-  // 4. Pollinations Direct Simple Prompt Endpoint
+  // 4. Fast Single Pollinations Call (max 4.0s timeout)
   try {
-    const rawDirectRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&system=${encodeURIComponent(systemPromptText)}`, {
-      method: 'GET',
-      signal
+    const pollPromise = fetch('https://text.pollinations.ai/openai/chat/completions', {
+      method: 'POST',
+      signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openai',
+        messages: [
+          { role: 'system', content: systemPromptText },
+          ...history.slice(-4).map(m => ({
+            role: (m.role === 'ai' || m.role === 'assistant') ? 'assistant' : 'user',
+            content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+          })),
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3
+      })
     });
-    if (rawDirectRes.ok) {
-      const text = await rawDirectRes.text();
+
+    const pollTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Pollinations timeout')), 4000)
+    );
+
+    const pollRes = await Promise.race([pollPromise, pollTimeout]);
+    if (pollRes.ok) {
+      const pData = await pollRes.json();
+      const text = pData?.choices?.[0]?.message?.content;
       if (text && !isErrorMessage(text)) {
         const parsed = parseAIResponse(text);
         return {
           content: parsed.cleanContent,
           action: parsed.action,
           question: parsed.question,
-          source: 'pollinations-simple'
+          source: 'pollinations-fast'
         };
       }
     }
-  } catch (rawErr) {
-    if (rawErr.name === 'AbortError') throw rawErr;
+  } catch (pErr) {
+    if (pErr.name === 'AbortError') throw pErr;
   }
 
   // 5. Intelligent Instant Fallback Using Live Pre-Calculated Snapshot

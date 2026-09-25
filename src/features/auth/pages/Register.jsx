@@ -15,11 +15,11 @@ const Register = () => {
     confirmPassword: '',
     agreeToTerms: false
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // New password features state
   const [suggestedPassword, setSuggestedPassword] = useState('');
   const [showSuggestion, setShowSuggestion] = useState(false);
@@ -40,20 +40,20 @@ const Register = () => {
   // Password Strength Utility
   const calculateStrength = (pwd) => {
     if (!pwd) return { score: 0, label: '', color: '' };
-    
+
     let score = 0;
     if (pwd.length > 8) score++;
     if (pwd.length > 12) score++;
     if (/[A-Z]/.test(pwd)) score++;
     if (/[0-9]/.test(pwd)) score++;
     if (/[^A-Za-z0-9]/.test(pwd)) score++;
-    
+
     // Normalize score to 0-4
     const finalScore = Math.min(score, 4);
-    
+
     const labels = ['Weak', 'Weak', 'Medium', 'Strong', 'Very Strong'];
     const colors = ['#ef4444', '#ef4444', '#f59e0b', '#10b981', '#059669'];
-    
+
     return {
       score: finalScore,
       label: labels[finalScore],
@@ -65,9 +65,37 @@ const Register = () => {
     setSuggestedPassword(generatePassword());
   }, [generatePassword]);
 
-  const { register, loginWithProvider } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    if (name === 'password') {
+      const strength = calculateStrength(value);
+      setPasswordStrength(strength);
+      if (value.length > 0) setShowSuggestion(false);
+      setIsUsingSuggested(false);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleUseSuggested = () => {
+    setFormData(prev => ({
+      ...prev,
+      password: suggestedPassword,
+      confirmPassword: suggestedPassword
+    }));
+    setPasswordStrength(calculateStrength(suggestedPassword));
+    setShowSuggestion(false);
+    setIsUsingSuggested(true);
+  };
+
+  /*
   const handleSocialLogin = async (provider) => {
     setError('');
     setIsSubmitting(true);
@@ -80,40 +108,17 @@ const Register = () => {
       setIsSubmitting(false);
     }
   };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-
-    if (name === 'password') {
-      setPasswordStrength(calculateStrength(value));
-      if (isUsingSuggested) setIsUsingSuggested(false);
-    }
-  };
-
-  const handleUseSuggested = () => {
-    setFormData(prev => ({
-      ...prev,
-      password: suggestedPassword,
-      confirmPassword: suggestedPassword
-    }));
-    setPasswordStrength(calculateStrength(suggestedPassword));
-    setIsUsingSuggested(true);
-    setShowSuggestion(false);
-  };
+  */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
       return setError('Passwords do not match');
     }
-    
+
     if (!formData.agreeToTerms) {
       return setError('You must agree to the Terms and Conditions');
     }
@@ -132,13 +137,13 @@ const Register = () => {
   };
 
   return (
-    <AuthLayout 
-      title="Sign Up" 
+    <AuthLayout
+      title="Sign Up"
       subtitle="Fill in the details below to create your account"
     >
       <form onSubmit={handleSubmit} className="auth-form">
         {error && <div className="auth-error-alert">{error}</div>}
-        
+
         <div className="flex gap-4">
           <div className="form-group flex-1">
             <label className="form-label" htmlFor="firstName">First Name</label>
@@ -225,8 +230,8 @@ const Register = () => {
               placeholder="••••••••"
               required
             />
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="password-toggle"
               onClick={() => setShowPassword(!showPassword)}
             >
@@ -248,15 +253,15 @@ const Register = () => {
                 <code>{suggestedPassword}</code>
               </div>
               <div className="suggestion-actions">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn btn-secondary btn-sm"
                   onClick={() => setShowSuggestion(false)}
                 >
                   Use Own
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn btn-primary btn-sm"
                   onClick={handleUseSuggested}
                 >
@@ -269,9 +274,9 @@ const Register = () => {
           {formData.password && (
             <div className="strength-meter-container">
               <div className="strength-meter-bar">
-                <div 
-                  className="strength-meter-fill" 
-                  style={{ 
+                <div
+                  className="strength-meter-fill"
+                  style={{
                     width: `${(passwordStrength.score / 4) * 100}%`,
                     backgroundColor: passwordStrength.color
                   }}
@@ -301,8 +306,8 @@ const Register = () => {
 
         <div className="auth-options flex items-center mb-6">
           <label className="checkbox-container">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               name="agreeToTerms"
               checked={formData.agreeToTerms}
               onChange={handleChange}
@@ -313,8 +318,8 @@ const Register = () => {
           </label>
         </div>
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="btn btn-primary w-full h-12"
           disabled={isSubmitting}
         >

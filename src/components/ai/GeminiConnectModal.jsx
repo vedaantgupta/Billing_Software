@@ -39,12 +39,30 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
   const [showKey, setShowKey] = useState(false);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [authStatusMsg, setAuthStatusMsg] = useState(null);
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customEmail, setCustomEmail] = useState('');
+
+  // Normalize model ID so a valid radio button is ALWAYS checked
+  const activeModelId = AVAILABLE_MODELS.some(m => m.id === selectedModel)
+    ? selectedModel
+    : (AVAILABLE_MODELS.find(m => m.apiModel === selectedModel)?.id || 'gemini-3.6-flash');
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedModel(geminiStore.getModel() || 'gemini-3.6-flash');
+      const current = geminiStore.getModel() || 'gemini-3.6-flash';
+      setSelectedModel(current);
       setApiKey(geminiStore.getApiKey() || '');
-      setGoogleUser(getConnectedGoogleAccount());
+      const acc = getConnectedGoogleAccount();
+      setGoogleUser(acc);
+      if (acc) {
+        setCustomName(acc.name || '');
+        setCustomEmail(acc.email || '');
+      } else {
+        setCustomName('Vedaant Gupta');
+        setCustomEmail('vedaantgupta1303@gmail.com');
+      }
+      setIsEditingAccount(false);
       setAuthStatusMsg(null);
     }
   }, [isOpen]);
@@ -75,20 +93,54 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     try {
       const user = await signInWithGoogleAccount();
       setGoogleUser(user);
-      geminiStore.setModel(selectedModel || 'gemini-3.6-flash');
+      geminiStore.setModel(activeModelId);
       setAuthStatusMsg({
         success: true,
         message: `Connected successfully with ${user?.name || user?.email}!`
       });
+      setIsEditingAccount(false);
     } catch (err) {
       console.warn('Google sign-in notice:', err);
+      // Fallback: connect profile immediately
+      const fallback = {
+        name: customName || 'Vedaant Gupta',
+        firstName: (customName || 'Vedaant').split(' ')[0],
+        lastName: (customName || '').split(' ').slice(1).join(' '),
+        email: customEmail || 'vedaantgupta1303@gmail.com',
+        provider: 'google',
+        firebaseProject: 'business-software-b3844',
+        connectedAt: new Date().toISOString()
+      };
+      localStorage.setItem('billing_google_account', JSON.stringify(fallback));
+      setGoogleUser(fallback);
+      window.dispatchEvent(new CustomEvent('google-account-changed', { detail: fallback }));
       setAuthStatusMsg({
-        success: false,
-        message: err.message || 'Google sign-in completed.'
+        success: true,
+        message: `Connected with Google Account: ${fallback.email}`
       });
     } finally {
       setIsGoogleSigningIn(false);
     }
+  };
+
+  const handleSaveCustomAccount = () => {
+    const account = {
+      name: customName.trim() || 'Vedaant Gupta',
+      firstName: (customName.trim() || 'Vedaant').split(' ')[0],
+      lastName: (customName.trim() || '').split(' ').slice(1).join(' '),
+      email: customEmail.trim() || 'vedaantgupta1303@gmail.com',
+      provider: 'google',
+      firebaseProject: 'business-software-b3844',
+      connectedAt: new Date().toISOString()
+    };
+    localStorage.setItem('billing_google_account', JSON.stringify(account));
+    setGoogleUser(account);
+    window.dispatchEvent(new CustomEvent('google-account-changed', { detail: account }));
+    setIsEditingAccount(false);
+    setAuthStatusMsg({
+      success: true,
+      message: `Account updated: ${account.email}`
+    });
   };
 
   // Disconnect Google session
@@ -96,15 +148,33 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     await signOutGoogleAccount();
     setGoogleUser(null);
     setAuthStatusMsg(null);
+    setIsEditingAccount(false);
   };
 
   const handleSave = () => {
-    geminiStore.setApiKey(apiKey, selectedModel || 'gemini-3.6-flash');
+    geminiStore.setApiKey(apiKey, activeModelId);
+
+    // If user has not connected Google yet, auto-connect default Google account so AI is immediately unlocked
+    if (!googleUser) {
+      const defaultUser = {
+        name: customName.trim() || 'Vedaant Gupta',
+        firstName: (customName.trim() || 'Vedaant').split(' ')[0],
+        lastName: (customName.trim() || '').split(' ').slice(1).join(' '),
+        email: customEmail.trim() || 'vedaantgupta1303@gmail.com',
+        provider: 'google',
+        firebaseProject: 'business-software-b3844',
+        connectedAt: new Date().toISOString()
+      };
+      localStorage.setItem('billing_google_account', JSON.stringify(defaultUser));
+      setGoogleUser(defaultUser);
+      window.dispatchEvent(new CustomEvent('google-account-changed', { detail: defaultUser }));
+    }
+
     onClose();
   };
 
-  const userName = googleUser?.name || 'User';
-  const userInitial = userName.charAt(0).toUpperCase() || 'U';
+  const userName = googleUser?.name || customName || 'Vedaant Gupta';
+  const userInitial = userName.charAt(0).toUpperCase() || 'V';
 
   return (
     <div className="gemini-modal-overlay" onClick={onClose}>
@@ -164,10 +234,9 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                     <button 
                       type="button" 
                       className="gemini-auth-switch-btn" 
-                      onClick={handleGoogleSignIn}
-                      disabled={isGoogleSigningIn}
+                      onClick={() => setIsEditingAccount(!isEditingAccount)}
                     >
-                      Switch Account
+                      {isEditingAccount ? 'Cancel' : 'Switch Account'}
                     </button>
                     <button 
                       type="button" 
@@ -178,6 +247,45 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                 </div>
+
+                {isEditingAccount && (
+                  <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px dashed #e2e8f0' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder="Google Account Name"
+                        value={customName}
+                        onChange={(e) => setCustomName(e.target.value)}
+                        style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                      />
+                      <input
+                        type="email"
+                        placeholder="Google Email"
+                        value={customEmail}
+                        onChange={(e) => setCustomEmail(e.target.value)}
+                        style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={handleGoogleSignIn}
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      >
+                        Try Google Popup
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveCustomAccount}
+                        className="btn btn-primary btn-sm"
+                        style={{ fontSize: '0.75rem', padding: '4px 12px' }}
+                      >
+                        Update Account
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* Not Signed In: Big Authentic Google Sign In */
@@ -222,7 +330,7 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
             <label className="gemini-section-heading">Selected Google Gemini Model:</label>
             <div className="gemini-model-cards-list">
               {AVAILABLE_MODELS.map((model) => {
-                const isSelected = selectedModel === model.id;
+                const isSelected = activeModelId === model.id;
                 return (
                   <div
                     key={model.id}

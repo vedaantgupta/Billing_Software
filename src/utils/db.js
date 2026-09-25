@@ -64,11 +64,20 @@ export const getItems = async (collection, userId) => {
     return [];
   }
 
+  // Local queued items that haven't synced yet
+  let queueItems = [];
+  try {
+    const queue = JSON.parse(localStorage.getItem(`${DB_KEY}_queue`) || '[]');
+    queueItems = queue
+      .filter(q => q.collection === collection && (q.userId === userId || !q.userId))
+      .map(q => ({ ...q.item, _offline: true }));
+  } catch (e) {}
+
   try {
     const response = await fetch(`${API_BASE_URL}/work/${userId}?type=${collection}`);
     if (!response.ok) {
       if (response.status === 500) {
-        const errJson = await response.json();
+        const errJson = await response.json().catch(() => ({}));
         throw new Error(errJson.message || `Server Error (500) while fetching ${collection}`);
       }
       throw new Error(`Failed to fetch ${collection}: ${response.statusText}`);
@@ -76,15 +85,38 @@ export const getItems = async (collection, userId) => {
     const items = await response.json();
     const mappedItems = items.map(i => ({ ...i.data, _dbId: i._id }));
 
-    // Cache for offline
-    localStorage.setItem(`${DB_KEY}_cache_${collection}`, JSON.stringify(mappedItems));
+    // Merge server items with local queue
+    const combined = [...mappedItems];
+    queueItems.forEach(qi => {
+      if (!combined.some(ci => (ci.id && ci.id === qi.id) || (ci.invoiceNumber && ci.invoiceNumber === qi.invoiceNumber))) {
+        combined.unshift(qi);
+      }
+    });
 
-    return mappedItems;
+    // Cache for offline (only if we got data or cache was empty)
+    if (combined.length > 0) {
+      localStorage.setItem(`${DB_KEY}_cache_${collection}`, JSON.stringify(combined));
+    }
+
+    return combined;
   } catch (error) {
-    console.error(`Error fetching ${collection}:`, error);
+    console.warn(`Notice fetching ${collection}, falling back to cache:`, error.message);
     // Return cached data if offline
-    const cached = localStorage.getItem(`${DB_KEY}_cache_${collection}`);
-    return cached ? JSON.parse(cached) : [];
+    let cached = [];
+    try {
+      const raw = localStorage.getItem(`${DB_KEY}_cache_${collection}`);
+      if (raw) cached = JSON.parse(raw);
+    } catch (e) {}
+
+    // Merge cached with queue
+    const combined = [...cached];
+    queueItems.forEach(qi => {
+      if (!combined.some(ci => (ci.id && ci.id === qi.id) || (ci.invoiceNumber && ci.invoiceNumber === qi.invoiceNumber))) {
+        combined.unshift(qi);
+      }
+    });
+
+    return combined;
   }
 };
 
@@ -95,16 +127,25 @@ export const addItem = async (collection, item, userId, userName = 'You') => {
     return null;
   }
 
+  const timestampId = Date.now().toString();
+  const newItem = { ...item, id: timestampId };
+
+  // Always immediately update local cache so UI and AI snapshot see the item instantly
   try {
-    const timestampId = Date.now().toString();
+    const cached = JSON.parse(localStorage.getItem(`${DB_KEY}_cache_${collection}`) || '[]');
+    const updatedCache = [newItem, ...cached.filter(c => (c.id !== newItem.id))];
+    localStorage.setItem(`${DB_KEY}_cache_${collection}`, JSON.stringify(updatedCache));
+  } catch (e) {}
+
+  try {
     const response = await fetch(`${API_BASE_URL}/work`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, type: collection, data: { ...item, id: timestampId } })
+      body: JSON.stringify({ userId, type: collection, data: newItem })
     });
 
     if (!response.ok) {
-      const errData = await response.json();
+      const errData = await response.json().catch(() => ({}));
       throw new Error(errData.message || `Failed to add ${collection}`);
     }
 
@@ -117,18 +158,16 @@ export const addItem = async (collection, item, userId, userName = 'You') => {
     if (collection === 'products') actionLabel = `Added Product: ${item.name}`;
     logActivity(actionLabel, userId, userName);
 
-    return { ...item, id: timestampId, _dbId: result.id };
+    return { ...newItem, _dbId: result.id };
   } catch (error) {
-    console.error(`Error adding to ${collection}:`, error);
+    console.warn(`Saved ${collection} to local offline queue:`, error.message);
 
     // Add to offline queue
     const queue = JSON.parse(localStorage.getItem(`${DB_KEY}_queue`) || '[]');
-    queue.push({ collection, item, userId, userName, timestamp: Date.now() });
+    queue.push({ collection, item: newItem, userId, userName, timestamp: Date.now() });
     localStorage.setItem(`${DB_KEY}_queue`, JSON.stringify(queue));
 
-    alert('You are offline. Your changes have been saved locally and will sync when you are back online.');
-
-    return { ...item, id: Date.now().toString(), offline: true };
+    return { ...newItem, offline: true };
   }
 };
 

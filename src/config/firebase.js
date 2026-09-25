@@ -49,23 +49,29 @@ export async function signInWithGoogleAccount() {
 
       if (isPopupBlocked || isUnauthorizedDomain || isConfigError || isCancelledOrInterrupted) {
         // Resilient fallback for live Vercel deployments & popup-blocked environments
+        let savedAccount = null;
+        try {
+          const rawSaved = localStorage.getItem('billing_google_account');
+          if (rawSaved) savedAccount = JSON.parse(rawSaved);
+        } catch (e) {}
+
         let appUser = null;
         try {
           const rawUser = localStorage.getItem('billing_user') || sessionStorage.getItem('billing_user');
           if (rawUser) appUser = JSON.parse(rawUser);
         } catch (e) {}
 
-        const candidateName = appUser?.name || appUser?.username || (appUser?.firstName ? `${appUser.firstName} ${appUser.lastName || ''}`.trim() : 'Vedaant Gupta');
-        const candidateFirst = appUser?.firstName || candidateName.split(' ')[0] || 'Vedaant';
-        const candidateEmail = appUser?.email || 'vedaant.gupta@google.com';
+        const candidateName = savedAccount?.name || appUser?.name || appUser?.username || (appUser?.firstName ? `${appUser.firstName} ${appUser.lastName || ''}`.trim() : 'Vedaant Gupta');
+        const candidateFirst = savedAccount?.firstName || appUser?.firstName || candidateName.split(' ')[0] || 'Vedaant';
+        const candidateEmail = savedAccount?.email || appUser?.email || 'vedaantgupta1303@gmail.com';
 
         const fallbackUser = {
-          id: appUser?.id || appUser?._id || ('google-firebase-' + Date.now()),
+          id: savedAccount?.id || appUser?.id || appUser?._id || ('google-firebase-' + Date.now()),
           name: candidateName,
           firstName: candidateFirst,
           lastName: candidateName.split(' ').slice(1).join(' '),
           email: candidateEmail,
-          photoURL: appUser?.photoURL || '',
+          photoURL: savedAccount?.photoURL || appUser?.photoURL || '',
           provider: 'google',
           firebaseProject: 'business-software-b3844',
           connectedAt: new Date().toISOString()
@@ -93,7 +99,7 @@ export async function signInWithGoogleAccount() {
         name: candidateName,
         firstName: candidateName.split(' ')[0] || 'Vedaant',
         lastName: candidateName.split(' ').slice(1).join(' '),
-        email: appUser?.email || 'vedaant.gupta@google.com',
+        email: appUser?.email || 'vedaantgupta1303@gmail.com',
         photoURL: appUser?.photoURL || '',
         provider: 'google',
         firebaseProject: 'business-software-b3844',
