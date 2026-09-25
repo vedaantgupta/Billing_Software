@@ -96,7 +96,9 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
       geminiStore.setModel(activeModelId);
       setAuthStatusMsg({
         success: true,
-        message: `Connected successfully with ${user?.name || user?.email}!`
+        message: user?.isUnauthorizedDomain
+          ? `Connected with ${user?.name || user?.email}! (Note: Add ${typeof window !== 'undefined' ? window.location.hostname : 'domain'} in Firebase Console -> Authorized domains for live OAuth)`
+          : `Connected successfully with ${user?.name || user?.email}!`
       });
       setIsEditingAccount(false);
     } catch (err) {
