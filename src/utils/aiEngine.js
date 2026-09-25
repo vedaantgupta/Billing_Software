@@ -55,175 +55,90 @@ const isErrorMessage = (text) => {
 };
 
 /**
- * Detects if a user prompt is asking specifically for business snapshot figures:
- * Today's sales, month sales, pending udhaar, inventory/stock, or expenses.
- */
-export const isDirectDataQuery = (text) => {
-  if (!text) return false;
-  const q = text.toLowerCase().trim();
-
-  // Exclude action requests (e.g., create invoice, add customer, delete)
-  if (/\b(create|banao|bana do|generate|add|record|delete|hatao|nayi|naya)\b/i.test(q)) {
-    return false;
-  }
-
-  return (
-    q.includes('aaj') || q.includes('today') ||
-    q.includes('mahine') || q.includes('month') ||
-    q.includes('sale') || q.includes('bikri') || q.includes('turnover') ||
-    q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata') ||
-    q.includes('stock') || q.includes('maal') || q.includes('inventory') || q.includes('item') ||
-    q.includes('kharcha') || q.includes('expense') || q.includes('spent') ||
-    q.includes('hisaab')
-  );
-};
-
-/**
- * Intelligent deterministic answer generator when external APIs are offline or unreachable,
- * or when direct data queries require 100% verified, instantaneous answers.
+ * Intelligent deterministic answer generator when external APIs are offline or unreachable.
  * Uses exact pre-calculated business metrics so the user always gets 100% accurate figures.
  */
-export const generateDeterministicFallback = (textToSend, snapshot) => {
+const generateDeterministicFallback = (textToSend, snapshot) => {
   const q = (textToSend || '').toLowerCase();
   const m = snapshot?.metrics || {};
 
   const isHindiScript = /[\u0900-\u097F]/.test(textToSend);
-  const isHinglish = /\b(aaj|aajka|batao|karo|bhai|kitna|hisaab|udhaar|baki|khata|dukaan|bikri|maal|kaunse|konsa|hai|hain|karna|dekh|kuch|kya|mujhe)\b/i.test(textToSend);
-
-  const isTodayQuery = q.includes('aaj') || q.includes('today') || q.includes('aajka') || q.includes('aaj ki') || q.includes('current day');
-  const isMonthQuery = q.includes('mahine') || q.includes('month') || q.includes('this month') || q.includes('is mahine');
-  const isUdhaarQuery = q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata') || q.includes('due');
-  const isStockQuery = q.includes('stock') || q.includes('item') || q.includes('maal') || q.includes('inventory') || q.includes('product') || q.includes('kam');
-  const isExpenseQuery = q.includes('kharcha') || q.includes('expense') || q.includes('spent') || q.includes('kharch');
-  const isSaleQuery = q.includes('sale') || q.includes('bikri') || q.includes('revenue') || q.includes('turnover') || q.includes('bill') || q.includes('invoice');
-
-  // Specific party check
-  const parties = m.partiesWithUdhaar || [];
-  const matchedParty = parties.find(p => q.includes(p.name.toLowerCase()));
-  if (matchedParty) {
-    if (isHindiScript) {
-      return `नमस्ते! ${matchedParty.name} का कुल बकाया उधार ₹${matchedParty.amount.toLocaleString('en-IN')} है (फ़ोन: ${matchedParty.phone})। क्या आप इसका भुगतान रिकॉर्ड करना चाहते हैं?`;
-    }
-    if (isHinglish) {
-      return `${matchedParty.name} ka total pending udhaar ₹${matchedParty.amount.toLocaleString('en-IN')} baki hai (Phone: ${matchedParty.phone}). Kya aap inka payment record karna chahte hain ya reminder bhejna hai?`;
-    }
-    return `${matchedParty.name} has an outstanding balance of ₹${matchedParty.amount.toLocaleString('en-IN')} (Phone: ${matchedParty.phone}). Would you like to record a payment?`;
-  }
+  const isHinglish = /\b(aaj|aajka|batao|karo|bhai|kitna|hisaab|udhaar|baki|khata|dukaan|bikri|maal|kaunse|konsa|hai|hain|karna|dekh)\b/i.test(textToSend);
 
   // Today's Sales
-  if (isTodayQuery) {
-    const todayAmt = (m.todaySalesAmount || 0).toLocaleString('en-IN');
-    const todayCount = m.todaySalesCount || 0;
-    const lifetimeAmt = (m.totalSalesAmount || 0).toLocaleString('en-IN');
-    const lifetimeCount = m.totalInvoicesCount || 0;
-
-    if (todayCount === 0) {
-      if (isHindiScript) {
-        return `नमस्ते! आज अभी तक कोई नया बिक्री बिल नहीं बना है (आज की बिक्री ₹0 है)। आपके व्यापार की कुल लाइफटाइम बिक्री ₹${lifetimeAmt} है (${lifetimeCount} बिल)। क्या आप नया इनवॉइस बनाना चाहते हैं?`;
-      }
-      if (isHinglish) {
-        return `Aaj abhi tak koi naya bill nahi bana hai (aaj ka sale ₹0 hai). Aapka total lifetime sale ₹${lifetimeAmt} hai across ${lifetimeCount} bills. Kya aap koi naya invoice banana chahte hain?`;
-      }
-      return `No sales invoices have been generated today yet (Today's sales: ₹0). Your total lifetime sales stand at ₹${lifetimeAmt} across ${lifetimeCount} invoices. Would you like to generate a new invoice?`;
-    }
-
+  if (q.includes('aaj') || q.includes('today') || (q.includes('sale') && !q.includes('month') && !q.includes('total'))) {
     if (isHindiScript) {
-      return `नमस्ते! आज आपके व्यापार में कुल ₹${todayAmt} की बिक्री हुई है (${todayCount} बिल)। क्या आप कोई नया बिल बनाना चाहते हैं?`;
+      return `नमस्ते! आज आपके व्यापार में कुल ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} की बिक्री हुई है (${m.todaySalesCount || 0} बिल)। क्या आप कोई नया बिल या रसीद बनाना चाहते हैं?`;
     }
     if (isHinglish) {
-      return `Aaj aapka total sale ₹${todayAmt} hua hai across ${todayCount} bill(s). Koi naya bill generate karna hai toh batayein!`;
+      return `Aaj aapka total sale ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} hua hai across ${m.todaySalesCount || 0} bill(s). Kisi party ka naya bill generate karna hai toh batayein!`;
     }
-    return `Today's total sales are ₹${todayAmt} across ${todayCount} bill(s).`;
+    return `Today's total sales amount is ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} across ${m.todaySalesCount || 0} bill(s). Would you like to create a new invoice?`;
   }
 
   // Monthly Sales
-  if (isMonthQuery) {
-    const monthAmt = (m.monthSalesAmount || 0).toLocaleString('en-IN');
-    const monthCount = m.monthSalesCount || 0;
+  if (q.includes('mahine') || q.includes('month')) {
     if (isHindiScript) {
-      return `इस महीने की कुल बिक्री ₹${monthAmt} हुई है (${monthCount} बिल)।`;
+      return `इस महीने की कुल बिक्री ₹${(m.monthSalesAmount || 0).toLocaleString('en-IN')} हुई है (${m.monthSalesCount || 0} बिल)।`;
     }
     if (isHinglish) {
-      return `Is mahine ka total sales ₹${monthAmt} hua hai across ${monthCount} bill(s).`;
+      return `Is mahine ka total sales ₹${(m.monthSalesAmount || 0).toLocaleString('en-IN')} hua hai (${m.monthSalesCount || 0} bills).`;
     }
-    return `This month's total sales are ₹${monthAmt} across ${monthCount} bill(s).`;
-  }
-
-  // General Sales or All-Time Sales
-  if (isSaleQuery) {
-    const totalAmt = (m.totalSalesAmount || 0).toLocaleString('en-IN');
-    const totalCount = m.totalInvoicesCount || 0;
-    const todayAmt = (m.todaySalesAmount || 0).toLocaleString('en-IN');
-    const todayCount = m.todaySalesCount || 0;
-    if (isHindiScript) {
-      return `नमस्ते! आपके व्यापार की कुल लाइफटाइम बिक्री ₹${totalAmt} है (${totalCount} बिल), जिसमें से आज की बिक्री ₹${todayAmt} है (${todayCount} बिल)।`;
-    }
-    if (isHinglish) {
-      return `Aapka total all-time sale ₹${totalAmt} hua hai across ${totalCount} bills (aur aaj ka sale ₹${todayAmt} hai across ${todayCount} bills). Kya aap koi naya invoice banana chahte hain?`;
-    }
-    return `Your lifetime sales revenue is ₹${totalAmt} across ${totalCount} invoices, with today's sales standing at ₹${todayAmt} across ${todayCount} bill(s).`;
+    return `This month's total sales are ₹${(m.monthSalesAmount || 0).toLocaleString('en-IN')} across ${m.monthSalesCount || 0} bill(s).`;
   }
 
   // Pending Udhaar / Receivables
-  if (isUdhaarQuery) {
-    const udhaarAmt = (m.totalUnpaidReceivables || 0).toLocaleString('en-IN');
-    const partyCount = (m.partiesWithUdhaar || []).length;
+  if (q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata')) {
     if (isHindiScript) {
-      return `व्यापार में कुल बकाया राशि (उधार) ₹${udhaarAmt} है (${partyCount} पार्टियों से)। आप किसी भी विशिष्ट पार्टी का नाम पूछकर उसका विवरण देख सकते हैं।`;
+      return `व्यापार में कुल बकाया राशि (उधार) ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} है। आप लेजर या कॉन्टैक्ट्स में जाकर पार्टीवार विवरण देख सकते हैं।`;
     }
     if (isHinglish) {
-      return `Aapka total pending udhaar ₹${udhaarAmt} baki hai across ${partyCount} parties. Kisi specific customer ka hisaab check karna ho toh naam batayein!`;
+      return `Aapka total pending udhaar ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} baki hai. Kisi specific party ka hisaab check karna hai toh naam batayein!`;
     }
-    return `Total outstanding pending receivables (udhaar) stand at ₹${udhaarAmt} across ${partyCount} parties.`;
+    return `Total outstanding pending receivables (udhaar) stand at ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')}.`;
   }
 
   // Low Stock / Inventory
-  if (isStockQuery) {
-    const stockVal = (m.stockValuationTotal || 0).toLocaleString('en-IN');
-    const lowCount = m.lowStockCount || 0;
+  if (q.includes('stock') || q.includes('item') || q.includes('maal') || q.includes('inventory')) {
     if (isHindiScript) {
-      return `वर्तमान में ${lowCount} उत्पाद न्यूनतम स्टॉक स्तर से नीचे हैं। कुल इन्वेंट्री का मूल्य लगभग ₹${stockVal} है।`;
+      return `वर्तमान में ${m.lowStockCount || 0} उत्पाद कम स्टॉक पर हैं। कुल इन्वेंट्री का मूल्य लगभग ₹${(m.stockValuationTotal || 0).toLocaleString('en-IN')} है।`;
     }
     if (isHinglish) {
-      return `Aapke paas ${lowCount} items low stock par hain jinhe reorder karna zaroori hai. Total inventory value ₹${stockVal} hai.`;
+      return `Aapke paas ${m.lowStockCount || 0} items low stock par hain jinhe reorder karne ki zaroorat hai. Total inventory value ₹${(m.stockValuationTotal || 0).toLocaleString('en-IN')} hai.`;
     }
-    return `Currently ${lowCount} items are below minimum stock level. Total inventory valuation is ₹${stockVal}.`;
+    return `Currently ${m.lowStockCount || 0} items are below minimum stock level. Total stock valuation is ₹${(m.stockValuationTotal || 0).toLocaleString('en-IN')}.`;
   }
 
   // Expenses
-  if (isExpenseQuery) {
-    const todayExp = (m.todayExpensesAmount || 0).toLocaleString('en-IN');
-    const totalExp = (m.totalExpensesAmount || 0).toLocaleString('en-IN');
+  if (q.includes('kharcha') || q.includes('expense')) {
     if (isHindiScript) {
-      return `आज का कुल खर्च ₹${todayExp} है और कुल लाइफटाइम खर्च ₹${totalExp} है।`;
+      return `आज का कुल खर्च ₹${(m.todayExpensesAmount || 0).toLocaleString('en-IN')} है और कुल रिकॉर्डेड खर्च ₹${(m.totalExpensesAmount || 0).toLocaleString('en-IN')} है।`;
     }
     if (isHinglish) {
-      return `Aaj ka recorded kharcha ₹${todayExp} hai aur all-time total expenses ₹${totalExp} hain.`;
+      return `Aaj ka total kharcha ₹${(m.todayExpensesAmount || 0).toLocaleString('en-IN')} hai aur all-time recorded expenses ₹${(m.totalExpensesAmount || 0).toLocaleString('en-IN')} hain.`;
     }
-    return `Today's recorded expenses are ₹${todayExp} and lifetime expenses are ₹${totalExp}.`;
+    return `Today's recorded expenses are ₹${(m.todayExpensesAmount || 0).toLocaleString('en-IN')} and total expenses are ₹${(m.totalExpensesAmount || 0).toLocaleString('en-IN')}.`;
   }
 
   // General Greeting or Overview
-  const todayAmt = (m.todaySalesAmount || 0).toLocaleString('en-IN');
-  const udhaarAmt = (m.totalUnpaidReceivables || 0).toLocaleString('en-IN');
   if (isHindiScript) {
-    return `नमस्ते! मैं आपका Google Gemini बिजनेस असिस्टेंट हूँ। आज की बिक्री ₹${todayAmt} है और कुल बकाया उधार ₹${udhaarAmt} है। मैं आपकी क्या सहायता कर सकता हूँ?`;
+    return `नमस्ते! मैं आपका Google Gemini बिजनेस असिस्टेंट हूँ। आज की बिक्री ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} है और कुल बकाया ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} है। मैं आपकी क्या सहायता कर सकता हूँ?`;
   }
   if (isHinglish) {
-    return `Namaste! Main aapka Google Gemini business AI copilot hoon. Aaj aapka total sale ₹${todayAmt} hua hai aur pending udhaar ₹${udhaarAmt} hai. Aap mujhse kisi bhi bill, party balance, ya naye invoice ke bare me pooch sakte hain!`;
+    return `Namaste! Main aapka business AI copilot hoon. Aaj aapka total sale ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} hua hai aur pending udhaar ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} hai. Aap mujhse kisi bhi bill, party, stock ya naye invoice ke bare me pooch sakte hain!`;
   }
-  return `Hello! I am your Google Gemini AI business assistant. Today's sales are ₹${todayAmt} and total outstanding receivables are ₹${udhaarAmt}. How can I assist you with your business today?`;
+  return `Hello! I am your AI business assistant. Today's sales are ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} across ${m.todaySalesCount || 0} bills. How can I assist you with your business today?`;
 };
 
 /**
  * Master multi-engine AI caller:
- * 1. Instant Data Route: Direct accurate answers for database queries (< 50ms)
- * 2. Backend API (with fast 2.5s race timeout)
- * 3. Direct Google Generative Language API (if user entered Gemini key)
- * 4. Fast Pollinations API (single attempt)
+ * 1. Backend API (with live database & timeout safeguard)
+ * 2. Direct Google Generative Language API (if key available)
+ * 3. Resilient Pollinations models with multi-tier fallback (openai -> mistral -> deepseek)
+ * 4. Resilient direct prompt endpoint
  * 5. Deterministic fallback using live database snapshot
  * 
- * NEVER hangs, NEVER takes 20 seconds, NEVER gives wrong values!
+ * NEVER fails, NEVER returns "Error: The model is currently unreachable."!
  */
 export const queryAIEngine = async ({
   prompt,
@@ -242,18 +157,46 @@ export const queryAIEngine = async ({
   const userGeminiKey = geminiStore.getApiKey();
   const systemPromptText = buildGeminiSystemPrompt(snapshot?.contextString, userName);
 
-  // 1. FAST-PATH: Direct business data queries (e.g. today sales, udhaar, stock, expenses)
-  // If the query is asking for data numbers without creating or modifying documents,
-  // answer INSTANTLY with 100% verified numbers from the active database!
-  if (!pendingAction && !hasActiveQuestion && files.length === 0 && isDirectDataQuery(prompt)) {
-    const instantText = generateDeterministicFallback(prompt, snapshot);
-    const parsed = parseAIResponse(instantText);
-    return {
-      content: parsed.cleanContent,
-      action: parsed.action,
-      question: parsed.question,
-      source: 'live-local-intelligence'
-    };
+  // 1. Try Backend First (5.0s race timeout)
+  try {
+    const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
+      method: 'POST',
+      signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        history,
+        userId: effectiveUserId,
+        userName,
+        userGeminiKey,
+        pendingAction,
+        hasActiveQuestion,
+        geminiModel: effectiveApiModel,
+        clientBusinessContext: snapshot?.contextString || '',
+        files: files.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
+      })
+    });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Backend timeout, switching to direct AI engine')), 5000)
+    );
+
+    const res = await Promise.race([backendFetchPromise, timeoutPromise]);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.response && !isErrorMessage(data.response)) {
+        const parsed = parseAIResponse(data.response);
+        return {
+          content: parsed.cleanContent,
+          action: data.action || parsed.action || null,
+          question: data.question || parsed.question || null,
+          source: 'backend'
+        };
+      }
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    console.warn('Backend /ai/chat did not complete in time, trying direct AI engine...', err.message);
   }
 
   // 2. Direct Google Generative Language API (if user provided Gemini API key)
@@ -298,88 +241,67 @@ export const queryAIEngine = async ({
     }
   }
 
-  // 3. Try Backend (Fast 2.5s race timeout)
-  try {
-    const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
-      method: 'POST',
-      signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        history,
-        userId: effectiveUserId,
-        userName,
-        userGeminiKey,
-        pendingAction,
-        hasActiveQuestion,
-        geminiModel: effectiveApiModel,
-        clientBusinessContext: snapshot?.contextString || '',
-        files: files.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
-      })
-    });
+  // 3. Multi-tier Pollinations Fallback (openai -> mistral -> deepseek)
+  const modelsToTry = ['openai', 'mistral', 'deepseek'];
+  for (const mod of modelsToTry) {
+    try {
+      const pollRes = await fetch('https://text.pollinations.ai/openai/chat/completions', {
+        method: 'POST',
+        signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: mod,
+          messages: [
+            { role: 'system', content: systemPromptText },
+            ...history.slice(-5).map(m => ({
+              role: (m.role === 'ai' || m.role === 'assistant') ? 'assistant' : 'user',
+              content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+            })),
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.3
+        })
+      });
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Backend timeout, switching to fast intelligence')), 2500)
-    );
-
-    const res = await Promise.race([backendFetchPromise, timeoutPromise]);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.response && !isErrorMessage(data.response)) {
-        const parsed = parseAIResponse(data.response);
-        return {
-          content: parsed.cleanContent,
-          action: data.action || parsed.action || null,
-          question: data.question || parsed.question || null,
-          source: 'backend'
-        };
+      if (pollRes.ok) {
+        const pData = await pollRes.json();
+        const text = pData?.choices?.[0]?.message?.content;
+        if (text && !isErrorMessage(text)) {
+          const parsed = parseAIResponse(text);
+          return {
+            content: parsed.cleanContent,
+            action: parsed.action,
+            question: parsed.question,
+            source: `pollinations-${mod}`
+          };
+        }
       }
+    } catch (pErr) {
+      if (pErr.name === 'AbortError') throw pErr;
+      console.warn(`Pollinations ${mod} attempt failed, trying next...`);
     }
-  } catch (err) {
-    if (err.name === 'AbortError') throw err;
-    console.warn('Backend /ai/chat did not complete within 2.5s, switching to instant engine...');
   }
 
-  // 4. Fast Single Pollinations Call (max 4.0s timeout)
+  // 4. Pollinations Direct Simple Prompt Endpoint
   try {
-    const pollPromise = fetch('https://text.pollinations.ai/openai/chat/completions', {
-      method: 'POST',
-      signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'openai',
-        messages: [
-          { role: 'system', content: systemPromptText },
-          ...history.slice(-4).map(m => ({
-            role: (m.role === 'ai' || m.role === 'assistant') ? 'assistant' : 'user',
-            content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-          })),
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3
-      })
+    const rawDirectRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&system=${encodeURIComponent(systemPromptText)}`, {
+      method: 'GET',
+      signal
     });
-
-    const pollTimeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Pollinations timeout')), 4000)
-    );
-
-    const pollRes = await Promise.race([pollPromise, pollTimeout]);
-    if (pollRes.ok) {
-      const pData = await pollRes.json();
-      const text = pData?.choices?.[0]?.message?.content;
+    if (rawDirectRes.ok) {
+      const text = await rawDirectRes.text();
       if (text && !isErrorMessage(text)) {
         const parsed = parseAIResponse(text);
         return {
           content: parsed.cleanContent,
           action: parsed.action,
           question: parsed.question,
-          source: 'pollinations-fast'
+          source: 'pollinations-simple'
         };
       }
     }
-  } catch (pErr) {
-    if (pErr.name === 'AbortError') throw pErr;
+  } catch (rawErr) {
+    if (rawErr.name === 'AbortError') throw rawErr;
   }
 
   // 5. Intelligent Instant Fallback Using Live Pre-Calculated Snapshot

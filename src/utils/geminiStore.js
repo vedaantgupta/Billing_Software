@@ -111,9 +111,6 @@ export const geminiStore = {
   getModel() {
     try {
       const saved = localStorage.getItem(MODEL_STORAGE);
-      if (saved === 'gemini-2.0-flash' || saved === 'gemini-flash') return 'gemini-3.6-flash';
-      if (saved === 'gemini-2.0-flash-lite') return 'gemini-3.5-flash-lite';
-      if (saved === 'gemini-1.5-pro' || saved === 'gemini-pro') return 'gemini-3.1-pro';
       if (saved && AVAILABLE_MODELS.some(m => m.id === saved)) {
         return saved;
       }

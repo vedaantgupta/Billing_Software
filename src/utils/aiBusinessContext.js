@@ -1,5 +1,4 @@
 import { getItems } from '@/utils/db';
-import { getAllContactBalances } from '@/utils/ledger';
 
 /**
  * Accurately extracts the active user ID from auth state or local storage
@@ -26,123 +25,14 @@ export const getEffectiveUserId = (user) => {
     }
   } catch (e) {}
 
-  try {
-    const rawGoogle = localStorage.getItem('billing_google_account');
-    if (rawGoogle) {
-      const parsed = JSON.parse(rawGoogle);
-      if (parsed?.id) return parsed.id;
-    }
-  } catch (e) {}
-
   return 'guest_user';
 };
 
 /**
- * Gets today's date in local calendar timezone (YYYY-MM-DD)
- * Guarantees IST/local alignment instead of UTC day-shift
- */
-export const getTodayLocalISO = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-/**
- * Robust date normalizer: converts any date format (YYYY-MM-DD, DD/MM/YYYY, ISO string) to YYYY-MM-DD
- */
-export const normalizeDateToISO = (raw) => {
-  if (!raw) return '';
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim();
-    // YYYY-MM-DD
-    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      return trimmed;
-    }
-    // DD/MM/YYYY or DD-MM-YYYY
-    const parts = trimmed.split(/[\/\-]/);
-    if (parts.length === 3) {
-      if (parts[2].length === 4) {
-        const day = parts[0].padStart(2, '0');
-        const month = parts[1].padStart(2, '0');
-        const year = parts[2];
-        return `${year}-${month}-${day}`;
-      }
-      if (parts[0].length === 4) {
-        const year = parts[0];
-        const month = parts[1].padStart(2, '0');
-        const day = parts[2].padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-    }
-  }
-  try {
-    const d = new Date(raw);
-    if (!isNaN(d.getTime())) {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-  } catch (e) {}
-  return '';
-};
-
-/**
- * Extracts numeric document amount from any document structure
- */
-const getDocAmount = (d) => {
-  if (!d) return 0;
-  const amt = Number(d.grandTotal ?? d.total ?? d.netAmount ?? d.invoiceDetail?.grandTotal ?? d.amount ?? 0);
-  return isNaN(amt) ? 0 : amt;
-};
-
-/**
- * Extracts friendly party / customer name
- */
-const getPartyName = (d) => {
-  if (!d) return 'Cash / Counter';
-  return (
-    d.customerName ||
-    d.partyName ||
-    d.clientName ||
-    d.customerInfo?.ms ||
-    d.customerInfo?.customerName ||
-    d.clientInfo?.ms ||
-    'Cash / Counter'
-  );
-};
-
-/**
- * Reads offline queue and localStorage cache to guarantee no data is ever missed
- */
-const getLocalQueueItems = (collection, userId) => {
-  const items = [];
-  try {
-    const queue = JSON.parse(localStorage.getItem('gogstbill_db_queue') || '[]');
-    queue.forEach(q => {
-      if (q.collection === collection && (!userId || q.userId === userId || !q.userId)) {
-        if (q.item) items.push(q.item);
-      }
-    });
-  } catch (e) {}
-
-  try {
-    const cached = JSON.parse(localStorage.getItem(`gogstbill_db_cache_${collection}`) || '[]');
-    if (Array.isArray(cached)) {
-      cached.forEach(c => items.push(c));
-    }
-  } catch (e) {}
-
-  return items;
-};
-
-/**
  * Builds a 100% comprehensive, live, pre-calculated snapshot of the entire business database.
- * This guarantees the AI has exact, reliable numbers for:
+ * This guarantees the AI has exact numbers for:
  * - Today's sales vs This Month's vs All-time
- * - Unpaid / Udhaar balances per party (using digital ledger and outstanding invoices)
+ * - Unpaid / Udhaar balances per party
  * - Low stock products
  * - Expenses
  * - Recent invoices
@@ -156,110 +46,59 @@ export const buildLiveBusinessSnapshot = async (user) => {
       documents,
       contacts,
       products,
-      dailyExpensesSnake,
-      dailyExpensesCamel,
+      dailyExpenses,
       generalExpenses,
       ledgerTxs,
-      inwardSnake,
-      inwardCamel,
-      outwardSnake,
-      outwardCamel,
+      inwardPayments,
+      outwardPayments,
       staff,
       banks,
       loans,
-      otherIncomeSnake,
-      otherIncomeCamel,
-      contactBalances
+      otherIncomes
     ] = await Promise.all([
       getItems('invoices', userId).catch(() => []),
       getItems('documents', userId).catch(() => []),
       getItems('contacts', userId).catch(() => []),
       getItems('products', userId).catch(() => []),
       getItems('daily_expenses', userId).catch(() => []),
-      getItems('dailyExpenses', userId).catch(() => []),
       getItems('expenses', userId).catch(() => []),
       getItems('ledger_transactions', userId).catch(() => []),
       getItems('inward_payments', userId).catch(() => []),
-      getItems('inwardPayments', userId).catch(() => []),
       getItems('outward_payments', userId).catch(() => []),
-      getItems('outwardPayments', userId).catch(() => []),
       getItems('staff', userId).catch(() => []),
       getItems('banks', userId).catch(() => []),
       getItems('loans', userId).catch(() => []),
-      getItems('other_incomes', userId).catch(() => []),
-      getItems('otherIncome', userId).catch(() => []),
-      getAllContactBalances(userId).catch(() => ({}))
+      getItems('other_incomes', userId).catch(() => [])
     ]);
 
-    // 1. Merge & Deduplicate Sales Documents (Both 'documents', legacy 'invoices', and local cache/queue)
-    const localDocs = getLocalQueueItems('documents', userId);
-    const localInvs = getLocalQueueItems('invoices', userId);
-    const allDocs = [...(documents || []), ...localDocs];
-
-    [...(invoices || []), ...localInvs].forEach(inv => {
+    // 1. Merge & Deduplicate Sales Documents (Both 'documents' and legacy 'invoices')
+    const allDocs = [...(documents || [])];
+    (invoices || []).forEach(inv => {
       const exists = allDocs.some(d =>
         (d.id && d.id === inv.id) ||
         (d._id && d._id === inv._id) ||
         (d.invoiceNumber && d.invoiceNumber === inv.invoiceNumber)
       );
       if (!exists) {
-        allDocs.push({ ...inv, docType: inv.docType || 'Sale Invoice' });
+        allDocs.push({ ...inv, docType: inv.docType || 'Invoice' });
       }
     });
 
-    // Classify Sale Invoices vs other document types
-    // CRITICAL: Strictly isolate Sale Invoices so Purchase Invoices, Sale Orders, Delivery Challans, and Quotations do NOT distort sales figures!
-    const isSaleInvoice = (d) => {
-      if (!d) return false;
-      const t = String(d.docType || d.type || '').trim().toLowerCase();
-      const num = String(d.invoiceNumber || '').trim().toUpperCase();
-      const status = String(d.status || '').trim().toLowerCase();
+    // Classify Sale vs Purchase
+    const saleInvoices = allDocs.filter(d => {
+      const type = (d.docType || d.type || 'Invoice').toLowerCase();
+      return type.includes('invoice') || type.includes('sale') || type === 'bill';
+    });
 
-      // If document is explicitly for a vendor, or contains purchase indicators, it is NOT a sale invoice
-      if (d.vendorId || d.vendorName || d.vendorInfo) return false;
-      if (num.startsWith('PUR-') || num.startsWith('PO-') || num.startsWith('PINV-')) return false;
-      if (num.startsWith('QUOT-') || num.startsWith('DC-') || num.startsWith('SO/') || num.startsWith('SO-') || num.startsWith('CN-') || num.startsWith('DN-')) return false;
+    const purchaseInvoices = allDocs.filter(d => {
+      const type = (d.docType || d.type || '').toLowerCase();
+      return type.includes('purchase');
+    });
 
-      // Status check
-      if (status.includes('purchase') || status.includes('order') || status.includes('quotation') || status.includes('challan') || status.includes('cancelled')) return false;
-
-      // Type checks
-      if (
-        t.includes('purchase') ||
-        t.includes('order') ||
-        t.includes('challan') ||
-        t.includes('quotation') ||
-        t.includes('offer') ||
-        t.includes('proforma') ||
-        t.includes('debit') ||
-        t.includes('credit') ||
-        t.includes('job') ||
-        t.includes('letter')
-      ) {
-        return false;
-      }
-
-      // Must be a sale invoice or bill
-      if (t.includes('sale') || t.includes('invoice') || t.includes('bill') || t.includes('tax')) return true;
-      if (num.startsWith('SINV-') || num.startsWith('INV-')) return true;
-      if (d.customerName || d.customerId || d.customerInfo) return true;
-      return false;
-    };
-
-    const isPurchaseInvoice = (d) => {
-      if (!d) return false;
-      const t = String(d.docType || d.type || '').trim().toLowerCase();
-      const num = String(d.invoiceNumber || '').trim().toUpperCase();
-      return t.includes('purchase') || num.startsWith('PUR-') || num.startsWith('PO-') || !!d.vendorName;
-    };
-
-    const saleInvoices = allDocs.filter(isSaleInvoice);
-    const purchaseInvoices = allDocs.filter(isPurchaseInvoice);
-
-    // 2. Date Filtering (Today, Month, Lifetime) with local calendar alignment
-    const todayStr = getTodayLocalISO(); // YYYY-MM-DD in user's local timezone
-    const currentMonthStr = todayStr.substring(0, 7); // YYYY-MM
+    // 2. Date Filtering (Today, Month, Lifetime)
     const now = new Date();
+    const todayStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const currentMonthStr = todayStr.substring(0, 7); // YYYY-MM
     const todayFormattedDate = now.toLocaleDateString('en-IN', {
       weekday: 'long',
       year: 'numeric',
@@ -267,120 +106,65 @@ export const buildLiveBusinessSnapshot = async (user) => {
       day: 'numeric'
     });
 
-    const getDocDate = (doc) => {
+    const getDocDateStr = (doc) => {
       const rawDate = doc.date || doc.invoiceDetail?.date || doc.invoiceDate || doc.createdAt || '';
-      return normalizeDateToISO(rawDate);
+      if (!rawDate) return '';
+      if (typeof rawDate === 'string') return rawDate.split('T')[0];
+      try {
+        return new Date(rawDate).toISOString().split('T')[0];
+      } catch (e) {
+        return '';
+      }
     };
 
     // Today's Sales
-    const todaySaleDocs = saleInvoices.filter(d => getDocDate(d) === todayStr);
-    const todaySalesAmount = todaySaleDocs.reduce((sum, d) => sum + getDocAmount(d), 0);
+    const todaySaleDocs = saleInvoices.filter(d => getDocDateStr(d) === todayStr);
+    const todaySalesAmount = todaySaleDocs.reduce((sum, d) => sum + (Number(d.grandTotal ?? d.total ?? 0) || 0), 0);
 
     // This Month's Sales
-    const monthSaleDocs = saleInvoices.filter(d => getDocDate(d).startsWith(currentMonthStr));
-    const monthSalesAmount = monthSaleDocs.reduce((sum, d) => sum + getDocAmount(d), 0);
+    const monthSaleDocs = saleInvoices.filter(d => getDocDateStr(d).startsWith(currentMonthStr));
+    const monthSalesAmount = monthSaleDocs.reduce((sum, d) => sum + (Number(d.grandTotal ?? d.total ?? 0) || 0), 0);
 
     // Lifetime Sales
-    const totalSalesAmount = saleInvoices.reduce((sum, d) => sum + getDocAmount(d), 0);
+    const totalSalesAmount = saleInvoices.reduce((sum, d) => sum + (Number(d.grandTotal ?? d.total ?? 0) || 0), 0);
 
-    // 3. Outstanding Receivables (Udhaar) from Invoices & Ledger
-    const isDocOutstanding = (d) => {
-      const status = (d.status || '').trim().toLowerCase();
-      if (status === 'paid' || status === 'completed' || status === 'cancelled') return false;
-      if (status === 'outstanding' || status === 'unpaid' || status === 'pending' || status === 'active' || status === 'due') return true;
-      if (Number(d.balanceDue) > 0) return true;
-      return true; // Default to outstanding if not explicitly marked paid
-    };
-
-    const getDocPendingAmount = (d) => {
-      if (Number(d.balanceDue) > 0) return Number(d.balanceDue);
-      const status = (d.status || '').trim().toLowerCase();
-      if (status === 'paid' || status === 'completed' || status === 'cancelled') return 0;
-      return getDocAmount(d);
-    };
-
-    const invoiceUnpaidTotal = saleInvoices.filter(isDocOutstanding).reduce((sum, d) => sum + getDocPendingAmount(d), 0);
-
-    // Combine Ledger Debit Balances for Contacts & Individual Invoices
-    let ledgerDebtorsTotal = 0;
-    const partiesWithUdhaar = [];
-
-    const allContacts = [...(contacts || []), ...getLocalQueueItems('contacts', userId)];
-    const seenParties = new Set();
-
-    allContacts.forEach(c => {
-      const cid = c.id || c._id || c._dbId;
-      const bInfo = contactBalances[cid];
-      let netUdhaar = 0;
-
-      if (bInfo) {
-        if (bInfo.position === 'Dr' && bInfo.balance > 0) {
-          netUdhaar = bInfo.balance;
-        }
-      } else {
-        const rawBal = Number(c.balance || c.openingBalance || 0);
-        if (rawBal > 0) netUdhaar = rawBal;
+    // Pending Receivables / Udhaar from Invoices
+    const totalUnpaidReceivables = saleInvoices.reduce((sum, d) => {
+      const status = (d.status || '').toLowerCase();
+      if (status === 'unpaid' || status === 'pending') {
+        return sum + (Number(d.balanceDue ?? d.grandTotal ?? d.total ?? 0) || 0);
       }
+      if (Number(d.balanceDue) > 0) {
+        return sum + Number(d.balanceDue);
+      }
+      return sum;
+    }, 0);
 
-      if (netUdhaar > 0) {
-        const partyName = c.companyName || c.customerName || c.name || 'Unnamed Party';
-        seenParties.add(partyName.toLowerCase());
-        ledgerDebtorsTotal += netUdhaar;
-        partiesWithUdhaar.push({
-          name: partyName,
-          phone: c.phone || c.mobile || 'N/A',
-          amount: netUdhaar
-        });
+    // 3. Merge & Deduplicate Expenses
+    const allExpenses = [...(dailyExpenses || [])];
+    (generalExpenses || []).forEach(ge => {
+      if (!allExpenses.some(e => e.id === ge.id || (e.description === ge.description && e.amount === ge.amount))) {
+        allExpenses.push(ge);
       }
     });
 
-    // Also include any customer from saleInvoices who has outstanding balance
-    saleInvoices.filter(isDocOutstanding).forEach(inv => {
-      const pName = getPartyName(inv);
-      if (!pName || pName === 'Cash / Counter' || seenParties.has(pName.toLowerCase())) return;
-      const amt = getDocPendingAmount(inv);
-      if (amt > 0) {
-        seenParties.add(pName.toLowerCase());
-        partiesWithUdhaar.push({
-          name: pName,
-          phone: inv.customerInfo?.phoneNo || inv.phone || 'N/A',
-          amount: amt
-        });
-      }
+    const todayExpenses = allExpenses.filter(e => {
+      const dStr = (e.date || e.createdAt || '').split('T')[0];
+      return dStr === todayStr;
     });
-
-    // Effective pending receivables: use the more comprehensive of invoice totals or ledger debtors
-    const totalPendingReceivables = Math.max(invoiceUnpaidTotal, ledgerDebtorsTotal, partiesWithUdhaar.reduce((s, p) => s + p.amount, 0));
-
-    // 4. Merge & Deduplicate Expenses
-    const allExpenses = [];
-    const seenExp = new Set();
-    const addExpenseIfNew = (e) => {
-      if (!e) return;
-      const key = `${e.id || e._id || ''}_${e.date || ''}_${e.amount || 0}_${e.description || e.category || ''}`;
-      if (!seenExp.has(key)) {
-        seenExp.add(key);
-        allExpenses.push(e);
-      }
-    };
-
-    (dailyExpensesSnake || []).forEach(addExpenseIfNew);
-    (dailyExpensesCamel || []).forEach(addExpenseIfNew);
-    (generalExpenses || []).forEach(addExpenseIfNew);
-    getLocalQueueItems('dailyExpenses', userId).forEach(addExpenseIfNew);
-
-    const todayExpenses = allExpenses.filter(e => normalizeDateToISO(e.date || e.createdAt) === todayStr);
     const todayExpensesAmount = todayExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
-    const monthExpenses = allExpenses.filter(e => normalizeDateToISO(e.date || e.createdAt).startsWith(currentMonthStr));
+    const monthExpenses = allExpenses.filter(e => {
+      const dStr = (e.date || e.createdAt || '').split('T')[0];
+      return dStr.startsWith(currentMonthStr);
+    });
     const monthExpensesAmount = monthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const totalExpensesAmount = allExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
-    // 5. Inventory & Stock Valuation
-    const allProducts = [...(products || []), ...getLocalQueueItems('products', userId)];
+    // 4. Inventory & Stock Valuation
     let stockValuationTotal = 0;
     const lowStockItems = [];
-    allProducts.forEach(p => {
+    (products || []).forEach(p => {
       const qty = Number(p.quantity ?? p.stock ?? p.openingStock ?? 0);
       const price = Number(p.price ?? p.sellingPrice ?? p.rate ?? p.purchasePrice ?? 0);
       const minStock = Number(p.minStock ?? p.reorderLevel ?? 5);
@@ -397,19 +181,23 @@ export const buildLiveBusinessSnapshot = async (user) => {
       }
     });
 
+    // 5. Contacts & Customer Udhaar
+    const customers = (contacts || []).filter(c => (c.type || 'customer').toLowerCase() === 'customer');
+    const suppliers = (contacts || []).filter(c => (c.type || '').toLowerCase() === 'supplier');
+    const partiesWithBalance = (contacts || []).filter(c => Number(c.balance || 0) > 0 || Number(c.openingBalance || 0) > 0);
+
     // 6. Recent Invoices
     const sortedInvoices = [...saleInvoices].sort((a, b) => {
-      const dateA = new Date(normalizeDateToISO(a.date || a.invoiceDetail?.date) || 0);
-      const dateB = new Date(normalizeDateToISO(b.date || b.invoiceDetail?.date) || 0);
+      const dateA = new Date(a.date || a.invoiceDetail?.date || 0);
+      const dateB = new Date(b.date || b.invoiceDetail?.date || 0);
       return dateB - dateA;
     });
-
     const recentInvoicesSample = sortedInvoices.slice(0, 15).map(inv => {
       const num = inv.invoiceNumber || inv.id || 'N/A';
-      const party = getPartyName(inv);
-      const amt = getDocAmount(inv);
+      const party = inv.partyName || inv.clientName || inv.customerName || 'Cash';
+      const amt = Number(inv.grandTotal ?? inv.total ?? 0);
       const status = inv.status || 'Active';
-      const date = getDocDate(inv) || 'N/A';
+      const date = getDocDateStr(inv) || 'N/A';
       return `#${num} (${date}) | Party: ${party} | Amount: ₹${amt.toLocaleString('en-IN')} | Status: ${status}`;
     });
 
@@ -418,7 +206,7 @@ export const buildLiveBusinessSnapshot = async (user) => {
       const cat = e.category || 'General';
       const amt = Number(e.amount || 0);
       const desc = e.description || e.notes || 'Expense';
-      const date = normalizeDateToISO(e.date || e.createdAt) || 'N/A';
+      const date = (e.date || '').split('T')[0] || 'N/A';
       return `${date} | ${cat}: ₹${amt.toLocaleString('en-IN')} (${desc})`;
     });
 
@@ -436,25 +224,25 @@ CURRENT MONTH: ${currentMonthStr}
 - Today's Total Sales Amount: ₹${todaySalesAmount.toLocaleString('en-IN')}
 - Today's Total Bills Count: ${todaySaleDocs.length} bill(s)
 ${todaySaleDocs.length > 0
-  ? `Today's Bills: \n  ${todaySaleDocs.map(d => `* Bill #${d.invoiceNumber || d.id || 'N/A'}: Party "${getPartyName(d)}", Amount ₹${getDocAmount(d).toLocaleString('en-IN')}, Status: ${d.status || 'Active'}`).join('\n  ')}`
+  ? `Today's Bills: \n  ${todaySaleDocs.map(d => `* Bill #${d.invoiceNumber || d.id || 'N/A'}: Party "${d.partyName || d.clientName || 'Cash'}", Amount ₹${Number(d.grandTotal ?? d.total ?? 0).toLocaleString('en-IN')}, Status: ${d.status || 'Active'}`).join('\n  ')}`
   : '- Note: No invoices or bills have been generated today yet.'}
 
 === 2. THIS MONTH'S SALES (${currentMonthStr}) ===
 - Month-To-Date Total Sales: ₹${monthSalesAmount.toLocaleString('en-IN')} across ${monthSaleDocs.length} bill(s)
 
 === 3. ALL-TIME LIFETIME SALES & RECEIVABLES ===
-- Total Lifetime Sale Invoices: ${saleInvoices.length}
+- Total Lifetime Invoices: ${saleInvoices.length}
 - Total Lifetime Sales Revenue: ₹${totalSalesAmount.toLocaleString('en-IN')}
-- Total Outstanding Udhaar (Pending Receivables): ₹${totalPendingReceivables.toLocaleString('en-IN')}
+- Total Outstanding Udhaar (Pending Receivables): ₹${totalUnpaidReceivables.toLocaleString('en-IN')}
 
 === 4. CUSTOMERS & PENDING UDHAAR BALANCES ===
-- Total Customers: ${allContacts.filter(c => (c.type || 'customer').toLowerCase() === 'customer').length}
-${partiesWithUdhaar.length > 0
-  ? `Parties with Pending Udhaar:\n  ${partiesWithUdhaar.slice(0, 15).map(c => `* ${c.name} (${c.phone}): ₹${c.amount.toLocaleString('en-IN')} pending`).join('\n  ')}`
+- Total Customers: ${customers.length} | Suppliers: ${suppliers.length}
+${partiesWithBalance.length > 0
+  ? `Parties with Pending Udhaar:\n  ${partiesWithBalance.slice(0, 15).map(c => `* ${c.name} (${c.phone || 'No phone'}): ₹${Number(c.balance || c.openingBalance || 0).toLocaleString('en-IN')} pending`).join('\n  ')}`
   : '- All customer accounts are settled (Khata clear).'}
 
 === 5. INVENTORY & STOCK ALERT ===
-- Total Products: ${allProducts.length}
+- Total Products: ${(products || []).length}
 - Total Inventory Valuation: ₹${stockValuationTotal.toLocaleString('en-IN')}
 - Low Stock Items (${lowStockItems.length} items need reordering):
 ${lowStockItems.length > 0
@@ -490,14 +278,13 @@ ${recentInvoicesSample.join('\n') || 'No invoices found.'}
         monthSalesCount: monthSaleDocs.length,
         totalSalesAmount,
         totalInvoicesCount: saleInvoices.length,
-        totalUnpaidReceivables: totalPendingReceivables,
+        totalUnpaidReceivables,
         totalExpensesAmount,
         todayExpensesAmount,
         lowStockCount: lowStockItems.length,
         stockValuationTotal,
-        customersCount: allContacts.length,
-        productsCount: allProducts.length,
-        partiesWithUdhaar
+        customersCount: customers.length,
+        productsCount: (products || []).length
       }
     };
   } catch (err) {
@@ -531,13 +318,14 @@ CRITICAL INSTRUCTIONS (MUST FOLLOW STRICTLY):
   - Speak just like real Google Gemini and ChatGPT talk to Indian business owners: friendly, clear, respectful, and sharp.
   - Use common, natural Indian business terms: "sale", "bill", "pending", "udhaar", "khata", "stock", "party", "customer", "payment", "munafa", "baki".
   - CRITICAL NEGATIVE CONSTRAINT: DO NOT insert awkward, forced Devanagari bracket translations in Hinglish sentences!
-    * WRONG: "Aapke vyapaar ka कुल बिक्री (Total Sales) ₹15,000 hai aur बकाया राशि (Pending Udhaar) ₹3,000 hai."
+    * WRONG: "Aapke vyapaar ka कुल बिक्री (Total Sales) ₹15,000 hai aur बकाया राशि (Pending Udhaar) ₹3,000 hai." (This is robotic and unnatural!)
     * RIGHT: "Aaj aapka total sale ₹15,000 hua hai across 3 bills. Aur Sharma Traders ka ₹3,000 pending udhaar baki hai. Kya aap iska payment record karna chahte hain?"
   - Keep sentences clean, contemporary, and effortless to read.
 
 * RULE 2: PURE HINDI (DEVANAGARI SCRIPT):
   - When the user writes in Devanagari script (e.g., "आज की कुल बिक्री कितनी हुई है?", "शर्मा ट्रेडर्स का कितना बकाया है?"):
   - Respond in pure, respectful, and articulate Hindi (हिन्दी) in Devanagari script.
+  - Example: "नमस्ते! आज आपके व्यापार में कुल ₹15,000 की बिक्री हुई है (3 बिल)..."
 
 * RULE 3: ENGLISH:
   - When the user writes in English (e.g., "What is my total sales today?", "Generate an invoice for Sharma Traders"):
@@ -547,7 +335,6 @@ CRITICAL INSTRUCTIONS (MUST FOLLOW STRICTLY):
 - You have 100% full, real-time read and write access to the user's business database.
 - ALWAYS use the [EXACT REAL-TIME BUSINESS DATABASE SNAPSHOT] provided below.
 - If asked about "aaj" (today), look specifically at "TODAY'S SALES" in Section 1. Do NOT quote all-time sales for today!
-- If asked about general sales or all-time sales, look at Section 3.
 - If asked about "is mahine" (this month), look at Section 2.
 - If asked about customer balances or udhaar, look at Section 4.
 - If asked about low stock, quote the exact products listed in Section 5.
@@ -561,24 +348,38 @@ CRITICAL INSTRUCTIONS (MUST FOLLOW STRICTLY):
 {
   "actionId": "act_${Date.now()}",
   "type": "create_document",
-  "label": "Create Invoice for Customer",
+  "label": "Create Invoice for Sharma Traders",
   "collection": "documents",
   "status": "pending",
   "route": "/documents",
   "data": {
-    "invoiceNumber": "SINV-101",
-    "customerName": "Sharma Traders",
+    "invoiceNumber": "INV-${Math.floor(100 + Math.random() * 900)}",
+    "partyName": "Sharma Traders",
     "grandTotal": 5000,
-    "date": "${getTodayLocalISO()}",
-    "status": "Outstanding"
+    "date": "${new Date().toISOString().split('T')[0]}",
+    "status": "Unpaid"
   },
   "preview": {
     "Party": "Sharma Traders",
     "Amount": "₹5,000",
-    "Type": "Sale Invoice"
+    "Type": "Tax Invoice"
   }
 }
 <<<END_ACTION_PROPOSAL>>>
+
+Valid types: "create_document", "create_product", "create_contact", "create_expense", "create_staff", "create_ledger_entry".
+Valid collections: "documents", "products", "contacts", "expenses", "staff", "ledger_transactions".
+
+- If key information is missing (e.g., user asks "create invoice" without customer name or amount), interactively ask clarifying questions using:
+<<<ASK_QUESTION>>>
+{
+  "questionId": "q_${Date.now()}",
+  "text": "Invoice kis customer ke naam se banana hai aur total amount kitna hai?",
+  "type": "text",
+  "options": [],
+  "status": "active"
+}
+<<<END_ASK_QUESTION>>>
 
 ${liveBusinessContext || ''}
 `;

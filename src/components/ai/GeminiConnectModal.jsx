@@ -34,35 +34,14 @@ const GoogleIcon = () => (
 
 const GeminiConnectModal = ({ isOpen, onClose }) => {
   const [googleUser, setGoogleUser] = useState(() => getConnectedGoogleAccount());
-  const [selectedModel, setSelectedModel] = useState(() => geminiStore.getModel() || 'gemini-3.6-flash');
-  const [apiKey, setApiKey] = useState(() => geminiStore.getApiKey() || '');
-  const [showKey, setShowKey] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(() => geminiStore.getModel() || 'gemini-2.0-flash');
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [authStatusMsg, setAuthStatusMsg] = useState(null);
-  const [isEditingAccount, setIsEditingAccount] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customEmail, setCustomEmail] = useState('');
-
-  // Normalize model ID so a valid radio button is ALWAYS checked
-  const activeModelId = AVAILABLE_MODELS.some(m => m.id === selectedModel)
-    ? selectedModel
-    : (AVAILABLE_MODELS.find(m => m.apiModel === selectedModel)?.id || 'gemini-3.6-flash');
 
   useEffect(() => {
     if (isOpen) {
-      const current = geminiStore.getModel() || 'gemini-3.6-flash';
-      setSelectedModel(current);
-      setApiKey(geminiStore.getApiKey() || '');
-      const acc = getConnectedGoogleAccount();
-      setGoogleUser(acc);
-      if (acc) {
-        setCustomName(acc.name || '');
-        setCustomEmail(acc.email || '');
-      } else {
-        setCustomName('Vedaant Gupta');
-        setCustomEmail('vedaantgupta1303@gmail.com');
-      }
-      setIsEditingAccount(false);
+      setSelectedModel(geminiStore.getModel() || 'gemini-2.0-flash');
+      setGoogleUser(getConnectedGoogleAccount());
       setAuthStatusMsg(null);
     }
   }, [isOpen]);
@@ -73,7 +52,6 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     };
     const handleGeminiChange = (e) => {
       if (e.detail?.model) setSelectedModel(e.detail.model);
-      if (e.detail?.apiKey !== undefined) setApiKey(e.detail.apiKey);
     };
 
     window.addEventListener('google-account-changed', handleGoogleChange);
@@ -93,54 +71,20 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     try {
       const user = await signInWithGoogleAccount();
       setGoogleUser(user);
-      geminiStore.setModel(activeModelId);
+      geminiStore.setModel(selectedModel || 'gemini-2.0-flash');
       setAuthStatusMsg({
         success: true,
         message: `Connected successfully with ${user?.name || user?.email}!`
       });
-      setIsEditingAccount(false);
     } catch (err) {
-      console.warn('Google sign-in notice:', err);
-      // Fallback: connect profile immediately
-      const fallback = {
-        name: customName || 'Vedaant Gupta',
-        firstName: (customName || 'Vedaant').split(' ')[0],
-        lastName: (customName || '').split(' ').slice(1).join(' '),
-        email: customEmail || 'vedaantgupta1303@gmail.com',
-        provider: 'google',
-        firebaseProject: 'business-software-b3844',
-        connectedAt: new Date().toISOString()
-      };
-      localStorage.setItem('billing_google_account', JSON.stringify(fallback));
-      setGoogleUser(fallback);
-      window.dispatchEvent(new CustomEvent('google-account-changed', { detail: fallback }));
+      console.warn('Google sign-in error:', err);
       setAuthStatusMsg({
-        success: true,
-        message: `Connected with Google Account: ${fallback.email}`
+        success: false,
+        message: err.message || 'Google sign-in was cancelled or encountered an error.'
       });
     } finally {
       setIsGoogleSigningIn(false);
     }
-  };
-
-  const handleSaveCustomAccount = () => {
-    const account = {
-      name: customName.trim() || 'Vedaant Gupta',
-      firstName: (customName.trim() || 'Vedaant').split(' ')[0],
-      lastName: (customName.trim() || '').split(' ').slice(1).join(' '),
-      email: customEmail.trim() || 'vedaantgupta1303@gmail.com',
-      provider: 'google',
-      firebaseProject: 'business-software-b3844',
-      connectedAt: new Date().toISOString()
-    };
-    localStorage.setItem('billing_google_account', JSON.stringify(account));
-    setGoogleUser(account);
-    window.dispatchEvent(new CustomEvent('google-account-changed', { detail: account }));
-    setIsEditingAccount(false);
-    setAuthStatusMsg({
-      success: true,
-      message: `Account updated: ${account.email}`
-    });
   };
 
   // Disconnect Google session
@@ -148,33 +92,15 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     await signOutGoogleAccount();
     setGoogleUser(null);
     setAuthStatusMsg(null);
-    setIsEditingAccount(false);
   };
 
   const handleSave = () => {
-    geminiStore.setApiKey(apiKey, activeModelId);
-
-    // If user has not connected Google yet, auto-connect default Google account so AI is immediately unlocked
-    if (!googleUser) {
-      const defaultUser = {
-        name: customName.trim() || 'Vedaant Gupta',
-        firstName: (customName.trim() || 'Vedaant').split(' ')[0],
-        lastName: (customName.trim() || '').split(' ').slice(1).join(' '),
-        email: customEmail.trim() || 'vedaantgupta1303@gmail.com',
-        provider: 'google',
-        firebaseProject: 'business-software-b3844',
-        connectedAt: new Date().toISOString()
-      };
-      localStorage.setItem('billing_google_account', JSON.stringify(defaultUser));
-      setGoogleUser(defaultUser);
-      window.dispatchEvent(new CustomEvent('google-account-changed', { detail: defaultUser }));
-    }
-
+    geminiStore.setModel(selectedModel);
     onClose();
   };
 
-  const userName = googleUser?.name || customName || 'Vedaant Gupta';
-  const userInitial = userName.charAt(0).toUpperCase() || 'V';
+  const userName = googleUser?.name || 'User';
+  const userInitial = userName.charAt(0).toUpperCase() || 'U';
 
   return (
     <div className="gemini-modal-overlay" onClick={onClose}>
@@ -234,9 +160,10 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                     <button 
                       type="button" 
                       className="gemini-auth-switch-btn" 
-                      onClick={() => setIsEditingAccount(!isEditingAccount)}
+                      onClick={handleGoogleSignIn}
+                      disabled={isGoogleSigningIn}
                     >
-                      {isEditingAccount ? 'Cancel' : 'Switch Account'}
+                      Switch Account
                     </button>
                     <button 
                       type="button" 
@@ -247,45 +174,6 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                 </div>
-
-                {isEditingAccount && (
-                  <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px dashed #e2e8f0' }}>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                      <input
-                        type="text"
-                        placeholder="Google Account Name"
-                        value={customName}
-                        onChange={(e) => setCustomName(e.target.value)}
-                        style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
-                      />
-                      <input
-                        type="email"
-                        placeholder="Google Email"
-                        value={customEmail}
-                        onChange={(e) => setCustomEmail(e.target.value)}
-                        style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                      <button
-                        type="button"
-                        onClick={handleGoogleSignIn}
-                        className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                      >
-                        Try Google Popup
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSaveCustomAccount}
-                        className="btn btn-primary btn-sm"
-                        style={{ fontSize: '0.75rem', padding: '4px 12px' }}
-                      >
-                        Update Account
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               /* Not Signed In: Big Authentic Google Sign In */
@@ -330,7 +218,7 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
             <label className="gemini-section-heading">Selected Google Gemini Model:</label>
             <div className="gemini-model-cards-list">
               {AVAILABLE_MODELS.map((model) => {
-                const isSelected = activeModelId === model.id;
+                const isSelected = selectedModel === model.id;
                 return (
                   <div
                     key={model.id}
@@ -356,60 +244,6 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                 );
               })}
             </div>
-          </div>
-
-          {/* GOOGLE GEMINI API KEY SECTION */}
-          <div className="gemini-key-input-section" style={{ marginTop: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={14} color="#1a73e8" /> Google Gemini API Key (Direct Free Access)
-              </label>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: '0.78rem', color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}
-              >
-                Get Free Key &rarr;
-              </a>
-            </div>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input
-                type={showKey ? 'text' : 'password'}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="AIzaSy... (Paste key from Google AI Studio for 100% direct speed)"
-                style={{
-                  width: '100%',
-                  padding: '0.6rem 3rem 0.6rem 0.75rem',
-                  fontSize: '0.85rem',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  outline: 'none',
-                  background: '#ffffff',
-                  fontFamily: 'monospace'
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  color: '#64748b',
-                  fontWeight: 600
-                }}
-              >
-                {showKey ? 'Hide' : 'Show'}
-              </button>
-            </div>
-            <p style={{ margin: '0.4rem 0 0', fontSize: '0.75rem', color: '#64748b', lineHeight: 1.4 }}>
-              100% free with your Google account. Enables instant, direct Google Gemini 2.0 Flash responses without server cold-starts.
-            </p>
           </div>
 
           {/* Status Feedback */}
