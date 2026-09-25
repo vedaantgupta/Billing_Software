@@ -12,6 +12,8 @@ import AntigravityAskingModal from '@/components/ui/AntigravityAskingModal';
 import GeminiStarLogo from '@/components/ai/GeminiStarLogo';
 import { getItems, addItem } from '@/utils/db';
 import { googleAccountStore } from '@/utils/googleAccountStore';
+import { buildLiveBusinessSnapshot, buildGeminiSystemPrompt } from '@/utils/aiBusinessContext';
+import { queryAIEngine, parseAIResponse } from '@/utils/aiEngine';
 import '@/styles/AntigravityAI.css';
 import {
   Sparkles, Send, Plus, ArrowRight, ArrowUp, Square, ShieldCheck,
@@ -128,110 +130,8 @@ const selectBestGeminiVoice = (spokenText) => {
   return defaultEn || voices[0] || null;
 };
 
-/**
- * Parses client-side AI response to extract structured action proposals and questions
- */
-const parseClientAIResponse = (raw) => {
-  if (!raw || typeof raw !== 'string') return { cleanContent: raw || '', action: null, question: null };
+// Uses buildGeminiSystemPrompt from @/utils/aiBusinessContext and parseAIResponse from @/utils/aiEngine
 
-  let cleanContent = raw;
-  let action = null;
-  let question = null;
-
-  // Extract Action Proposal
-  const actionMatch = raw.match(/<<<ACTION_PROPOSAL>>>([\s\S]*?)<<<END_ACTION_PROPOSAL>>>/);
-  if (actionMatch) {
-    try {
-      action = JSON.parse(actionMatch[1].trim());
-      cleanContent = cleanContent.replace(/<<<ACTION_PROPOSAL>>>[\s\S]*?<<<END_ACTION_PROPOSAL>>>/g, '').trim();
-    } catch (e) {
-      console.warn('Failed to parse AI action proposal JSON:', e);
-    }
-  }
-
-  // Extract Question
-  const questionMatch = raw.match(/<<<ASK_QUESTION>>>([\s\S]*?)<<<END_ASK_QUESTION>>>/);
-  if (questionMatch) {
-    try {
-      question = JSON.parse(questionMatch[1].trim());
-      cleanContent = cleanContent.replace(/<<<ASK_QUESTION>>>[\s\S]*?<<<END_ASK_QUESTION>>>/g, '').trim();
-    } catch (e) {
-      console.warn('Failed to parse AI question JSON:', e);
-    }
-  }
-
-  return { cleanContent, action, question };
-};
-
-/**
- * System prompt that enforces:
- * 1. Dynamic Language Mirroring (Hinglish -> Hinglish, Hindi -> Hindi, English -> English)
- * 2. 100% Full Website Access and accurate database answering
- * 3. Autonomous action proposals with user confirmation and clarification questions
- */
-const buildGeminiSystemPrompt = (liveContext, userName = 'User') => `
-You are Google Gemini - an elite, state-of-the-art AI assistant integrated as the intelligent business copilot for this company.
-
-CRITICAL INSTRUCTIONS (MUST FOLLOW STRICTLY):
-1. DYNAMIC LANGUAGE & DIALECT MIRRORING (AUTHENTIC REAL GOOGLE GEMINI EXPERIENCE):
-- Automatically detect the user's language, tone, and script:
-- MAXIMUM PRIORITY RULE FOR HINDI WRITTEN IN ENGLISH (HINGLISH / ROMAN HINDI):
-  * When the user writes in Hindi using English alphabet (e.g., "mera total sale kitna hua hai", "Sharma ji ka udhaar baki hai kya", "aaj kitna bill kata", "kaunse items low stock me hain", "ek invoice bana do", "mujhe hisaab dikhao", "kya haal hai", "kaise karein"):
-  * YOUR PRIMARY ANSWER MUST BE IN NATURAL CONVERSATIONAL HINGLISH (Hindi written in English alphabet).
-    Example: "Bhai, aapka aaj ka total sale ₹18,400 hua hai across 5 bills! Sharma Traders ka ₹3,500 udhaar abhi baki hai. Kya aap inka payment record karna chahte hain?"
-  * AND JUST LIKE REAL GOOGLE GEMINI, weave in pure Hindi phrases or key words in Devanagari script (e.g., 'कुल बिक्री', 'उधार खाता', 'बकाया राशि', 'मुनाफ़ा', 'स्टॉक स्थिति') for headings, key metrics, greetings, or summary bullet points where appropriate (e.g., "नमस्ते! Aapke business ka taaza hisaab ye raha: • कुल बिक्री (Total Sales): ₹45,200 • बकाया राशि (Pending Udhaar): ₹5,000...").
-- IF THE USER ASKS IN PURE HINDI (Devanagari script, e.g., "आज की कुल बिक्री कितनी हुई है?"):
-  * Respond in pure, respectful, and articulate Hindi (हिन्दी).
-- IF THE USER ASKS IN ENGLISH (e.g., "What is my total revenue this week?"):
-  * Respond in clear, authoritative, professional English.
-- NEVER force stiff English when the user speaks Hindi or Hinglish! Seamlessly mirror the user's linguistic style with warmth, authority, and clarity.
-
-2. FULL ACCESS TO ALL WEBSITE BUSINESS DATA:
-- You have 100% full, real-time read and write access to the user's business database.
-- NEVER say "I don't have access to your data", "I cannot view your files", or "As an AI I don't know your business data".
-- Use the LIVE WEBSITE BUSINESS DATABASE SNAPSHOT below to answer questions about sales, invoices, pending receivables, inventory/stock, low stock items, contacts/parties, udhaar khata, expenses, staff/payroll, loans, and banks accurately down to the exact numbers!
-
-3. AUTONOMOUS ACTION PROPOSALS WITH USER PERMISSION:
-- When the user asks you to perform an action (e.g. create invoice/bill, add product, record expense, add contact/party, add staff, add ledger entry), propose it clearly in your message, explain what you prepared, and append an action proposal JSON block at the very end of your response:
-<<<ACTION_PROPOSAL>>>
-{
-  "actionId": "act_${Date.now()}",
-  "type": "create_document",
-  "label": "Create Invoice for Sharma Traders",
-  "collection": "documents",
-  "status": "pending",
-  "route": "/documents",
-  "data": {
-    "invoiceNumber": "INV-101",
-    "partyName": "Sharma Traders",
-    "grandTotal": 5000,
-    "date": "${new Date().toISOString().split('T')[0]}",
-    "status": "Unpaid"
-  },
-  "preview": {
-    "Party": "Sharma Traders",
-    "Amount": "₹5,000",
-    "Type": "Tax Invoice"
-  }
-}
-<<<END_ACTION_PROPOSAL>>>
-
-Valid types: "create_document", "create_product", "create_contact", "create_expense", "create_staff", "create_ledger_entry".
-Valid collections: "documents", "products", "contacts", "expenses", "staff", "ledger_transactions".
-
-- If vital details are missing to execute the task (e.g. user says "create invoice" without mentioning customer or amount), ask clarifying questions interactively with:
-<<<ASK_QUESTION>>>
-{
-  "questionId": "q_${Date.now()}",
-  "text": "Kaun se customer ke liye invoice banana hai aur total amount kitna hai?",
-  "type": "text",
-  "options": [],
-  "status": "active"
-}
-<<<END_ASK_QUESTION>>>
-
-${liveContext || ''}
-`;
 
 const AIPage = () => {
   const { user } = useAuth();
@@ -299,88 +199,19 @@ const AIPage = () => {
   const inputRef = useRef(null);
   const bottomInputRef = useRef(null);
 
-  // Full Real-Time Website Database Context for Gemini
-  const [liveBusinessContext, setLiveBusinessContext] = useState('');
+  // Full Real-Time Website Database Snapshot for Gemini
+  const [liveBusinessSnapshot, setLiveBusinessSnapshot] = useState(null);
 
-  // Fetch full live business database snapshot across all 10 modules
+  // Fetch full live business database snapshot
   useEffect(() => {
     let isMounted = true;
-    const loadFullBusinessData = async () => {
-      const userId = user?.id || user?._id || 'guest_user';
-      try {
-        const [
-          products,
-          documents,
-          contacts,
-          expenses,
-          income,
-          staff,
-          loans,
-          banks,
-          ledger,
-          projects
-        ] = await Promise.all([
-          getItems('products', userId).catch(() => []),
-          getItems('documents', userId).catch(() => []),
-          getItems('contacts', userId).catch(() => []),
-          getItems('expenses', userId).catch(() => []),
-          getItems('income', userId).catch(() => []),
-          getItems('staff', userId).catch(() => []),
-          getItems('loans', userId).catch(() => []),
-          getItems('banks', userId).catch(() => []),
-          getItems('ledger_transactions', userId).catch(() => []),
-          getItems('projects', userId).catch(() => [])
-        ]);
-
-        if (!isMounted) return;
-
-        const totalSales = documents.reduce((sum, d) => sum + (Number(d.grandTotal) || Number(d.total) || 0), 0);
-        const totalUnpaid = documents.reduce((sum, d) => sum + (Number(d.balanceDue) || 0), 0);
-        const lowStockProducts = products.filter(p => Number(p.stock ?? p.quantity ?? 0) <= (Number(p.minStock) || 5));
-        const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-        const totalPayroll = staff.reduce((sum, s) => sum + (Number(s.salary) || 0), 0);
-
-        const contextSummary = `
-[LIVE WEBSITE BUSINESS DATABASE SNAPSHOT - REAL-TIME]
-SALES & INVOICES:
-- Total Invoices: ${documents.length}
-- Total Sales Revenue: ₹${totalSales.toLocaleString('en-IN')}
-- Outstanding / Unpaid Receivables: ₹${totalUnpaid.toLocaleString('en-IN')}
-- Recent Invoices Sample: ${documents.slice(0, 10).map(d => `#${d.invoiceNumber || d.id || 'N/A'} (Party: ${d.partyName || d.clientName || 'Cash'}, Amount: ₹${Number(d.grandTotal || d.total || 0).toLocaleString('en-IN')}, Status: ${d.status || 'Active'})`).join('; ') || 'No invoices yet'}
-
-PRODUCTS & INVENTORY:
-- Total Products: ${products.length}
-- Low Stock Items Alert (${lowStockProducts.length}): ${lowStockProducts.map(p => `${p.name} (Stock: ${p.stock ?? p.quantity ?? 0}, Min: ${p.minStock || 5})`).join(', ') || 'All products in stock'}
-- Product Catalog Sample: ${products.slice(0, 12).map(p => `${p.name} (Price: ₹${p.price || p.sellingPrice || 0}, Stock: ${p.stock ?? p.quantity ?? 0})`).join('; ') || 'No products added'}
-
-CONTACTS & PARTIES:
-- Total Contacts: ${contacts.length}
-- Parties: ${contacts.slice(0, 10).map(c => `${c.name} (${c.type || 'Party'}, Phone: ${c.phone || 'N/A'}, Balance: ₹${c.balance || 0})`).join('; ') || 'No contacts yet'}
-
-EXPENSES & CASH FLOW:
-- Total Recorded Expenses: ₹${totalExpenses.toLocaleString('en-IN')} (${expenses.length} records)
-- Recent Expenses: ${expenses.slice(0, 6).map(e => `${e.category || 'General'}: ₹${e.amount} (${e.description || e.notes || 'Expense'})`).join('; ') || 'None recorded'}
-
-STAFF & PAYROLL:
-- Total Staff: ${staff.length}
-- Total Monthly Payroll: ₹${totalPayroll.toLocaleString('en-IN')}
-- Staff Members: ${staff.map(s => `${s.name} (${s.designation || s.role || 'Staff'}, Salary: ₹${s.salary || 0})`).join('; ') || 'No staff members'}
-
-DIGITAL LEDGER (UDHAAR KHATA):
-- Ledger Records: ${ledger.length} transactions
-- Active Balances: ${ledger.slice(0, 8).map(l => `${l.partyName || l.contactName || 'Party'}: ${l.type === 'gave' ? 'Gave (To Receive)' : 'Got (To Pay)'} ₹${l.amount}`).join('; ') || 'Khata clear'}
-
-BANKS & LOANS:
-- Banks: ${banks.map(b => `${b.bankName || b.name || 'Bank'} (Balance: ₹${b.balance || 0})`).join('; ') || 'No bank accounts'}
-- Loans: ${loans.map(l => `${l.loanName || l.name || 'Loan'} (Principal: ₹${l.principal || 0}, EMI: ₹${l.emiAmount || 0})`).join('; ') || 'None'}
-`;
-        setLiveBusinessContext(contextSummary);
-      } catch (err) {
-        console.warn('Failed to fetch full business data for AI:', err);
+    buildLiveBusinessSnapshot(user).then(snap => {
+      if (isMounted) {
+        setLiveBusinessSnapshot(snap);
       }
-    };
-
-    loadFullBusinessData();
+    }).catch(err => {
+      console.warn('Initial business snapshot warning:', err);
+    });
     return () => { isMounted = false; };
   }, [user]);
 
@@ -712,7 +543,7 @@ BANKS & LOANS:
     });
   };
 
-  // Execute prompt against backend with specific conversation history & reliable fallback
+  // Execute prompt with fresh live business snapshot and multi-engine fallback
   const executeSendPrompt = async (textToSend, historyForApi = messages, filesToSend = attachedFiles) => {
     if (!textToSend.trim() && filesToSend.length === 0) return;
 
@@ -720,68 +551,50 @@ BANKS & LOANS:
 
     const pendingAction = getLatestPendingAction();
     const hasActiveQ = historyForApi.some(m => m.question && m.question.status === 'active');
-    const effectiveApiModel = geminiStore.getApiModel(selectedModel);
-    const userKey = geminiStore.getApiKey();
     const currentUserName = googleUser?.name || 'Vedaant Gupta';
 
     setIsLoading(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    let answered = false;
-
-    // 1. Try Backend First (Includes MongoDB Business Data, Invoices, Contacts, Stock, Actions)
     try {
-      const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: textToSend,
-          history: historyForApi,
-          userId: user?.id || user?._id || 'guest_user',
-          userName: currentUserName,
-          userGeminiKey: userKey,
-          pendingAction,
-          hasActiveQuestion: hasActiveQ,
-          geminiModel: effectiveApiModel,
-          clientBusinessContext: liveBusinessContext,
-          files: filesToSend.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
-        })
+      // 1. Fetch fresh live business database snapshot on-demand for 100% accurate answering
+      const freshSnapshot = await buildLiveBusinessSnapshot(user);
+      setLiveBusinessSnapshot(freshSnapshot);
+
+      // 2. Query multi-engine AI (Backend -> Google -> Multi-tier Pollinations -> Live Local Intelligence)
+      const aiResult = await queryAIEngine({
+        prompt: textToSend,
+        history: historyForApi,
+        user,
+        userName: currentUserName,
+        snapshot: freshSnapshot,
+        selectedModel,
+        files: filesToSend,
+        pendingAction,
+        hasActiveQuestion: hasActiveQ,
+        signal: controller.signal
       });
 
-      // 7.5s timeout: if Render backend is sleeping on live Vercel, seamlessly switch to instant direct Gemini engine
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Backend response timeout on live, falling back to direct AI engine')), 7500)
-      );
+      const newAiMsg = {
+        role: 'ai',
+        content: aiResult.content,
+        action: aiResult.action,
+        question: aiResult.question,
+        model: selectedModel,
+        timestamp: new Date().toISOString()
+      };
 
-      const response = await Promise.race([backendFetchPromise, timeoutPromise]);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.response && !data.response.toLowerCase().includes('error communicating with ai')) {
-          answered = true;
-          const parsed = parseClientAIResponse(data.response);
-          const newAiMsg = {
-            role: 'ai',
-            content: parsed.cleanContent,
-            action: data.action || parsed.action || null,
-            question: data.question || parsed.question || null,
-            model: selectedModel,
-            timestamp: new Date().toISOString()
-          };
-          if (newAiMsg.action && (newAiMsg.action.status === 'executed' || newAiMsg.action.status === 'cancelled')) {
-            setMessages(prev =>
-              prev.map(m =>
-                m.action && m.action.actionId === newAiMsg.action.actionId
-                  ? { ...m, action: newAiMsg.action }
-                  : m
-              ).concat([newAiMsg])
-            );
-          } else {
-            setMessages(prev => [...prev, newAiMsg]);
-          }
-        }
+      if (newAiMsg.action && (newAiMsg.action.status === 'executed' || newAiMsg.action.status === 'cancelled')) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.action && m.action.actionId === newAiMsg.action.actionId
+              ? { ...m, action: newAiMsg.action }
+              : m
+          ).concat([newAiMsg])
+        );
+      } else {
+        setMessages(prev => [...prev, newAiMsg]);
       }
     } catch (err) {
       if (err.name === 'AbortError') {
@@ -789,107 +602,19 @@ BANKS & LOANS:
         setIsLoading(false);
         return;
       }
-      console.warn('Backend AI chat error, falling back to direct intelligent engine...', err);
+      console.error('AI Query failed:', err);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'ai',
+          content: "Main aapke business data ke sath taiyar hoon! Kripya apna prashna dobara poochein.",
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    } finally {
+      abortControllerRef.current = null;
+      setIsLoading(false);
     }
-
-    // 2. Intelligent Direct Fallback (Guarantees Gemini ALWAYS answers accurately with full live data & Hinglish support)
-    if (!answered) {
-      try {
-        let directResponseText = null;
-        const systemPromptText = buildGeminiSystemPrompt(liveBusinessContext, currentUserName);
-
-        // If user provided a Gemini API Key, query Google Generative Language directly
-        if (userKey) {
-          try {
-            const googleRes = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(userKey)}`,
-              {
-                method: 'POST',
-                signal: controller.signal,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  systemInstruction: {
-                    parts: [{ text: systemPromptText }]
-                  },
-                  contents: [
-                    ...historyForApi.slice(-6).map(m => ({
-                      role: (m.role === 'ai' || m.role === 'assistant') ? 'model' : 'user',
-                      parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
-                    })),
-                    { role: 'user', parts: [{ text: textToSend }] }
-                  ]
-                })
-              }
-            );
-            if (googleRes.ok) {
-              const gData = await googleRes.json();
-              directResponseText = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
-            }
-          } catch (gErr) {
-            console.warn('Direct Google API error:', gErr);
-          }
-        }
-
-        // Secondary resilient intelligent provider so Gemini NEVER goes blank or fails
-        if (!directResponseText) {
-          const directRes = await fetch('https://text.pollinations.ai/openai/chat/completions', {
-            method: 'POST',
-            signal: controller.signal,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              messages: [
-                {
-                  role: 'system',
-                  content: systemPromptText
-                },
-                ...historyForApi.slice(-6).map(m => ({
-                  role: (m.role === 'ai' || m.role === 'assistant') ? 'assistant' : 'user',
-                  content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-                })),
-                { role: 'user', content: textToSend }
-              ],
-              temperature: 0.3
-            })
-          });
-
-          if (directRes.ok) {
-            const dData = await directRes.json();
-            directResponseText = dData?.choices?.[0]?.message?.content;
-          }
-        }
-
-        if (directResponseText) {
-          const parsed = parseClientAIResponse(directResponseText);
-          setMessages(prev => [
-            ...prev,
-            {
-              role: 'ai',
-              content: parsed.cleanContent,
-              action: parsed.action,
-              question: parsed.question,
-              model: selectedModel,
-              timestamp: new Date().toISOString()
-            }
-          ]);
-          answered = true;
-        } else {
-          setMessages(prev => [
-            ...prev,
-            { role: 'ai', content: "I apologize, I wasn't able to complete that response. Please try asking again." }
-          ]);
-        }
-      } catch (directErr) {
-        if (directErr.name === 'AbortError') return;
-        console.error('All AI engines failed:', directErr);
-        setMessages(prev => [
-          ...prev,
-          { role: 'ai', content: "I encountered an issue processing your request. Please check your connection and try again." }
-        ]);
-      }
-    }
-
-    abortControllerRef.current = null;
-    setIsLoading(false);
   };
 
   // Send new message

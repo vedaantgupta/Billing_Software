@@ -65,37 +65,9 @@ const Register = () => {
     setSuggestedPassword(generatePassword());
   }, [generatePassword]);
 
-  const { register } = useAuth();
+  const { register, loginWithProvider } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (name === 'password') {
-      const strength = calculateStrength(value);
-      setPasswordStrength(strength);
-      if (value.length > 0) setShowSuggestion(false);
-      setIsUsingSuggested(false);
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleUseSuggested = () => {
-    setFormData(prev => ({
-      ...prev,
-      password: suggestedPassword,
-      confirmPassword: suggestedPassword
-    }));
-    setPasswordStrength(calculateStrength(suggestedPassword));
-    setShowSuggestion(false);
-    setIsUsingSuggested(true);
-  };
-
-  /*
   const handleSocialLogin = async (provider) => {
     setError('');
     setIsSubmitting(true);
@@ -108,7 +80,30 @@ const Register = () => {
       setIsSubmitting(false);
     }
   };
-  */
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+
+    if (name === 'password') {
+      setPasswordStrength(calculateStrength(value));
+      if (isUsingSuggested) setIsUsingSuggested(false);
+    }
+  };
+
+  const handleUseSuggested = () => {
+    setFormData(prev => ({
+      ...prev,
+      password: suggestedPassword,
+      confirmPassword: suggestedPassword
+    }));
+    setPasswordStrength(calculateStrength(suggestedPassword));
+    setIsUsingSuggested(true);
+    setShowSuggestion(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

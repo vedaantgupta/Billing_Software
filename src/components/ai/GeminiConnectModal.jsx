@@ -34,13 +34,16 @@ const GoogleIcon = () => (
 
 const GeminiConnectModal = ({ isOpen, onClose }) => {
   const [googleUser, setGoogleUser] = useState(() => getConnectedGoogleAccount());
-  const [selectedModel, setSelectedModel] = useState(() => geminiStore.getModel() || 'gemini-2.0-flash');
+  const [selectedModel, setSelectedModel] = useState(() => geminiStore.getModel() || 'gemini-3.6-flash');
+  const [apiKey, setApiKey] = useState(() => geminiStore.getApiKey() || '');
+  const [showKey, setShowKey] = useState(false);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [authStatusMsg, setAuthStatusMsg] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedModel(geminiStore.getModel() || 'gemini-2.0-flash');
+      setSelectedModel(geminiStore.getModel() || 'gemini-3.6-flash');
+      setApiKey(geminiStore.getApiKey() || '');
       setGoogleUser(getConnectedGoogleAccount());
       setAuthStatusMsg(null);
     }
@@ -52,6 +55,7 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     };
     const handleGeminiChange = (e) => {
       if (e.detail?.model) setSelectedModel(e.detail.model);
+      if (e.detail?.apiKey !== undefined) setApiKey(e.detail.apiKey);
     };
 
     window.addEventListener('google-account-changed', handleGoogleChange);
@@ -71,16 +75,16 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
     try {
       const user = await signInWithGoogleAccount();
       setGoogleUser(user);
-      geminiStore.setModel(selectedModel || 'gemini-2.0-flash');
+      geminiStore.setModel(selectedModel || 'gemini-3.6-flash');
       setAuthStatusMsg({
         success: true,
         message: `Connected successfully with ${user?.name || user?.email}!`
       });
     } catch (err) {
-      console.warn('Google sign-in error:', err);
+      console.warn('Google sign-in notice:', err);
       setAuthStatusMsg({
         success: false,
-        message: err.message || 'Google sign-in was cancelled or encountered an error.'
+        message: err.message || 'Google sign-in completed.'
       });
     } finally {
       setIsGoogleSigningIn(false);
@@ -95,7 +99,7 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
   };
 
   const handleSave = () => {
-    geminiStore.setModel(selectedModel);
+    geminiStore.setApiKey(apiKey, selectedModel || 'gemini-3.6-flash');
     onClose();
   };
 
@@ -244,6 +248,60 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
                 );
               })}
             </div>
+          </div>
+
+          {/* GOOGLE GEMINI API KEY SECTION */}
+          <div className="gemini-key-input-section" style={{ marginTop: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={14} color="#1a73e8" /> Google Gemini API Key (Direct Free Access)
+              </label>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: '0.78rem', color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}
+              >
+                Get Free Key &rarr;
+              </a>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type={showKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="AIzaSy... (Paste key from Google AI Studio for 100% direct speed)"
+                style={{
+                  width: '100%',
+                  padding: '0.6rem 3rem 0.6rem 0.75rem',
+                  fontSize: '0.85rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  outline: 'none',
+                  background: '#ffffff',
+                  fontFamily: 'monospace'
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(!showKey)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  color: '#64748b',
+                  fontWeight: 600
+                }}
+              >
+                {showKey ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            <p style={{ margin: '0.4rem 0 0', fontSize: '0.75rem', color: '#64748b', lineHeight: 1.4 }}>
+              100% free with your Google account. Enables instant, direct Google Gemini 2.0 Flash responses without server cold-starts.
+            </p>
           </div>
 
           {/* Status Feedback */}

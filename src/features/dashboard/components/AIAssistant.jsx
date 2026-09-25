@@ -17,6 +17,8 @@ import {
   Bell, HelpCircle, Terminal, GraduationCap, Moon, Sun, Plus,
 } from 'lucide-react';
 import { addItem } from '@/utils/db';
+import { buildLiveBusinessSnapshot } from '@/utils/aiBusinessContext';
+import { queryAIEngine } from '@/utils/aiEngine';
 import '@/features/dashboard/styles/AIAssistant.css';
 
 const AIAssistant = () => {
@@ -231,133 +233,55 @@ const AIAssistant = () => {
     setInput('');
     setIsLoading(true);
 
-    let answered = false;
-
-    // 1. Try Backend First with 7s race timeout
     try {
-      const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: textToSend,
-          history: messages,
-          userId: user?.id,
-          userName: googleUser?.name || 'Vedaant',
-          pendingAction,
-          hasActiveQuestion: hasActiveQ,
-          geminiModel: selectedModel
-        }),
+      // 1. Fetch fresh live business database snapshot on-demand
+      const freshSnapshot = await buildLiveBusinessSnapshot(user);
+
+      // 2. Query multi-engine AI (Backend -> Google -> Multi-tier Pollinations -> Live Local Intelligence)
+      const aiResult = await queryAIEngine({
+        prompt: textToSend,
+        history: messages,
+        user,
+        userName: googleUser?.name || 'Vedaant',
+        snapshot: freshSnapshot,
+        selectedModel,
+        pendingAction,
+        hasActiveQuestion: hasActiveQ
       });
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Backend timeout on live')), 7000)
-      );
-
-      const response = await Promise.race([backendFetchPromise, timeoutPromise]);
-      const data = await response.json();
-
-      if (response.ok && data && data.response && !data.response.toLowerCase().includes('error communicating with ai')) {
-        answered = true;
-        if (data.action && (data.action.status === 'executed' || data.action.status === 'cancelled')) {
-          setMessages(prev =>
-            prev.map(m =>
-              m.action && m.action.actionId === data.action.actionId
-                ? { ...m, action: data.action }
-                : m
-            ).concat([{
-              role: 'ai',
-              content: data.response,
-              action: data.action,
-              question: data.question || null
-            }])
-          );
-        } else {
-          setMessages(prev => [
-            ...prev,
-            {
-              role: 'ai',
-              content: data.response,
-              action: data.action || null,
-              question: data.question || null
-            }
-          ]);
-        }
-      }
-    } catch (error) {
-      console.warn('Backend chat notice, switching to instant direct Gemini engine...', error);
-    }
-
-    // 2. Direct Intelligent Fallback for 100% uptime on both local and live Vercel
-    if (!answered) {
-      try {
-        const systemPrompt = `You are Google Gemini - an elite, state-of-the-art AI assistant integrated as the intelligent business copilot.
-CRITICAL INSTRUCTIONS:
-- DYNAMIC LANGUAGE MIRRORING: If the user asks in Hindi written in English (Hinglish/Roman Hindi), answer primarily in natural conversational Hinglish, and naturally interweave pure Hindi terms (e.g. 'कुल बिक्री', 'उधार खाता', 'बकाया राशि') just like real Google Gemini. If in pure Hindi, answer in Hindi. If in English, answer in English.
-- Always provide accurate, helpful, and articulate business guidance.
-- If proposing an action (like creating an invoice or adding product), format it at the end using <<<ACTION_PROPOSAL>>>{"actionId":"act_${Date.now()}","type":"create_document","label":"Create Invoice","collection":"documents","status":"pending","data":{},"preview":{}}<<<END_ACTION_PROPOSAL>>>`;
-
-        const directRes = await fetch('https://text.pollinations.ai/openai/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [
-              { role: 'system', content: systemPrompt },
-              ...messages.slice(-5).map(m => ({
-                role: (m.role === 'ai' || m.role === 'assistant') ? 'assistant' : 'user',
-                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-              })),
-              { role: 'user', content: textToSend }
-            ],
-            temperature: 0.3
-          })
-        });
-
-        if (directRes.ok) {
-          const dData = await directRes.json();
-          let rawText = dData?.choices?.[0]?.message?.content || '';
-          let actionObj = null;
-          let questionObj = null;
-
-          const actMatch = rawText.match(/<<<ACTION_PROPOSAL>>>([\s\S]*?)<<<END_ACTION_PROPOSAL>>>/);
-          if (actMatch) {
-            try {
-              actionObj = JSON.parse(actMatch[1].trim());
-              rawText = rawText.replace(/<<<ACTION_PROPOSAL>>>[\s\S]*?<<<END_ACTION_PROPOSAL>>>/g, '').trim();
-            } catch (e) {}
+      if (aiResult.action && (aiResult.action.status === 'executed' || aiResult.action.status === 'cancelled')) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.action && m.action.actionId === aiResult.action.actionId
+              ? { ...m, action: aiResult.action }
+              : m
+          ).concat([{
+            role: 'ai',
+            content: aiResult.content,
+            action: aiResult.action,
+            question: aiResult.question
+          }])
+        );
+      } else {
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'ai',
+            content: aiResult.content,
+            action: aiResult.action,
+            question: aiResult.question
           }
-
-          const qMatch = rawText.match(/<<<ASK_QUESTION>>>([\s\S]*?)<<<END_ASK_QUESTION>>>/);
-          if (qMatch) {
-            try {
-              questionObj = JSON.parse(qMatch[1].trim());
-              rawText = rawText.replace(/<<<ASK_QUESTION>>>[\s\S]*?<<<END_ASK_QUESTION>>>/g, '').trim();
-            } catch (e) {}
-          }
-
-          setMessages(prev => [
-            ...prev,
-            {
-              role: 'ai',
-              content: rawText,
-              action: actionObj,
-              question: questionObj
-            }
-          ]);
-          answered = true;
-        }
-      } catch (directErr) {
-        console.error('Direct fallback error:', directErr);
+        ]);
       }
-    }
-
-    if (!answered) {
+    } catch (err) {
+      console.error('AI assistant query error:', err);
       setMessages(prev => [
         ...prev,
         { role: 'ai', content: 'Main aapki sahayata ke liye taiyar hoon! Kripya apna prashna dobara poochein.' }
       ]);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleExecuteAction = async (msgIndex, action) => {
