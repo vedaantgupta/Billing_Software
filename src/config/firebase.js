@@ -39,13 +39,25 @@ export async function signInWithGoogleAccount() {
       window.dispatchEvent(new CustomEvent('google-account-changed', { detail: accountInfo }));
       return accountInfo;
     } catch (err) {
-      console.warn('[Firebase Auth Notice]:', err);
-
       // Check if popup was blocked by browser, domain unauthorized (e.g. live Vercel deployment), or policy restricted
-      const isPopupBlocked = err.code === 'auth/popup-blocked' || (err.message && err.message.includes('popup-blocked'));
-      const isUnauthorizedDomain = err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized domain'));
-      const isConfigError = err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed';
-      const isCancelledOrInterrupted = err.code === 'auth/cancelled-popup-request' || err.code === 'auth/internal-error';
+      const isPopupBlocked = err?.code === 'auth/popup-blocked' || (err?.message && err.message.includes('popup-blocked'));
+      const isUnauthorizedDomain = err?.code === 'auth/unauthorized-domain' || (err?.message && err.message.includes('unauthorized domain'));
+      const isConfigError = err?.code === 'auth/configuration-not-found' || err?.code === 'auth/operation-not-allowed';
+      const isCancelledOrInterrupted = err?.code === 'auth/cancelled-popup-request' || err?.code === 'auth/internal-error';
+
+      if (isUnauthorizedDomain) {
+        const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'billing-software-lyart-six.vercel.app';
+        console.warn(
+          `[Firebase Auth Notice]: Domain "${currentHost}" is not yet added to Authorized Domains in Firebase Console.\n` +
+          `To enable real Google Sign-In on Vercel:\n` +
+          `1. Open Firebase Console (https://console.firebase.google.com/) -> Project: business-software-b3844\n` +
+          `2. Navigate to Authentication -> Settings -> Authorized domains\n` +
+          `3. Click "Add domain" and enter: ${currentHost}\n` +
+          `Activating fallback user account in the meantime.`
+        );
+      } else if (!isPopupBlocked && !isCancelledOrInterrupted) {
+        console.warn('[Firebase Auth Notice]:', err);
+      }
 
       if (isPopupBlocked || isUnauthorizedDomain || isConfigError || isCancelledOrInterrupted) {
         // Resilient fallback for live Vercel deployments & popup-blocked environments
@@ -74,7 +86,9 @@ export async function signInWithGoogleAccount() {
           photoURL: savedAccount?.photoURL || appUser?.photoURL || '',
           provider: 'google',
           firebaseProject: 'business-software-b3844',
-          connectedAt: new Date().toISOString()
+          connectedAt: new Date().toISOString(),
+          isUnauthorizedDomain: !!isUnauthorizedDomain,
+          unauthorizedDomainHost: typeof window !== 'undefined' ? window.location.hostname : 'billing-software-lyart-six.vercel.app'
         };
 
         localStorage.setItem('billing_google_account', JSON.stringify(fallbackUser));

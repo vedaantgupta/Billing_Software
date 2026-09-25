@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, X, CheckCircle2, Loader2, 
-  ShieldCheck, Zap, LogOut, Check
+  ShieldCheck, Zap, LogOut, Check, AlertTriangle
 } from 'lucide-react';
 import { 
   signInWithGoogleAccount, 
@@ -72,10 +72,17 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
       const user = await signInWithGoogleAccount();
       setGoogleUser(user);
       geminiStore.setModel(selectedModel || 'gemini-2.0-flash');
-      setAuthStatusMsg({
-        success: true,
-        message: `Connected successfully with ${user?.name || user?.email}!`
-      });
+      if (user?.isUnauthorizedDomain) {
+        setAuthStatusMsg({
+          warning: true,
+          message: `Connected! Note: Add "${user.unauthorizedDomainHost || window.location.hostname}" to Firebase Console -> Authentication -> Settings -> Authorized domains to enable live Google popup.`
+        });
+      } else {
+        setAuthStatusMsg({
+          success: true,
+          message: `Connected successfully with ${user?.name || user?.email}!`
+        });
+      }
     } catch (err) {
       console.warn('Google sign-in error:', err);
       setAuthStatusMsg({
@@ -248,8 +255,12 @@ const GeminiConnectModal = ({ isOpen, onClose }) => {
 
           {/* Status Feedback */}
           {authStatusMsg && (
-            <div className={`gemini-test-result-box ${authStatusMsg.success ? 'success' : 'error'}`}>
-              <CheckCircle2 size={16} color={authStatusMsg.success ? "#16a34a" : "#dc2626"} />
+            <div className={`gemini-test-result-box ${authStatusMsg.warning ? 'warning' : authStatusMsg.success ? 'success' : 'error'}`}>
+              {authStatusMsg.warning ? (
+                <AlertTriangle size={16} color="#d97706" style={{ flexShrink: 0 }} />
+              ) : (
+                <CheckCircle2 size={16} color={authStatusMsg.success ? "#16a34a" : "#dc2626"} style={{ flexShrink: 0 }} />
+              )}
               <span>{authStatusMsg.message}</span>
             </div>
           )}

@@ -584,6 +584,13 @@
   border: 1px solid #bbf7d0;
 }
 
+.gemini-test-result-box.warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  line-height: 1.4;
+}
+
 .gemini-test-result-box.error {
   background: #fef2f2;
   color: #991b1b;
