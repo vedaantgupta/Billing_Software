@@ -10,6 +10,7 @@ import { getConnectedGoogleAccount } from '@/config/firebase';
 import GeminiConnectModal from '@/components/ai/GeminiConnectModal';
 import AntigravityAskingModal from '@/components/ui/AntigravityAskingModal';
 import GeminiStarLogo from '@/components/ai/GeminiStarLogo';
+import { getItems, addItem } from '@/utils/db';
 import { googleAccountStore } from '@/utils/googleAccountStore';
 import '@/styles/AntigravityAI.css';
 import {
@@ -21,7 +22,8 @@ import {
   UserCheck, Users, Briefcase, DollarSign, Home, X,
   TrendingUp, AlertTriangle, Layers, Clock, Zap,
   MessageSquare, FileSpreadsheet, Paperclip, Pencil,
-  ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Mail, Flag, GitFork, Info
+  ThumbsUp, ThumbsDown, Share2, MoreHorizontal, Mail, Flag, GitFork, Info,
+  Play, Pause
 } from 'lucide-react';
 
 const formatFileSize = (bytes) => {
@@ -31,6 +33,205 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
+
+/**
+ * Prepares clean spoken script for Gemini Speech Synthesis:
+ * - Strips raw JSON blocks (<<<ACTION_PROPOSAL>>>, <<<ASK_QUESTION>>>)
+ * - Converts markdown tables, links, code blocks into pleasant spoken phrasing
+ * - Phonetizes Indian currency (₹ / Rs.) to "rupees" so numbers are read naturally
+ */
+const prepareSpokenScript = (rawText) => {
+  if (!rawText) return '';
+  let text = String(rawText);
+
+  // 1. Remove raw action proposals & questions completely from spoken audio
+  text = text.replace(/<<<ACTION_PROPOSAL>>>[\s\S]*?<<<END_ACTION_PROPOSAL>>>/g, '');
+  text = text.replace(/<<<ASK_QUESTION>>>[\s\S]*?<<<END_ASK_QUESTION>>>/g, '');
+  text = text.replace(/<<<[^>]+>>>/g, '');
+
+  // 2. Remove fenced code blocks
+  text = text.replace(/```[\s\S]*?```/g, ' Code block omitted. ');
+
+  // 3. Remove inline code
+  text = text.replace(/`([^`]+)`/g, '$1');
+
+  // 4. Summarize markdown tables
+  text = text.replace(/\|[^\n]+\|\n\|[-:\s|]+\|\n([\s\S]*?)(?=\n\n|$)/g, ' Table details summarized in chat. ');
+  text = text.replace(/\|/g, ' ');
+
+  // 5. Clean markdown formatting
+  text = text.replace(/!\[[^\]]*\]\([^)]*\)/g, ''); // images
+  text = text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1'); // links
+  text = text.replace(/https?:\/\/\S+/g, ''); // raw urls
+  text = text.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1'); // bold / italic
+  text = text.replace(/~{2}([^~]+)~{2}/g, '$1'); // strikethrough
+  text = text.replace(/^#+\s+/gm, ''); // headings
+  text = text.replace(/^[•\-\*]\s+/gm, ''); // bullets
+  text = text.replace(/^\d+\.\s+/gm, ''); // numbered lists
+
+  // 6. Natural Indian currency & numbers conversion
+  text = text.replace(/₹\s*([0-9,]+(\.[0-9]+)?)/g, '$1 rupees');
+  text = text.replace(/\bRs\.?\s*([0-9,]+(\.[0-9]+)?)/gi, '$1 rupees');
+
+  // 7. Common abbreviations for smooth phonetic flow
+  text = text.replace(/\be\.g\.\b/gi, 'for example');
+  text = text.replace(/\bi\.e\.\b/gi, 'that is');
+  text = text.replace(/\bapprox\.\b/gi, 'approximately');
+  text = text.replace(/\bGSTIN\b/gi, 'GST number');
+  text = text.replace(/\bINV-(\d+)\b/gi, 'Invoice $1');
+
+  // 8. Clean up multiple whitespaces
+  text = text.replace(/\s+/g, ' ').trim();
+  return text;
+};
+
+/**
+ * Auto-selects the most natural Gemini voice for speech synthesis:
+ * - Selects Indian English (en-IN) or Hindi (hi-IN) voice when user text is in Hinglish or Hindi
+ * - Selects high quality natural voices for English
+ */
+const selectBestGeminiVoice = (spokenText) => {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) return null;
+
+  const hasHindiScript = /[\u0900-\u097F]/.test(spokenText);
+  const hasHinglishWords = /\b(hai|hain|karo|batao|udhaar|khata|rupaye|hisaab|sharma|bhai|kaise|kitna|chahiye|nahi|mera|meri|mere|aapka|karna|dukaan|paisa|paise|bana|dekh|raha)\b/i.test(spokenText);
+
+  if (hasHindiScript) {
+    const hindiVoice = voices.find(v => v.lang.startsWith('hi') || v.name.toLowerCase().includes('hindi'));
+    if (hindiVoice) return hindiVoice;
+  }
+
+  if (hasHindiScript || hasHinglishWords) {
+    const indianVoice = voices.find(v =>
+      v.lang === 'en-IN' ||
+      v.lang.startsWith('hi') ||
+      v.name.includes('India') ||
+      v.name.includes('Neerja') ||
+      v.name.includes('Prabhat') ||
+      v.name.includes('Swara') ||
+      v.name.includes('Hemant') ||
+      v.name.toLowerCase().includes('hindi')
+    );
+    if (indianVoice) return indianVoice;
+  }
+
+  // Fallback to top quality natural voices
+  const naturalVoice = voices.find(v =>
+    (v.name.includes('Natural') || v.name.includes('Google')) &&
+    (v.lang.startsWith('en') || v.lang.startsWith('hi'))
+  );
+  if (naturalVoice) return naturalVoice;
+
+  const defaultEn = voices.find(v => v.lang.startsWith('en'));
+  return defaultEn || voices[0] || null;
+};
+
+/**
+ * Parses client-side AI response to extract structured action proposals and questions
+ */
+const parseClientAIResponse = (raw) => {
+  if (!raw || typeof raw !== 'string') return { cleanContent: raw || '', action: null, question: null };
+
+  let cleanContent = raw;
+  let action = null;
+  let question = null;
+
+  // Extract Action Proposal
+  const actionMatch = raw.match(/<<<ACTION_PROPOSAL>>>([\s\S]*?)<<<END_ACTION_PROPOSAL>>>/);
+  if (actionMatch) {
+    try {
+      action = JSON.parse(actionMatch[1].trim());
+      cleanContent = cleanContent.replace(/<<<ACTION_PROPOSAL>>>[\s\S]*?<<<END_ACTION_PROPOSAL>>>/g, '').trim();
+    } catch (e) {
+      console.warn('Failed to parse AI action proposal JSON:', e);
+    }
+  }
+
+  // Extract Question
+  const questionMatch = raw.match(/<<<ASK_QUESTION>>>([\s\S]*?)<<<END_ASK_QUESTION>>>/);
+  if (questionMatch) {
+    try {
+      question = JSON.parse(questionMatch[1].trim());
+      cleanContent = cleanContent.replace(/<<<ASK_QUESTION>>>[\s\S]*?<<<END_ASK_QUESTION>>>/g, '').trim();
+    } catch (e) {
+      console.warn('Failed to parse AI question JSON:', e);
+    }
+  }
+
+  return { cleanContent, action, question };
+};
+
+/**
+ * System prompt that enforces:
+ * 1. Dynamic Language Mirroring (Hinglish -> Hinglish, Hindi -> Hindi, English -> English)
+ * 2. 100% Full Website Access and accurate database answering
+ * 3. Autonomous action proposals with user confirmation and clarification questions
+ */
+const buildGeminiSystemPrompt = (liveContext, userName = 'User') => `
+You are Google Gemini - an elite, state-of-the-art AI assistant integrated as the intelligent business copilot for this company.
+
+CRITICAL INSTRUCTIONS (MUST FOLLOW STRICTLY):
+1. DYNAMIC LANGUAGE & DIALECT MIRRORING (AUTHENTIC REAL GOOGLE GEMINI EXPERIENCE):
+- Automatically detect the user's language, tone, and script:
+- MAXIMUM PRIORITY RULE FOR HINDI WRITTEN IN ENGLISH (HINGLISH / ROMAN HINDI):
+  * When the user writes in Hindi using English alphabet (e.g., "mera total sale kitna hua hai", "Sharma ji ka udhaar baki hai kya", "aaj kitna bill kata", "kaunse items low stock me hain", "ek invoice bana do", "mujhe hisaab dikhao", "kya haal hai", "kaise karein"):
+  * YOUR PRIMARY ANSWER MUST BE IN NATURAL CONVERSATIONAL HINGLISH (Hindi written in English alphabet).
+    Example: "Bhai, aapka aaj ka total sale ₹18,400 hua hai across 5 bills! Sharma Traders ka ₹3,500 udhaar abhi baki hai. Kya aap inka payment record karna chahte hain?"
+  * AND JUST LIKE REAL GOOGLE GEMINI, weave in pure Hindi phrases or key words in Devanagari script (e.g., 'कुल बिक्री', 'उधार खाता', 'बकाया राशि', 'मुनाफ़ा', 'स्टॉक स्थिति') for headings, key metrics, greetings, or summary bullet points where appropriate (e.g., "नमस्ते! Aapke business ka taaza hisaab ye raha: • कुल बिक्री (Total Sales): ₹45,200 • बकाया राशि (Pending Udhaar): ₹5,000...").
+- IF THE USER ASKS IN PURE HINDI (Devanagari script, e.g., "आज की कुल बिक्री कितनी हुई है?"):
+  * Respond in pure, respectful, and articulate Hindi (हिन्दी).
+- IF THE USER ASKS IN ENGLISH (e.g., "What is my total revenue this week?"):
+  * Respond in clear, authoritative, professional English.
+- NEVER force stiff English when the user speaks Hindi or Hinglish! Seamlessly mirror the user's linguistic style with warmth, authority, and clarity.
+
+2. FULL ACCESS TO ALL WEBSITE BUSINESS DATA:
+- You have 100% full, real-time read and write access to the user's business database.
+- NEVER say "I don't have access to your data", "I cannot view your files", or "As an AI I don't know your business data".
+- Use the LIVE WEBSITE BUSINESS DATABASE SNAPSHOT below to answer questions about sales, invoices, pending receivables, inventory/stock, low stock items, contacts/parties, udhaar khata, expenses, staff/payroll, loans, and banks accurately down to the exact numbers!
+
+3. AUTONOMOUS ACTION PROPOSALS WITH USER PERMISSION:
+- When the user asks you to perform an action (e.g. create invoice/bill, add product, record expense, add contact/party, add staff, add ledger entry), propose it clearly in your message, explain what you prepared, and append an action proposal JSON block at the very end of your response:
+<<<ACTION_PROPOSAL>>>
+{
+  "actionId": "act_${Date.now()}",
+  "type": "create_document",
+  "label": "Create Invoice for Sharma Traders",
+  "collection": "documents",
+  "status": "pending",
+  "route": "/documents",
+  "data": {
+    "invoiceNumber": "INV-101",
+    "partyName": "Sharma Traders",
+    "grandTotal": 5000,
+    "date": "${new Date().toISOString().split('T')[0]}",
+    "status": "Unpaid"
+  },
+  "preview": {
+    "Party": "Sharma Traders",
+    "Amount": "₹5,000",
+    "Type": "Tax Invoice"
+  }
+}
+<<<END_ACTION_PROPOSAL>>>
+
+Valid types: "create_document", "create_product", "create_contact", "create_expense", "create_staff", "create_ledger_entry".
+Valid collections: "documents", "products", "contacts", "expenses", "staff", "ledger_transactions".
+
+- If vital details are missing to execute the task (e.g. user says "create invoice" without mentioning customer or amount), ask clarifying questions interactively with:
+<<<ASK_QUESTION>>>
+{
+  "questionId": "q_${Date.now()}",
+  "text": "Kaun se customer ke liye invoice banana hai aur total amount kitna hai?",
+  "type": "text",
+  "options": [],
+  "status": "active"
+}
+<<<END_ASK_QUESTION>>>
+
+${liveContext || ''}
+`;
 
 const AIPage = () => {
   const { user } = useAuth();
@@ -89,10 +290,111 @@ const AIPage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
   const [speakingIndex, setSpeakingIndex] = useState(null);
+  const [isSpeechPaused, setIsSpeechPaused] = useState(false);
+  const speechQueueRef = useRef([]);
+  const speechHeartbeatRef = useRef(null);
+  const currentVoiceRef = useRef(null);
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const bottomInputRef = useRef(null);
+
+  // Full Real-Time Website Database Context for Gemini
+  const [liveBusinessContext, setLiveBusinessContext] = useState('');
+
+  // Fetch full live business database snapshot across all 10 modules
+  useEffect(() => {
+    let isMounted = true;
+    const loadFullBusinessData = async () => {
+      const userId = user?.id || user?._id || 'guest_user';
+      try {
+        const [
+          products,
+          documents,
+          contacts,
+          expenses,
+          income,
+          staff,
+          loans,
+          banks,
+          ledger,
+          projects
+        ] = await Promise.all([
+          getItems('products', userId).catch(() => []),
+          getItems('documents', userId).catch(() => []),
+          getItems('contacts', userId).catch(() => []),
+          getItems('expenses', userId).catch(() => []),
+          getItems('income', userId).catch(() => []),
+          getItems('staff', userId).catch(() => []),
+          getItems('loans', userId).catch(() => []),
+          getItems('banks', userId).catch(() => []),
+          getItems('ledger_transactions', userId).catch(() => []),
+          getItems('projects', userId).catch(() => [])
+        ]);
+
+        if (!isMounted) return;
+
+        const totalSales = documents.reduce((sum, d) => sum + (Number(d.grandTotal) || Number(d.total) || 0), 0);
+        const totalUnpaid = documents.reduce((sum, d) => sum + (Number(d.balanceDue) || 0), 0);
+        const lowStockProducts = products.filter(p => Number(p.stock ?? p.quantity ?? 0) <= (Number(p.minStock) || 5));
+        const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        const totalPayroll = staff.reduce((sum, s) => sum + (Number(s.salary) || 0), 0);
+
+        const contextSummary = `
+[LIVE WEBSITE BUSINESS DATABASE SNAPSHOT - REAL-TIME]
+SALES & INVOICES:
+- Total Invoices: ${documents.length}
+- Total Sales Revenue: ₹${totalSales.toLocaleString('en-IN')}
+- Outstanding / Unpaid Receivables: ₹${totalUnpaid.toLocaleString('en-IN')}
+- Recent Invoices Sample: ${documents.slice(0, 10).map(d => `#${d.invoiceNumber || d.id || 'N/A'} (Party: ${d.partyName || d.clientName || 'Cash'}, Amount: ₹${Number(d.grandTotal || d.total || 0).toLocaleString('en-IN')}, Status: ${d.status || 'Active'})`).join('; ') || 'No invoices yet'}
+
+PRODUCTS & INVENTORY:
+- Total Products: ${products.length}
+- Low Stock Items Alert (${lowStockProducts.length}): ${lowStockProducts.map(p => `${p.name} (Stock: ${p.stock ?? p.quantity ?? 0}, Min: ${p.minStock || 5})`).join(', ') || 'All products in stock'}
+- Product Catalog Sample: ${products.slice(0, 12).map(p => `${p.name} (Price: ₹${p.price || p.sellingPrice || 0}, Stock: ${p.stock ?? p.quantity ?? 0})`).join('; ') || 'No products added'}
+
+CONTACTS & PARTIES:
+- Total Contacts: ${contacts.length}
+- Parties: ${contacts.slice(0, 10).map(c => `${c.name} (${c.type || 'Party'}, Phone: ${c.phone || 'N/A'}, Balance: ₹${c.balance || 0})`).join('; ') || 'No contacts yet'}
+
+EXPENSES & CASH FLOW:
+- Total Recorded Expenses: ₹${totalExpenses.toLocaleString('en-IN')} (${expenses.length} records)
+- Recent Expenses: ${expenses.slice(0, 6).map(e => `${e.category || 'General'}: ₹${e.amount} (${e.description || e.notes || 'Expense'})`).join('; ') || 'None recorded'}
+
+STAFF & PAYROLL:
+- Total Staff: ${staff.length}
+- Total Monthly Payroll: ₹${totalPayroll.toLocaleString('en-IN')}
+- Staff Members: ${staff.map(s => `${s.name} (${s.designation || s.role || 'Staff'}, Salary: ₹${s.salary || 0})`).join('; ') || 'No staff members'}
+
+DIGITAL LEDGER (UDHAAR KHATA):
+- Ledger Records: ${ledger.length} transactions
+- Active Balances: ${ledger.slice(0, 8).map(l => `${l.partyName || l.contactName || 'Party'}: ${l.type === 'gave' ? 'Gave (To Receive)' : 'Got (To Pay)'} ₹${l.amount}`).join('; ') || 'Khata clear'}
+
+BANKS & LOANS:
+- Banks: ${banks.map(b => `${b.bankName || b.name || 'Bank'} (Balance: ₹${b.balance || 0})`).join('; ') || 'No bank accounts'}
+- Loans: ${loans.map(l => `${l.loanName || l.name || 'Loan'} (Principal: ₹${l.principal || 0}, EMI: ₹${l.emiAmount || 0})`).join('; ') || 'None'}
+`;
+        setLiveBusinessContext(contextSummary);
+      } catch (err) {
+        console.warn('Failed to fetch full business data for AI:', err);
+      }
+    };
+
+    loadFullBusinessData();
+    return () => { isMounted = false; };
+  }, [user]);
+
+  // Clean up speech synthesis on component unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (speechHeartbeatRef.current) {
+        clearInterval(speechHeartbeatRef.current);
+      }
+    };
+  }, []);
 
   // Sync messages
   useEffect(() => {
@@ -262,30 +564,115 @@ const AIPage = () => {
     }
   };
 
-  // Voice Output
-  const handleSpeak = (text, index) => {
-    if (!window.speechSynthesis) return;
-
-    if (speakingIndex === index) {
+  // Real Gemini Audio Listen Engine
+  const stopSpeaking = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
-      setSpeakingIndex(null);
+    }
+    if (speechHeartbeatRef.current) {
+      clearInterval(speechHeartbeatRef.current);
+      speechHeartbeatRef.current = null;
+    }
+    speechQueueRef.current = [];
+    setSpeakingIndex(null);
+    setIsSpeechPaused(false);
+  };
+
+  const playNextSentenceChunk = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    if (speechQueueRef.current.length === 0) {
+      stopSpeaking();
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const cleanText = text
-      .replace(/[*_#~]/g, '')
-      .replace(/\[[^\]]+\]\([^)]+\)/g, '')
-      .replace(/<<<[^>]+>>>/g, '');
+    const chunk = speechQueueRef.current.shift();
+    if (!chunk || !chunk.trim()) {
+      playNextSentenceChunk();
+      return;
+    }
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.0;
+    const utterance = new SpeechSynthesisUtterance(chunk.trim());
+    if (currentVoiceRef.current) {
+      utterance.voice = currentVoiceRef.current;
+      utterance.lang = currentVoiceRef.current.lang || 'en-IN';
+    }
+    utterance.rate = 1.02;
     utterance.pitch = 1.0;
-    utterance.onend = () => setSpeakingIndex(null);
-    utterance.onerror = () => setSpeakingIndex(null);
 
-    setSpeakingIndex(index);
+    utterance.onend = () => {
+      playNextSentenceChunk();
+    };
+
+    utterance.onerror = (e) => {
+      if (e.error !== 'interrupted' && e.error !== 'canceled') {
+        console.warn('Speech chunk playback error:', e);
+        playNextSentenceChunk();
+      }
+    };
+
     window.speechSynthesis.speak(utterance);
+  };
+
+  const handleToggleSpeak = (text, index) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      alert('Speech synthesis is not supported on this device/browser.');
+      return;
+    }
+
+    // If currently speaking this message, toggle pause/resume
+    if (speakingIndex === index) {
+      if (isSpeechPaused) {
+        resumeSpeaking();
+      } else {
+        pauseSpeaking();
+      }
+      return;
+    }
+
+    // Otherwise, start fresh playback for this message
+    stopSpeaking();
+
+    const spokenScript = prepareSpokenScript(text);
+    if (!spokenScript) return;
+
+    // Split into natural sentences for conversational cadence & prevent Chromium 15s freeze
+    const sentences = spokenScript
+      .match(/[^.!?।\n]+[.!?।\n]+|[^.!?।\n]+$/g)
+      ?.map(s => s.trim())
+      .filter(s => s.length > 0) || [spokenScript];
+
+    if (!sentences.length) return;
+
+    speechQueueRef.current = sentences;
+    currentVoiceRef.current = selectBestGeminiVoice(spokenScript);
+    setSpeakingIndex(index);
+    setIsSpeechPaused(false);
+
+    // Keepalive heartbeat to keep speech engine awake in Chromium
+    if (speechHeartbeatRef.current) clearInterval(speechHeartbeatRef.current);
+    speechHeartbeatRef.current = setInterval(() => {
+      if (window.speechSynthesis && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 9000);
+
+    playNextSentenceChunk();
+  };
+
+  const pauseSpeaking = () => {
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      window.speechSynthesis.pause();
+      setIsSpeechPaused(true);
+    }
+  };
+
+  const resumeSpeaking = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.resume();
+      setIsSpeechPaused(false);
+    }
   };
 
   const handleCopy = (text, index) => {
@@ -305,6 +692,7 @@ const AIPage = () => {
 
   // Stop response generation
   const handleStopGeneration = () => {
+    stopSpeaking();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -328,13 +716,13 @@ const AIPage = () => {
   const executeSendPrompt = async (textToSend, historyForApi = messages, filesToSend = attachedFiles) => {
     if (!textToSend.trim() && filesToSend.length === 0) return;
 
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    setSpeakingIndex(null);
+    stopSpeaking();
 
     const pendingAction = getLatestPendingAction();
     const hasActiveQ = historyForApi.some(m => m.question && m.question.status === 'active');
     const effectiveApiModel = geminiStore.getApiModel(selectedModel);
     const userKey = geminiStore.getApiKey();
+    const currentUserName = googleUser?.name || 'Vedaant Gupta';
 
     setIsLoading(true);
     const controller = new AbortController();
@@ -344,7 +732,7 @@ const AIPage = () => {
 
     // 1. Try Backend First (Includes MongoDB Business Data, Invoices, Contacts, Stock, Actions)
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/chat`, {
+      const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
         signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
@@ -352,32 +740,41 @@ const AIPage = () => {
           prompt: textToSend,
           history: historyForApi,
           userId: user?.id || user?._id || 'guest_user',
-          userName: googleUser?.name || 'Vedaant Gupta',
+          userName: currentUserName,
           userGeminiKey: userKey,
           pendingAction,
           hasActiveQuestion: hasActiveQ,
           geminiModel: effectiveApiModel,
+          clientBusinessContext: liveBusinessContext,
           files: filesToSend.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
         })
       });
+
+      // 7.5s timeout: if Render backend is sleeping on live Vercel, seamlessly switch to instant direct Gemini engine
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Backend response timeout on live, falling back to direct AI engine')), 7500)
+      );
+
+      const response = await Promise.race([backendFetchPromise, timeoutPromise]);
 
       if (response.ok) {
         const data = await response.json();
         if (data && data.response && !data.response.toLowerCase().includes('error communicating with ai')) {
           answered = true;
+          const parsed = parseClientAIResponse(data.response);
           const newAiMsg = {
             role: 'ai',
-            content: data.response,
-            action: data.action || null,
-            question: data.question || null,
+            content: parsed.cleanContent,
+            action: data.action || parsed.action || null,
+            question: data.question || parsed.question || null,
             model: selectedModel,
             timestamp: new Date().toISOString()
           };
-          if (data.action && (data.action.status === 'executed' || data.action.status === 'cancelled')) {
+          if (newAiMsg.action && (newAiMsg.action.status === 'executed' || newAiMsg.action.status === 'cancelled')) {
             setMessages(prev =>
               prev.map(m =>
-                m.action && m.action.actionId === data.action.actionId
-                  ? { ...m, action: data.action }
+                m.action && m.action.actionId === newAiMsg.action.actionId
+                  ? { ...m, action: newAiMsg.action }
                   : m
               ).concat([newAiMsg])
             );
@@ -395,10 +792,11 @@ const AIPage = () => {
       console.warn('Backend AI chat error, falling back to direct intelligent engine...', err);
     }
 
-    // 2. Intelligent Direct Fallback (Guarantees Gemini ALWAYS answers accurately with full depth)
+    // 2. Intelligent Direct Fallback (Guarantees Gemini ALWAYS answers accurately with full live data & Hinglish support)
     if (!answered) {
       try {
         let directResponseText = null;
+        const systemPromptText = buildGeminiSystemPrompt(liveBusinessContext, currentUserName);
 
         // If user provided a Gemini API Key, query Google Generative Language directly
         if (userKey) {
@@ -411,11 +809,7 @@ const AIPage = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   systemInstruction: {
-                    parts: [{
-                      text: `You are Google Gemini - a world-class, ultra-intelligent, articulate, and accurate AI assistant.
-Answer thoroughly, accurately, and authoritatively in rich markdown with headings, bullet points, and code formatting where relevant.
-Be helpful, precise, and never give incorrect facts.`
-                    }]
+                    parts: [{ text: systemPromptText }]
                   },
                   contents: [
                     ...historyForApi.slice(-6).map(m => ({
@@ -446,9 +840,7 @@ Be helpful, precise, and never give incorrect facts.`
               messages: [
                 {
                   role: 'system',
-                  content: `You are Google Gemini - an elite, state-of-the-art AI assistant.
-Answer the user's prompt with maximum depth, accuracy, clear explanations, and formatting.
-Whether the question is about coding, math, general science, business, GST, accounting, or creative writing, provide authoritative, high-quality, and 100% correct answers.`
+                  content: systemPromptText
                 },
                 ...historyForApi.slice(-6).map(m => ({
                   role: (m.role === 'ai' || m.role === 'assistant') ? 'assistant' : 'user',
@@ -467,13 +859,14 @@ Whether the question is about coding, math, general science, business, GST, acco
         }
 
         if (directResponseText) {
+          const parsed = parseClientAIResponse(directResponseText);
           setMessages(prev => [
             ...prev,
             {
               role: 'ai',
-              content: directResponseText,
-              action: null,
-              question: null,
+              content: parsed.cleanContent,
+              action: parsed.action,
+              question: parsed.question,
               model: selectedModel,
               timestamp: new Date().toISOString()
             }
@@ -504,8 +897,7 @@ Whether the question is about coding, math, general science, business, GST, acco
     const textToSend = overridePrompt || input;
     if ((!textToSend.trim() && attachedFiles.length === 0) || isLoading) return;
 
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    setSpeakingIndex(null);
+    stopSpeaking();
 
     // Stop active mic if recording
     if (isRecording && recognitionRef.current) {
@@ -648,19 +1040,66 @@ Whether the question is about coding, math, general science, business, GST, acco
     if (!action || executingActionId) return;
     setExecutingActionId(action.actionId);
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/ai/action/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id,
-          action,
-          userName: googleUser?.name || user?.username || 'User'
-        })
-      });
+    const activeUserId = user?.id || user?._id || 'guest_user';
+    const activeUserName = googleUser?.name || user?.username || 'User';
 
-      const result = await res.json();
-      if (res.ok && result.success) {
+    try {
+      let savedItem = null;
+      let targetRoute = action.route;
+
+      // 1. Try backend execution endpoint first
+      try {
+        const res = await fetch(`${API_BASE_URL}/ai/action/execute`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: activeUserId,
+            action,
+            userName: activeUserName
+          })
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success) {
+            savedItem = result.item;
+            if (result.route) targetRoute = result.route;
+          }
+        }
+      } catch (backendErr) {
+        console.warn('Backend action execution failed, falling back to direct db.addItem...', backendErr);
+      }
+
+      // 2. Direct database saving fallback (Guarantees item is 100% saved into MongoDB / local cache)
+      if (!savedItem) {
+        const collectionName = action.collection || (
+          action.type === 'create_document' ? 'documents' :
+          action.type === 'create_product' ? 'products' :
+          action.type === 'create_contact' ? 'contacts' :
+          action.type === 'create_expense' ? 'expenses' :
+          action.type === 'create_staff' ? 'staff' :
+          action.type === 'create_ledger_entry' ? 'ledger_transactions' : 'documents'
+        );
+
+        savedItem = await addItem(
+          collectionName,
+          action.data || {},
+          activeUserId,
+          activeUserName
+        );
+
+        if (!targetRoute) {
+          targetRoute = 
+            collectionName === 'documents' ? '/documents' :
+            collectionName === 'products' ? '/products' :
+            collectionName === 'contacts' ? '/contacts' :
+            collectionName === 'expenses' ? '/expenses/daily' :
+            collectionName === 'staff' ? '/staff' :
+            collectionName === 'ledger_transactions' ? '/ledger' : '/documents';
+        }
+      }
+
+      if (savedItem) {
         setMessages(prev => {
           const updated = [...prev];
           updated[msgIndex] = {
@@ -668,18 +1107,19 @@ Whether the question is about coding, math, general science, business, GST, acco
             action: {
               ...action,
               status: 'executed',
-              savedItem: result.item,
-              route: result.route
+              savedItem,
+              route: targetRoute
             }
           };
           return updated;
         });
+        showToast(`Confirmed! ${action.label || 'Action'} saved to database.`);
       } else {
-        alert(result.message || 'Failed to execute action.');
+        alert('Could not save item to database. Please check your network connection.');
       }
     } catch (err) {
       console.error('Action error:', err);
-      alert('Network error executing action.');
+      alert('An unexpected error occurred while executing action.');
     } finally {
       setExecutingActionId(null);
     }
@@ -1295,6 +1735,21 @@ Whether the question is about coding, math, general science, business, GST, acco
                               {copiedIndex === index ? <Check size={15} color="#16a34a" /> : <Copy size={15} />}
                             </button>
 
+                            {/* Direct Listen Button matching real Gemini */}
+                            <button
+                              type="button"
+                              className={`gemini-ai-icon-btn ${speakingIndex === index ? 'active-speaking' : ''}`}
+                              onClick={() => handleToggleSpeak(msg.content, index)}
+                              title={speakingIndex === index ? (isSpeechPaused ? "Resume listening" : "Pause listening") : "Listen (Real Gemini Voice)"}
+                              aria-label="Listen"
+                            >
+                              {speakingIndex === index ? (
+                                isSpeechPaused ? <Play size={15} /> : <Volume2 size={15} className="gemini-speaking-pulse" />
+                              ) : (
+                                <Volume2 size={15} />
+                              )}
+                            </button>
+
                             <div className="gemini-more-menu-wrapper">
                               <button
                                 type="button"
@@ -1324,12 +1779,12 @@ Whether the question is about coding, math, general science, business, GST, acco
                                     type="button"
                                     className="gemini-popover-item"
                                     onClick={() => {
-                                      handleSpeak(msg.content, index);
+                                      handleToggleSpeak(msg.content, index);
                                       setOpenMenuIndex(null);
                                     }}
                                   >
                                     {speakingIndex === index ? <VolumeX size={16} className="popover-icon" /> : <Volume2 size={16} className="popover-icon" />}
-                                    <span>{speakingIndex === index ? "Stop listening" : "Listen"}</span>
+                                    <span>{speakingIndex === index ? (isSpeechPaused ? "Resume listening" : "Pause listening") : "Listen"}</span>
                                   </button>
 
                                   <button
@@ -1758,6 +2213,46 @@ Whether the question is about coding, math, general science, business, GST, acco
                 <span className="detail-val">{(detailsModalMsg.content || '').length} characters</span>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Real Gemini Floating Voice Player Bar */}
+      {speakingIndex !== null && (
+        <div className="gemini-floating-voice-player" role="region" aria-label="Audio playback controls">
+          <div className="voice-player-left">
+            <div className={`voice-player-wave ${isSpeechPaused ? 'paused' : 'playing'}`}>
+              <span className="wave-bar"></span>
+              <span className="wave-bar"></span>
+              <span className="wave-bar"></span>
+              <span className="wave-bar"></span>
+            </div>
+            <div className="voice-player-info">
+              <span className="voice-player-title">Gemini is reading response</span>
+              <span className="voice-player-subtitle">
+                {isSpeechPaused ? 'Playback Paused' : 'Natural AI Voice • Tap to pause'}
+              </span>
+            </div>
+          </div>
+          <div className="voice-player-controls">
+            <button
+              type="button"
+              className="voice-player-btn play-pause"
+              onClick={isSpeechPaused ? resumeSpeaking : pauseSpeaking}
+              title={isSpeechPaused ? 'Resume' : 'Pause'}
+              aria-label={isSpeechPaused ? 'Resume playback' : 'Pause playback'}
+            >
+              {isSpeechPaused ? <Play size={16} fill="currentColor" /> : <Pause size={16} fill="currentColor" />}
+            </button>
+            <button
+              type="button"
+              className="voice-player-btn stop"
+              onClick={stopSpeaking}
+              title="Stop listening"
+              aria-label="Stop listening"
+            >
+              <Square size={14} fill="currentColor" />
+            </button>
           </div>
         </div>
       )}
