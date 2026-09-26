@@ -164,6 +164,34 @@ const SaleInvoice = () => {
         const docs = await getItems('documents', user.id);
         const existing = docs.find(d => d._dbId === id || d.id === id);
         if (existing) setDoc(existing);
+      } else {
+        const prefillRaw = sessionStorage.getItem('prefill_sale_invoice');
+        if (prefillRaw) {
+          try {
+            const prefill = JSON.parse(prefillRaw);
+            sessionStorage.removeItem('prefill_sale_invoice');
+            setDoc(prev => ({
+              ...prev,
+              customer: {
+                ...prev.customer,
+                name: prefill.customerName || prev.customer.name,
+                phone: prefill.customerPhone || prev.customer.phone,
+                billingAddress: prefill.billingAddress || prev.customer.billingAddress,
+              },
+              items: prefill.items?.length > 0 ? prefill.items.map(it => ({
+                ...BLANK_ITEM(),
+                name: it.name,
+                rate: it.price || 0,
+                quantity: it.quantity || 1,
+                hsn: it.hsn || '',
+                unit: it.unit || 'PCS',
+                taxRate: it.taxRate || 18,
+                amount: (it.price || 0) * (it.quantity || 1)
+              })) : prev.items,
+              documentNote: prefill.notes || prev.documentNote
+            }));
+          } catch(e) {}
+        }
       }
     } catch (err) {
       console.error('Failed to load master data:', err);

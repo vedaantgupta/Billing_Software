@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Sparkles, Users, FileText, Package, BarChart3, Settings as SettingsIcon, 
   Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet, 
-  Banknote, Landmark, History, Briefcase, Video, FileEdit, IdCard,
+  Banknote, Landmark, History, Briefcase, Video, FileEdit, IdCard, Store,
   MessageSquareShare
 } from 'lucide-react';
 import '@/components/layout/Layout.css';
@@ -179,6 +179,15 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           <NavLink to="/products" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Inventory Management">
             <Package size={19} className="nav-icon" /> 
             {!isCollapsed && <span>Inventory</span>}
+          </NavLink>
+          <NavLink to="/catalog-manager" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Digital Catalog & Online Storefront">
+            <Store size={19} className="nav-icon" style={{ color: '#06b6d4' }} /> 
+            {!isCollapsed && (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span>Digital Catalog</span>
+                <span style={{ fontSize: '0.62rem', background: 'linear-gradient(135deg, #06b6d4, #3b82f6)', color: '#fff', padding: '1px 6px', borderRadius: '8px', fontWeight: 700 }}>LIVE</span>
+              </span>
+            )}
           </NavLink>
           <NavLink to="/contacts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Contacts & Customers">
             <Users size={19} className="nav-icon" /> 

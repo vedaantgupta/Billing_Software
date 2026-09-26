@@ -77,6 +77,9 @@ import Meet from '@/features/projects/pages/Meet';
 import PublicProfile from '@/pages/PublicProfile';
 import PublicProductDetail from '@/features/products/pages/PublicProductDetail';
 import CommunicationHub from '@/features/communication/pages/CommunicationHub';
+import DigitalCatalogAdmin from '@/features/catalog/pages/DigitalCatalogAdmin';
+import DigitalCatalogPublic from '@/features/catalog/pages/DigitalCatalogPublic';
+import DigitalCatalogProductDetail from '@/features/catalog/pages/DigitalCatalogProductDetail';
 
 function App() {
   return (
@@ -99,6 +102,14 @@ function App() {
                 <PublicProductDetail />
               </Layout>
             } />
+            <Route path="/catalog/product/:productId" element={<DigitalCatalogProductDetail />} />
+            <Route path="/catalog/:storeId/product/:productId" element={<DigitalCatalogProductDetail />} />
+            <Route path="/c/:storeId/product/:productId" element={<DigitalCatalogProductDetail />} />
+            <Route path="/store/:storeId/product/:productId" element={<DigitalCatalogProductDetail />} />
+            <Route path="/catalog/:id" element={<DigitalCatalogPublic />} />
+            <Route path="/catalog" element={<DigitalCatalogPublic />} />
+            <Route path="/c/:id" element={<DigitalCatalogPublic />} />
+            <Route path="/store/:id" element={<DigitalCatalogPublic />} />
 
             {/* Protected Routes */}
             <Route path="/ai" element={
@@ -694,9 +705,15 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/catalog-manager" element={
+              <ProtectedRoute>
+                <Layout>
+                  <DigitalCatalogAdmin />
+                </Layout>
+              </ProtectedRoute>
+            } />
             {/* Legacy redirects for removed modules */}
             <Route path="/network" element={<Navigate to="/" replace />} />
-            <Route path="/store" element={<Navigate to="/products" replace />} />
             <Route path="/categories" element={<Navigate to="/products" replace />} />
             <Route path="/store/account" element={<Navigate to="/settings" replace />} />
             <Route path="/account" element={<Navigate to="/settings" replace />} />
