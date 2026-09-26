@@ -1,12 +1,12 @@
 :root {
-    --ent-primary: #6366f1;
-    --ent-bg: #f8fafc;
+    --ent-primary: var(--cobalt-600, #2563eb);
+    --ent-bg: var(--bg-color, #f6f8fc);
     --ent-card-bg: #ffffff;
-    --ent-border: #e2e8f0;
-    --ent-text-main: #0f172a;
-    --ent-text-soft: #64748b;
-    --ent-highlight-bg: #fef08a;
-    --ent-highlight-text: #854d0e;
+    --ent-border: var(--border-color, #e2e8f0);
+    --ent-text-main: var(--text-primary, #0f172a);
+    --ent-text-soft: var(--text-secondary, #64748b);
+    --ent-highlight-bg: var(--yellow-100, #fef3c7);
+    --ent-highlight-text: var(--yellow-800, #92400e);
 }
 
 .search-results-page {

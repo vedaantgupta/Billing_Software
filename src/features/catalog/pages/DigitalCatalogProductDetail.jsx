@@ -593,7 +593,7 @@ ${itemsSummary}
 🚚 *Delivery:* ${isFreeDelivery ? 'FREE' : `₹${deliveryCharge}`}
 ${appliedCoupon ? `🏷️ *Coupon (${appliedCoupon.code}):* -₹${couponDiscountAmount.toLocaleString('en-IN')}\n` : ''}${bulkDiscountAmount > 0 ? `⚡ *Bulk Wholesale Discount:* -₹${bulkDiscountAmount.toLocaleString('en-IN')}\n` : ''}💵 *TOTAL AMOUNT:* ₹${cartTotal.toLocaleString('en-IN')}
 ---------------------------------------
-_Sent via Official GoGSTBill Digital Catalog Platform_`;
+_Sent via Official BaniyaBook Digital Catalog Platform_`;
 
     await saveOrderToDB('WhatsApp Inquiry', orderId);
 

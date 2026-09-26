@@ -15,14 +15,13 @@ import DocumentTypeSelection from '@/features/documents/components/DocumentTypeS
 import SaleInvoice from '@/features/documents/pages/SaleInvoice';
 import SaleOrder from '@/features/documents/pages/SaleOrder';
 import PurchaseOrder from '@/features/documents/pages/PurchaseOrder';
-import Reports from '@/features/reports/pages/Reports';
+import Analytics from '@/features/analytics/pages/Analytics';
 import Compliance from '@/features/compliance/pages/Compliance';
 import Settings from '@/features/settings/pages/Settings';
 import InwardPayment from '@/features/documents/pages/InwardPayment';
 import CreateInwardPayment from '@/features/documents/pages/CreateInwardPayment';
 import OutwardPayment from '@/features/documents/pages/OutwardPayment';
 import CreateOutwardPayment from '@/features/documents/pages/CreateOutwardPayment';
-import ProfitLossOverview from '@/features/dashboard/pages/ProfitLossOverview';
 import DeliveryChallan from '@/features/documents/pages/DeliveryChallan';
 import ProformaInvoice from '@/features/documents/components/ProformaInvoice';
 import Login from '@/features/auth/pages/Login';
@@ -413,17 +412,10 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            <Route path="/payments/profit-loss" element={
+            <Route path="/analytics" element={
               <ProtectedRoute>
                 <Layout extended={true}>
-                  <ProfitLossOverview />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/reports" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Reports />
+                  <Analytics />
                 </Layout>
               </ProtectedRoute>
             } />

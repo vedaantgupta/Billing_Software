@@ -137,7 +137,7 @@ const DocumentList = () => {
     window.open(gmailUrl, '_blank');
   };
 
-  const generateUPI = (amount, name) => `upi://pay?pa=merchant@upi&pn=${encodeURIComponent(name || 'GoGSTBill')}&am=${amount}&cu=INR`;
+  const generateUPI = (amount, name) => `upi://pay?pa=merchant@upi&pn=${encodeURIComponent(name || 'BaniyaBook')}&am=${amount}&cu=INR`;
 
   const tabToRoute = {
     'Sale Invoice': '/documents/sale/new',

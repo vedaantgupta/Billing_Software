@@ -2,7 +2,7 @@ import { getDB, getItems, addItem } from '@/utils/db';
 
 const SETTINGS_KEY = 'comm_hub_settings';
 const DEFAULT_UPI_VPA = 'merchant@upi';
-const DEFAULT_PAYEE_NAME = 'GoGSTBill Business';
+const DEFAULT_PAYEE_NAME = 'BaniyaBook Business';
 
 /**
  * Default customizable templates with variables:

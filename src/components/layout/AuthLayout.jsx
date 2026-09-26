@@ -15,8 +15,8 @@ const AuthLayout = ({ children, title, subtitle }) => {
         <div className="auth-card glass">
           <div className="auth-header text-center">
             <div className="auth-logo">
-              <div className="logo-icon">BG</div>
-              <span className="logo-text">BillGenius</span>
+              <div className="logo-icon">BB</div>
+              <span className="logo-text">Baniya<span style={{ color: 'var(--cobalt-600)' }}>Book</span></span>
             </div>
             {title && <h1>{title}</h1>}
             {subtitle && <p className="auth-subtitle">{subtitle}</p>}
@@ -27,7 +27,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
           </div>
           
           <div className="auth-footer">
-            <p>&copy; 2024 BillGenius. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} BaniyaBook. All rights reserved.</p>
           </div>
         </div>
       </div>

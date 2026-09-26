@@ -419,3 +419,57 @@
     color: var(--secondary-color);
     border-bottom: 1px solid rgba(244, 63, 94, 0.1);
 }
+
+/* Mobile & Tablet Responsiveness for History Section */
+@media (max-width: 860px) {
+    .history-page {
+        flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - 120px);
+        overflow-y: visible;
+    }
+
+    .history-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.75rem;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 0.35rem;
+    }
+
+    .compose-btn-container {
+        padding: 0;
+        margin-right: 0.5rem;
+    }
+
+    .btn-compose {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        border-radius: 10px;
+        white-space: nowrap;
+    }
+
+    .nav-link-item {
+        border-radius: 8px;
+        margin-right: 0;
+        padding: 0.5rem 0.85rem;
+        white-space: nowrap;
+        font-size: 0.825rem;
+    }
+
+    .history-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .mail-item {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .mail-content-preview {
+        width: 100%;
+    }
+}
