@@ -490,8 +490,8 @@ const PublicProductDetail = () => {
             <p className="toast-desc">{toast.product?.name || toast.message}</p>
             <div className="toast-actions">
               {toast.type === 'success' && (
-                <button className="toast-btn toast-btn-primary" onClick={() => { navigate('/store'); }}>
-                  Go to Marketplace Cart
+                <button className="toast-btn toast-btn-primary" onClick={() => { navigate('/products'); }}>
+                  View Products
                 </button>
               )}
               <button className="toast-btn toast-btn-secondary" onClick={() => setToast(null)}>
@@ -505,7 +505,7 @@ const PublicProductDetail = () => {
       <div className="amazon-pdp">
         {/* Breadcrumb */}
         <div className="pdp-breadcrumbs">
-          <span onClick={() => navigate('/store')}>Marketplace Store</span>
+          <span onClick={() => navigate('/products')}>Products</span>
           <span>/</span>
           <span onClick={() => navigate(`/p/${product.userId}`)}>{seller?.companyName || 'Seller'} Store</span>
           <span>/</span>

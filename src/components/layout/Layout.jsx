@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Sparkles, Users, FileText, Package, BarChart3, Settings as SettingsIcon, 
   Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet, 
-  Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag,
+  Banknote, Landmark, History, Briefcase, Video, FileEdit, IdCard,
   MessageSquareShare
 } from 'lucide-react';
 import '@/components/layout/Layout.css';
@@ -280,14 +280,6 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           <NavLink to="/meet" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Meet & Connect">
             <Video size={19} className="nav-icon" /> 
             {!isCollapsed && <span>Meet & Connect</span>}
-          </NavLink>
-          <NavLink to="/network" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Network Hub">
-            <Globe size={19} className="nav-icon" /> 
-            {!isCollapsed && <span>Network Hub</span>}
-          </NavLink>
-          <NavLink to="/store" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Marketplace Store">
-            <ShoppingBag size={19} className="nav-icon" /> 
-            {!isCollapsed && <span>Marketplace Store</span>}
           </NavLink>
           <NavLink to="/history" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Audit History">
             <History size={19} className="nav-icon" /> 

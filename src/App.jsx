@@ -74,10 +74,6 @@ import SearchResults from '@/pages/SearchResults';
 import Projects from '@/features/projects/pages/Projects';
 import ProjectDetails from '@/features/projects/pages/ProjectDetails';
 import Meet from '@/features/projects/pages/Meet';
-import NetworkHub from '@/features/network/pages/NetworkHub';
-import Store from '@/features/store/pages/Store';
-import CategoriesPage from '@/features/store/pages/CategoriesPage';
-import AccountPage from '@/features/store/pages/AccountPage';
 import PublicProfile from '@/pages/PublicProfile';
 import PublicProductDetail from '@/features/products/pages/PublicProductDetail';
 import CommunicationHub from '@/features/communication/pages/CommunicationHub';
@@ -698,41 +694,13 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            <Route path="/network" element={
-              <ProtectedRoute>
-                <Layout>
-                  <NetworkHub />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/store" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Store />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/categories" element={
-              <ProtectedRoute>
-                <Layout>
-                  <CategoriesPage />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/store/account" element={
-              <ProtectedRoute>
-                <Layout>
-                  <AccountPage />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/account" element={
-              <ProtectedRoute>
-                <Layout>
-                  <AccountPage />
-                </Layout>
-              </ProtectedRoute>
-            } />
+            {/* Legacy redirects for removed modules */}
+            <Route path="/network" element={<Navigate to="/" replace />} />
+            <Route path="/store" element={<Navigate to="/products" replace />} />
+            <Route path="/categories" element={<Navigate to="/products" replace />} />
+            <Route path="/store/account" element={<Navigate to="/settings" replace />} />
+            <Route path="/account" element={<Navigate to="/settings" replace />} />
+
 
             <Route path="/search" element={
               <ProtectedRoute>
