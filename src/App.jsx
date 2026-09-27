@@ -36,9 +36,6 @@ import Letters from '@/features/letters/pages/Letters';
 import SpreadsheetEditor from '@/features/tools/pages/SpreadsheetEditor';
 import WordProcessor from '@/features/tools/pages/WordProcessor';
 import PresentationEditor from '@/pages/PresentationEditor';
-import EditorHub from '@/pages/EditorHub';
-import BusinessCardEditor from '@/features/tools/pages/BusinessCardEditor';
-import CardBuilderHome from '@/features/tools/pages/CardBuilderHome';
 import Staff from '@/features/staff/pages/Staff';
 import StaffAccount from '@/features/staff/pages/StaffAccount';
 import ContactProfile from '@/features/contacts/pages/ContactProfile';
@@ -295,55 +292,58 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            <Route path="/editor" element={
+            {/* Word Processor & Document Routes */}
+            <Route path="/documents/word/new" element={
               <ProtectedRoute>
-                <Layout>
-                  <EditorHub />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/editor/spreadsheet" element={
-              <ProtectedRoute>
-                <Layout>
-                  <SpreadsheetEditor />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/editor/spreadsheet/edit/:id" element={
-              <ProtectedRoute>
-                <Layout>
-                  <SpreadsheetEditor />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/editor/business-card" element={
-            <ProtectedRoute>
-              <Layout noWrapper={true}>
-                <CardBuilderHome />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/editor/business-card/editor" element={
-            <ProtectedRoute>
-              <Layout noWrapper={true}>
-                <BusinessCardEditor />
-              </Layout>
-            </ProtectedRoute>
-          } />
-            <Route path="/word-processor" element={
-              <ProtectedRoute>
-                <Layout>
+                <Layout noWrapper={true}>
                   <WordProcessor />
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/documents/word/edit/:id" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <WordProcessor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/word-processor" element={<Navigate to="/documents/word/new" replace />} />
             <Route path="/word-processor/edit/:id" element={
               <ProtectedRoute>
-                <Layout>
+                <Layout noWrapper={true}>
                   <WordProcessor />
                 </Layout>
               </ProtectedRoute>
             } />
+
+            {/* Excel Spreadsheet Routes */}
+            <Route path="/documents/spreadsheet/new" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <SpreadsheetEditor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/spreadsheet/edit/:id" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <SpreadsheetEditor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/editor/spreadsheet" element={<Navigate to="/documents/spreadsheet/new" replace />} />
+            <Route path="/editor/spreadsheet/edit/:id" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <SpreadsheetEditor />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
+            {/* Clean redirects for removed editor and card builder routes */}
+            <Route path="/editor" element={<Navigate to="/documents" replace />} />
+            <Route path="/editor/business-card" element={<Navigate to="/documents" replace />} />
+            <Route path="/editor/business-card/editor" element={<Navigate to="/documents" replace />} />
             <Route path="/presentations" element={
               <ProtectedRoute>
                 <Layout>

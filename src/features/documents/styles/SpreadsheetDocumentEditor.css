@@ -1,0 +1,771 @@
+/* SpreadsheetDocumentEditor.css - Modern Enterprise Excel Spreadsheet */
+
+.spreadsheet-app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0f172a;
+  overflow: hidden;
+}
+
+/* ==========================================================
+   TOP NAVBAR
+   ========================================================== */
+.spreadsheet-top-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.25rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  z-index: 50;
+}
+
+.spreadsheet-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sheet-back-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sheet-back-button:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sheet-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet-icon-green {
+  color: #10b981;
+}
+
+.sheet-title-input {
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  width: 340px;
+  transition: all 0.2s;
+}
+
+.sheet-title-input:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.sheet-title-input:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.sheet-autosave-badge {
+  font-size: 11px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.spreadsheet-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.circular-warning-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.sheet-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sheet-action-btn.secondary {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+.sheet-action-btn.secondary:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.sheet-action-btn.primary {
+  background: #10b981;
+  border: 1px solid #059669;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
+}
+
+.sheet-action-btn.primary:hover {
+  background: #059669;
+}
+
+/* ==========================================================
+   EXCEL RIBBON TOOLBAR
+   ========================================================== */
+.sheet-ribbon-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 0.75rem;
+}
+
+.sheet-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sheet-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #cbd5e1;
+  margin: 0 4px;
+}
+
+.sheet-tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #334155;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.sheet-tool-btn:hover {
+  background: #e2e8f0;
+}
+
+.sheet-tool-btn.active {
+  background: #d1fae5;
+  border-color: #a7f3d0;
+  color: #059669;
+}
+
+.sheet-tool-btn-wide {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.sheet-tool-btn-wide.active {
+  background: #ecfdf5;
+  border-color: #10b981;
+  color: #059669;
+}
+
+.sheet-color-tool {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sheet-color-tool input[type="color"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.color-bar {
+  width: 16px;
+  height: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 2px;
+}
+
+.font-color-letter {
+  font-weight: 800;
+  font-size: 13px;
+  border-bottom: 3px solid currentColor;
+  line-height: 1;
+}
+
+.sheet-group-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.sheet-fn-badge {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sheet-fn-badge:hover {
+  background: #d1fae5;
+}
+
+/* ==========================================================
+   FORMULA BAR
+   ========================================================== */
+.sheet-formula-bar-container {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 1.25rem;
+  background: #ffffff;
+  border-bottom: 1px solid #cbd5e1;
+  gap: 6px;
+}
+
+.sheet-name-box {
+  width: 60px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  color: #0f172a;
+}
+
+.sheet-fx-symbol {
+  font-size: 13px;
+  font-weight: 700;
+  font-style: italic;
+  color: #64748b;
+  padding: 0 4px;
+}
+
+.sheet-formula-input {
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+}
+
+.sheet-formula-input:focus {
+  border-color: #10b981;
+}
+
+/* ==========================================================
+   MATRIX GRID VIEWPORT & TABLE
+   ========================================================== */
+.sheet-matrix-viewport {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background: #f8fafc;
+}
+
+.sheet-matrix-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #ffffff;
+}
+
+/* Corner & Header Cells */
+.sheet-corner-cell {
+  width: 44px;
+  height: 24px;
+  background: #f1f5f9;
+  border-right: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 30;
+}
+
+.sheet-col-header {
+  height: 26px;
+  background: #f1f5f9;
+  border-right: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+  user-select: none;
+  padding: 0 4px;
+}
+
+.sheet-col-header.freeze-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.sheet-col-header.active-col {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.col-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.col-filter-trigger {
+  opacity: 0.3;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.col-filter-trigger:hover, .sheet-col-header:hover .col-filter-trigger {
+  opacity: 1;
+  color: #059669;
+}
+
+.sheet-row-header {
+  width: 44px;
+  background: #f1f5f9;
+  border-right: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+  user-select: none;
+}
+
+.sheet-row-header.freeze-col {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+}
+
+.sheet-row-header.active-row {
+  background: #d1fae5;
+  color: #059669;
+}
+
+/* Data Cells */
+.sheet-data-cell {
+  height: 25px;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 2px 6px;
+  font-size: 12px;
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+  cursor: cell;
+}
+
+.sheet-data-cell.cell-selected {
+  outline: 2px solid #10b981;
+  outline-offset: -2px;
+  z-index: 5;
+}
+
+.cell-content-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.cell-text-span {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.cell-inline-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  font-family: inherit;
+  background: transparent;
+}
+
+/* Mini Databar */
+.cell-mini-databar {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  background: rgba(16, 185, 129, 0.15);
+  border-radius: 2px;
+  z-index: 1;
+}
+
+/* Cell Validation Dropdown */
+.cell-validation-dropdown {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  opacity: 0.7;
+  border: none;
+  background: transparent;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+/* Auto-Fill Handle (The green square) */
+.sheet-autofill-handle {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border: 1px solid #ffffff;
+  cursor: crosshair;
+  z-index: 10;
+}
+
+/* ==========================================================
+   FLOATING CHARTS OVERLAY
+   ========================================================== */
+.floating-chart-card {
+  position: absolute;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  overflow: hidden;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 12px;
+  cursor: move;
+}
+
+.chart-header button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.chart-body {
+  flex: 1;
+  padding: 8px;
+}
+
+/* ==========================================================
+   BOTTOM TABS BAR
+   ========================================================== */
+.sheet-bottom-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: #f1f5f9;
+  border-top: 1px solid #cbd5e1;
+  height: 34px;
+}
+
+.sheet-tabs-scroll {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sheet-tab-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+}
+
+.sheet-tab-button.active {
+  background: #ffffff;
+  color: #10b981;
+  font-weight: 600;
+  border-color: #cbd5e1;
+}
+
+.sheet-add-tab-btn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #475569;
+  margin-left: 6px;
+}
+
+.sheet-status-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* ==========================================================
+   MODALS
+   ========================================================== */
+.sheet-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.sheet-modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 520px;
+  max-width: 90vw;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.sheet-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sheet-modal-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sheet-modal-header button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.sheet-modal-body {
+  padding: 1.5rem;
+}
+
+.pivot-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.pivot-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pivot-input-block label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.pivot-input-block select {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.btn-generate-pivot {
+  width: 100%;
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pivot-result-wrapper {
+  margin-top: 1.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.pivot-result-wrapper h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.pivot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.pivot-table th, .pivot-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pivot-table th {
+  background: #f1f5f9;
+  font-weight: 600;
+  text-align: left;
+}
+
+.chart-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.chart-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.25rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chart-type-card:hover {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.chart-type-card strong {
+  font-size: 13px;
+  margin: 8px 0 2px;
+  color: #0f172a;
+}
+
+.chart-type-card span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.sheet-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sheet-modal-footer button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}

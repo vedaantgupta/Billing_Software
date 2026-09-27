@@ -1883,9 +1883,13 @@
 .content-area.no-padding {
   padding: 0;
   height: calc(100vh - 66px);
+  max-height: calc(100vh - 66px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ========================================================

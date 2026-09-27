@@ -42,6 +42,15 @@ const categories = [
     ]
   },
   {
+    title: 'OFFICE SUITE',
+    color: 'blue',
+    badgeColor: '#2563eb',
+    items: [
+      { id: 'word-document', label: 'Word Document', icon: FileText, color: '#2563eb', desc: 'Official letters, agreements & documentation' },
+      { id: 'spreadsheet', label: 'Spreadsheet', icon: FileEdit, color: '#10b981', desc: 'Custom calculations, data sheets & tables' },
+    ]
+  },
+  {
     title: 'PAYMENTS',
     color: 'rose',
     badgeColor: '#e11d48',
@@ -74,6 +83,10 @@ const DocumentTypeSelection = () => {
       navigate('/documents/job-work/new');
     } else if (type.id === 'letter') {
       navigate('/documents/letters/new');
+    } else if (type.id === 'word-document') {
+      navigate('/documents/word/new');
+    } else if (type.id === 'spreadsheet') {
+      navigate('/documents/spreadsheet/new');
     } else if (type.id === 'credit-note') {
       navigate('/documents/credit-note/new');
     } else if (type.id === 'debit-note') {

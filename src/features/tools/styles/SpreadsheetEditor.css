@@ -1,98 +1,263 @@
+/* ========================================================
+   SPREADSHEET EDITOR - ENTERPRISE WORKBOOK SUITE
+   Premium Design: Clean Excel/Sheets Viewport & Zero-Overflow Bounds
+   ======================================================== */
+
 .spreadsheet-module-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 220px); /* Fits comfortably inside the glass container */
-  min-height: 500px;
+  height: 100%;
   width: 100%;
-  background-color: #f3f4f6;
-  border-radius: 8px;
+  background-color: #ffffff;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* --- HEADER BAR --- */
 .spreadsheet-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1.5rem;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  padding: 0 1.25rem;
+  height: 58px;
+  min-height: 58px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+  z-index: 20;
 }
 
-.title-section {
+.spreadsheet-title-section {
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
 }
 
-.back-btn {
+/* Back button */
+.spreadsheet-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.spreadsheet-back-btn:hover {
+  background-color: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+/* Excel Badge */
+.spreadsheet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Spreadsheet Title Input */
+.spreadsheet-title-wrapper {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: none;
-  border: none;
-  color: #4b5563;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  background: #f8fafc;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
-.back-btn:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+.spreadsheet-title-wrapper:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+.spreadsheet-title-wrapper:focus-within {
+  border-color: #10b981;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 .spreadsheet-title-input {
-  font-size: 1.1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  color: #111827;
-  border: 1px solid transparent;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  color: #0f172a;
+  border: none;
+  background: transparent;
   outline: none;
-  width: 300px;
-  transition: all 0.2s;
+  width: 280px;
+  padding: 2px 0;
 }
 
-.spreadsheet-title-input:hover,
-.spreadsheet-title-input:focus {
-  border-color: #d1d5db;
-  background-color: #f9fafb;
-}
-
-.action-section {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
+.spreadsheet-title-input::placeholder {
+  color: #94a3b8;
   font-weight: 500;
+}
+
+/* Status Pill */
+.spreadsheet-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.spreadsheet-status-pill.saved {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.spreadsheet-status-pill.saving {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.spreadsheet-status-pill.info {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* --- ACTIONS SECTION --- */
+.spreadsheet-action-section {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.spreadsheet-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #334155;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.18s ease;
+  white-space: nowrap;
 }
 
-.action-btn:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+.spreadsheet-secondary-btn:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+.spreadsheet-primary-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #059669, #047857);
+  border: 1px solid #047857;
+  color: #ffffff;
+  padding: 0.48rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+  white-space: nowrap;
+}
+
+.spreadsheet-primary-save-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #047857, #065f46);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  transform: translateY(-1px);
+}
+
+.spreadsheet-primary-save-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.spreadsheet-primary-save-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spreadsheet-kbd-hint {
+  font-size: 0.6875rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 2px;
+  font-weight: 500;
+}
+
+/* --- MAIN SPREADSHEET WORKBOOK AREA --- */
 .spreadsheet-main-area {
   flex: 1;
+  min-height: 0;
+  height: calc(100% - 58px);
   width: 100%;
-  height: calc(100vh - 60px);
   position: relative;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.spreadsheet-fortune-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* FortuneSheet Container Fitting */
+.spreadsheet-fortune-wrapper > div,
+.spreadsheet-fortune-wrapper .luckysheet,
+.spreadsheet-fortune-wrapper .fortune-sheet-container {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+/* Loading Screen */
+.spreadsheet-loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: #f8fafc;
+  color: #64748b;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
 }

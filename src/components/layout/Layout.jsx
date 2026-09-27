@@ -424,16 +424,6 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
             {(!isCollapsed || isMobileDrawerOpen) && <span>Digital Catalog</span>}
           </NavLink>
 
-          <NavLink to="/editor" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Document Editor">
-            <FileEdit size={19} className="nav-icon" />
-            {(!isCollapsed || isMobileDrawerOpen) && <span>Document Editor</span>}
-          </NavLink>
-
-          <NavLink to="/editor/business-card" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Business Card Builder">
-            <IdCard size={19} className="nav-icon" /> 
-            {(!isCollapsed || isMobileDrawerOpen) && <span>Card Builder</span>}
-          </NavLink>
-
           {(!isCollapsed || isMobileDrawerOpen) && <div className="nav-section-title">Operations</div>}
           
           <NavLink to="/products" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Inventory Management">

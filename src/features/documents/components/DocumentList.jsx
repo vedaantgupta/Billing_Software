@@ -15,7 +15,7 @@ import {
   createConvertedDocumentDraft 
 } from '@/utils/documentUtils';
 
-const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note', 'Job Work', 'Letter'];
+const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Word Document', 'Spreadsheet', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note', 'Job Work', 'Letter'];
 
 const DocumentList = () => {
   const [documents, setDocuments] = useState([]);
@@ -62,6 +62,12 @@ const DocumentList = () => {
 
   const filteredDocs = documents.filter(d => {
     const type = normalizeDocType(d.docType);
+    if (activeTab === 'Word Document') {
+      return type === 'Word Document' || d.docType === 'Word Document';
+    }
+    if (activeTab === 'Spreadsheet') {
+      return type === 'Spreadsheet' || d.docType === 'Spreadsheet';
+    }
     if (activeTab === 'Sale Invoice') {
       return type === 'Sale Invoice' || type === 'Invoice';
     }
@@ -154,7 +160,11 @@ const DocumentList = () => {
     const docId = doc._dbId || doc.id || doc._id;
     const type = normalizeDocType(doc.docType);
 
-    if (type === 'Purchase Invoice') {
+    if (type === 'Word Document' || doc.docType === 'Word Document') {
+      navigate(`/documents/word/edit/${docId}`);
+    } else if (type === 'Spreadsheet' || doc.docType === 'Spreadsheet') {
+      navigate(`/documents/spreadsheet/edit/${docId}`);
+    } else if (type === 'Purchase Invoice') {
       navigate(`/documents/purchase/edit/${docId}`);
     } else if (type === 'Quotation' || type === 'Offer') {
       navigate(`/documents/quotation/edit/${docId}`);
@@ -180,6 +190,8 @@ const DocumentList = () => {
   };
 
   const tabToRoute = {
+    'Word Document': '/documents/word/new',
+    'Spreadsheet': '/documents/spreadsheet/new',
     'Sale Invoice': '/documents/sale/new',
     'Purchase Invoice': '/documents/purchase/new',
     'Quotation': '/documents/quotation/new',
@@ -197,12 +209,14 @@ const DocumentList = () => {
     return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading Documents...</div>;
   }
 
+  const isOfficeDoc = activeTab === 'Word Document' || activeTab === 'Spreadsheet';
+
   return (
     <div className="document-list-page">
       <div className="print-hide page-header">
         <div>
           <h1 className="page-title">Document Management</h1>
-          <p className="page-subtitle">Manage, convert, print, share, and track all your business documents with ease.</p>
+          <p className="page-subtitle">Manage, convert, print, share, and track all your business documents, spreadsheets, and word docs.</p>
         </div>
         <div className="flex gap-2">
           <button className="btn" style={{ backgroundColor: '#2563eb', color: 'white' }} onClick={() => navigate(tabToRoute[activeTab] || '/documents/select')}>
@@ -233,9 +247,9 @@ const DocumentList = () => {
             <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Date</th>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Number</th>
-              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{activeTab === 'Letter' ? 'Recipient' : 'Party'}</th>
-              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{activeTab === 'Letter' ? 'Subject' : 'Amount'}</th>
-              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{activeTab === 'Letter' ? 'Status' : 'Outstanding'}</th>
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{isOfficeDoc ? 'Document Title' : activeTab === 'Letter' ? 'Recipient' : 'Party'}</th>
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{isOfficeDoc ? 'Engine & Type' : activeTab === 'Letter' ? 'Subject' : 'Amount'}</th>
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{isOfficeDoc ? 'Format & Status' : activeTab === 'Letter' ? 'Status' : 'Outstanding'}</th>
               <th style={{ padding: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
@@ -243,18 +257,33 @@ const DocumentList = () => {
             {filteredDocs.map(doc => {
               const availableConversions = getAvailableConversions(doc.docType);
               const isLetter = doc.docType === 'Letter' || doc.docType === 'Document';
+              const isWord = doc.docType === 'Word Document';
+              const isSheet = doc.docType === 'Spreadsheet';
+              const isOffice = isWord || isSheet;
               const partyName = doc.recipient || doc.customerName || doc.vendorName || doc.customerInfo?.ms || doc.vendorInfo?.ms || doc.name || '-';
 
               return (
                 <tr key={doc._dbId || doc.id || Math.random().toString()} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '1rem' }}>{doc.date || doc.createdAt?.split('T')[0] || '-'}</td>
                   <td style={{ padding: '1rem', fontWeight: 600 }}>{doc.invoiceNumber || '-'}</td>
-                  <td style={{ padding: '1rem' }}>{partyName}</td>
-                  <td style={{ padding: '1rem', fontWeight: isLetter ? 500 : 600, color: isLetter ? 'var(--text-color)' : 'var(--primary-color)' }}>
-                    {isLetter ? (doc.subject ? (doc.subject.length > 30 ? doc.subject.slice(0, 30) + '...' : doc.subject) : (doc.title || 'Official Letter')) : `₹ ${Number(doc.total || doc.grandTotal || doc.amount || 0).toFixed(2)}`}
+                  <td style={{ padding: '1rem' }}>{isOffice ? (doc.title || `Untitled ${doc.docType}`) : partyName}</td>
+                  <td style={{ padding: '1rem', fontWeight: isOffice ? 600 : isLetter ? 500 : 600, color: isOffice ? (isWord ? '#2563eb' : '#059669') : isLetter ? 'var(--text-color)' : 'var(--primary-color)' }}>
+                    {isWord ? 'Word Processor' : isSheet ? 'Excel Spreadsheet' : isLetter ? (doc.subject ? (doc.subject.length > 30 ? doc.subject.slice(0, 30) + '...' : doc.subject) : (doc.title || 'Official Letter')) : `₹ ${Number(doc.total || doc.grandTotal || doc.amount || 0).toFixed(2)}`}
                   </td>
                   <td style={{ padding: '1rem' }}>
-                    {isLetter ? (
+                    {isOffice ? (
+                      <span style={{ 
+                        background: isWord ? '#eff6ff' : '#ecfdf5', 
+                        color: isWord ? '#2563eb' : '#059669', 
+                        padding: '4px 10px', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600,
+                        border: isWord ? '1px solid #bfdbfe' : '1px solid #a7f3d0'
+                      }}>
+                        {isWord ? 'Word (.doc)' : 'Spreadsheet (FortuneSheet)'}
+                      </span>
+                    ) : isLetter ? (
                       <span style={{ 
                         background: '#ecfdf5', 
                         color: '#059669', 
