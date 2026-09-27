@@ -11,6 +11,12 @@ import {
 } from 'lucide-react';
 import '@/features/documents/styles/DeliveryChallan.css';
 import '@/features/products/styles/product-table.css';
+import { 
+  getNextDocumentNumber, 
+  isDocumentNumberTaken, 
+  handleProductRowSelection, 
+  filterValidItems 
+} from '@/utils/documentUtils';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -151,10 +157,51 @@ const DeliveryChallan = () => {
     const init = async () => {
       setLoading(true);
       await loadMasterData();
+      const allDocs = await getItems('documents', user.id);
       if (id) {
-        const allDocs = await getItems('documents', user.id);
-        const existing = allDocs.find(d => d._dbId === id || d.id === id);
-        if (existing) setDoc(prev => ({ ...prev, ...existing }));
+        const existing = allDocs.find(d => d._dbId === id || d.id === id || d._id === id);
+        if (existing) {
+          const loadedItems = existing.items?.length > 0 ? [...existing.items] : [BLANK_ITEM()];
+          const last = loadedItems[loadedItems.length - 1];
+          if (last && (last.name || last.productId || Number(last.amount) > 0)) {
+            loadedItems.push(BLANK_ITEM());
+          }
+          setDoc(prev => ({ ...prev, ...existing, items: loadedItems }));
+        }
+      } else {
+        const nextNo = getNextDocumentNumber('Delivery Challan', allDocs);
+
+        // Check for conversion draft
+        const convertedRaw = sessionStorage.getItem('prefill_converted_document');
+        if (convertedRaw) {
+          try {
+            const draft = JSON.parse(convertedRaw);
+            sessionStorage.removeItem('prefill_converted_document');
+            if (draft.docType === 'Delivery Challan') {
+              const draftItems = draft.items?.length > 0 ? [...draft.items, BLANK_ITEM()] : [BLANK_ITEM()];
+              setDoc(prev => ({
+                ...prev,
+                ...draft,
+                items: draftItems,
+                dcDetail: {
+                  ...prev.dcDetail,
+                  ...draft.dcDetail,
+                  challanNo: draft.dcDetail?.challanNo || nextNo
+                }
+              }));
+              setLoading(false);
+              return;
+            }
+          } catch(e) {}
+        }
+
+        setDoc(prev => ({
+          ...prev,
+          dcDetail: {
+            ...prev.dcDetail,
+            challanNo: nextNo
+          }
+        }));
       }
       setLoading(false);
     };
@@ -228,33 +275,38 @@ const DeliveryChallan = () => {
   };
 
   const handleItemChange = (idx, field, value) => {
+    if (field === 'productId') {
+      const p = products.find(x => x.id === value || x._dbId === value || x._id === value);
+      if (p) {
+        // Increment quantity if already added, populate row, and auto-add blank row at bottom
+        const updatedItems = handleProductRowSelection(doc.items, p, idx, BLANK_ITEM);
+        setDoc(prev => ({ ...prev, items: updatedItems }));
+        return;
+      }
+    }
+
     const items = [...doc.items];
     const item = { ...items[idx] };
-
-    if (field === 'productId') {
-      const p = products.find(x => x.id === value);
-      if (p) {
-        item.productId = p.id;
-        item.name = p.name;
-        item.hsn = p.hsn || '';
-        item.unit = p.unit || 'PCS';
-        item.rate = Number(p.sellingPrice) || 0;
-        item.taxRate = Number(p.taxRate) || 0;
-        item.image = p.image || '';
-      }
-    } else {
-      item[field] = value;
-    }
+    item[field] = value;
 
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
+    const disc = Number(item.discountPercent) || 0;
     const tax = Number(item.taxRate) || 0;
-    const taxableTotal = qty * rate;
+    const base = qty * rate;
+    const discAmt = base * (disc / 100);
+    const taxableTotal = base - discAmt;
 
     item.amount = taxableTotal;
     item.taxAmount = taxableTotal * (tax / 100);
 
     items[idx] = item;
+
+    // Auto-add blank row if this is the last row and is now filled
+    if (idx === items.length - 1 && (item.name || item.productId || Number(item.amount) > 0)) {
+      items.push(BLANK_ITEM());
+    }
+
     setDoc(prev => ({ ...prev, items }));
   };
 
@@ -270,11 +322,27 @@ const DeliveryChallan = () => {
     if (!user?.id) return;
     if (!doc.dcDetail.challanNo) { alert('Please enter Delivery Challan No.'); return; }
 
+    const fullNo = `${doc.docPrefix}${doc.dcDetail.challanNo}${doc.docPostfix}`;
+
+    // REQUIREMENT 1: Prevent duplicate challan number reuse
+    const allDocs = await getItems('documents', user.id);
+    if (isDocumentNumberTaken('Delivery Challan', doc.dcDetail.challanNo, id, allDocs)) {
+      alert(`Delivery Challan number #${doc.dcDetail.challanNo} (or ${fullNo}) is already in use. Please enter a unique number.`);
+      return;
+    }
+
+    // REQUIREMENT 8: Filter out empty rows so that blank items are NOT saved or printed
+    const validItems = filterValidItems(doc.items);
+    if (validItems.length === 0) {
+      alert('Please add at least one item to the delivery challan.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const fullNo = `${doc.docPrefix}${doc.dcDetail.challanNo}${doc.docPostfix}`;
       const finalDoc = {
         ...doc,
+        items: validItems,
         invoiceNumber: fullNo,
         date: doc.dcDetail.date,
         total: doc.grandTotal,

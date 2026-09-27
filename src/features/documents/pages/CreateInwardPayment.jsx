@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getItems, addItem, logActivity } from '@/utils/db';
 import { postToLedger, getContactBalance } from '@/utils/ledger';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,15 +32,65 @@ const CreateInwardPayment = () => {
     status: 'Received'
   });
 
+  const location = useLocation();
+
   useEffect(() => {
-    const loadContacts = async () => {
+    const loadInitial = async () => {
       if (!user?.id) return;
-      const data = await getItems('contacts', user.id);
-      // Include all contacts (customers and vendors) for inward payments
-      setContacts(data.filter(c => (c.name && c.name.trim()) || (c.companyName && c.companyName.trim())));
+      const [contactList, existingPayments] = await Promise.all([
+        getItems('contacts', user.id),
+        getItems('inwardPayments', user.id).catch(() => [])
+      ]);
+      const validContacts = contactList.filter(c => (c.name && c.name.trim()) || (c.companyName && c.companyName.trim()));
+      setContacts(validContacts);
+
+      // Auto sequential numbering (1, 2, 3...)
+      let maxNum = 0;
+      (existingPayments || []).forEach(p => {
+        const raw = p.receiptNumber || String(p.fullReceiptNo || '').replace(/\D+/g, '');
+        const n = parseInt(raw, 10);
+        if (!isNaN(n) && n > maxNum && n < 1000000) maxNum = n;
+      });
+      const nextReceiptNo = String(maxNum + 1);
+
+      // Check conversion prefill
+      const incoming = location.state || {};
+      let prefilledName = incoming.customerName || '';
+      let prefilledId = incoming.customerId || '';
+      let prefilledAmount = incoming.amount || '';
+      let prefilledRemarks = incoming.remarks || '';
+      let prefilledAddress = '';
+      let prefilledGstin = '';
+      let outstanding = '0.00';
+
+      if (prefilledName || prefilledId) {
+        const matched = validContacts.find(c => c.id === prefilledId || c.name === prefilledName || c.companyName === prefilledName);
+        if (matched) {
+          prefilledId = matched.id;
+          prefilledName = matched.companyName || matched.name;
+          prefilledAddress = matched.address || '';
+          prefilledGstin = matched.gstin || matched.panno || '';
+          try {
+            const bal = await getContactBalance(matched.id, user.id);
+            outstanding = bal.balance.toFixed(2);
+          } catch(e) {}
+        }
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        receiptNumber: nextReceiptNo,
+        customerName: prefilledName || prev.customerName,
+        customerId: prefilledId || prev.customerId,
+        address: prefilledAddress || prev.address,
+        gstinPan: prefilledGstin || prev.gstinPan,
+        totalOutstanding: outstanding,
+        amount: prefilledAmount || prev.amount,
+        remarks: prefilledRemarks || prev.remarks
+      }));
     };
-    loadContacts();
-  }, [user?.id]);
+    loadInitial();
+  }, [user?.id, location.state]);
 
   const handleCustomerChange = async (e) => {
     const name = e.target.value;
@@ -73,6 +123,13 @@ const CreateInwardPayment = () => {
     }
 
     const fullReceiptNo = `${formData.receiptPrefix}${formData.receiptNumber}${formData.receiptPostfix}`;
+    const existingPayments = await getItems('inwardPayments', user.id).catch(() => []);
+    const duplicate = (existingPayments || []).some(p => p.fullReceiptNo === fullReceiptNo || String(p.receiptNumber) === String(formData.receiptNumber));
+    if (duplicate) {
+      alert(`Receipt No. "${fullReceiptNo}" is already used! Please choose a unique receipt number.`);
+      return;
+    }
+
     const paymentToSave = {
       ...formData,
       fullReceiptNo,

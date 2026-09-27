@@ -6,6 +6,12 @@ import PrintViewModal from '@/components/ui/PrintViewModal';
 import { ArrowLeft, Trash2, Printer, Save, Plus, MoreVertical, RotateCcw, X } from 'lucide-react';
 import ProductModal from '@/features/products/components/ProductModal';
 import ContactModal from '@/features/contacts/components/ContactModal';
+import {
+  getNextDocumentNumber,
+  isDocumentNumberTaken,
+  handleProductRowSelection,
+  filterValidItems
+} from '@/utils/documentUtils';
 import '@/features/documents/styles/JobWork.css';
 import '@/features/products/styles/product-table.css';
 
@@ -115,10 +121,57 @@ const JobWork = () => {
     const init = async () => {
       setLoading(true);
       await loadData();
-      if (id) {
-        const docs = await getItems('documents', user.id);
-        const ex = docs.find(d => d._dbId === id || d.id === id);
-        if (ex) setDoc(prev => ({ ...prev, ...ex }));
+      if (user?.id) {
+        try {
+          const docs = await getItems('documents', user.id);
+          if (id) {
+            const ex = docs.find(d => d._dbId === id || d.id === id || d._id === id);
+            if (ex) {
+              const loadedItems = ex.items?.length > 0 ? [...ex.items] : [BLANK_ITEM()];
+              const last = loadedItems[loadedItems.length - 1];
+              if (last && (last.name || last.productId || Number(last.amount) > 0)) {
+                loadedItems.push(BLANK_ITEM());
+              }
+              setDoc({ ...ex, items: loadedItems });
+            }
+          } else {
+            const nextJwNo = getNextDocumentNumber('Job Work', docs);
+            const convertedRaw = sessionStorage.getItem('prefill_converted_document');
+            if (convertedRaw) {
+              try {
+                const draft = JSON.parse(convertedRaw);
+                sessionStorage.removeItem('prefill_converted_document');
+                if (draft.docType === 'Job Work') {
+                  const draftItems = draft.items?.length > 0 ? [...draft.items, BLANK_ITEM()] : [BLANK_ITEM()];
+                  setDoc(prev => ({
+                    ...prev,
+                    ...draft,
+                    items: draftItems,
+                    jwDetail: {
+                      ...prev.jwDetail,
+                      ...draft.jwDetail,
+                      jobWorkNo: draft.jwDetail?.jobWorkNo || nextJwNo
+                    }
+                  }));
+                  setLoading(false);
+                  return;
+                }
+              } catch (e) {
+                console.error('Error parsing prefilled conversion draft:', e);
+              }
+            }
+
+            setDoc(prev => ({
+              ...prev,
+              jwDetail: {
+                ...prev.jwDetail,
+                jobWorkNo: nextJwNo
+              }
+            }));
+          }
+        } catch (err) {
+          console.error('Error initializing Job Work:', err);
+        }
       }
       setLoading(false);
     };
@@ -163,7 +216,7 @@ const JobWork = () => {
   };
 
   const handleContactSaved = async (newContact) => {
-    await loadMasterData();
+    await loadData();
     const cid = newContact.id || newContact._id || newContact._dbId;
     setDoc(prev => ({
       ...prev,
@@ -181,12 +234,23 @@ const JobWork = () => {
   };
 
   const handleItemChange = (idx, f, v) => {
+    if (f === 'productId') {
+      const selectedProduct = products.find(x => x.id === v);
+      if (selectedProduct) {
+        const updated = handleProductRowSelection({
+          currentItems: doc.items,
+          index: idx,
+          product: selectedProduct,
+          createBlankRow: BLANK_ITEM
+        });
+        setDoc(prev => ({ ...prev, items: updated }));
+        return;
+      }
+    }
+
     const items = [...doc.items];
     const item = { ...items[idx] };
-    if (f === 'productId') {
-      const p = products.find(x => x.id === v);
-      if (p) { item.productId = p.id; item.name = p.name; item.hsn = p.hsn || ''; item.unit = p.unit || 'PCS'; item.image = p.image || ''; item.rate = Number(p.sellingPrice) || 0; item.taxRate = Number(p.taxRate) || 0; }
-    } else { item[f] = v; }
+    item[f] = v;
     item.amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
     item.taxAmount = item.amount * ((Number(item.taxRate) || 0) / 100);
     items[idx] = item;
@@ -216,13 +280,37 @@ const JobWork = () => {
 
   const handleSave = async (print = false) => {
     if (!user?.id) return;
+    if (!doc.jwDetail.jobWorkNo) { alert('Please enter Job Work No.'); return; }
     setIsSubmitting(true);
     try {
+      const allDocs = await getItems('documents', user.id);
+      if (isDocumentNumberTaken('Job Work', doc.jwDetail.jobWorkNo, allDocs, id)) {
+        alert(`Job Work No. "${doc.jwDetail.jobWorkNo}" is already in use. Please use a unique number.`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const cleanItems = filterValidItems(doc.items);
+      if (cleanItems.length === 0) {
+        alert('Please add at least one product with name or quantity.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const fullNo = `${doc.docPrefix}${doc.jwDetail.jobWorkNo}${doc.docPostfix}`;
-      const final = { ...doc, invoiceNumber: fullNo, date: doc.jwDetail.date, total: doc.grandTotal, customerName: doc.customerInfo.ms };
+      const final = {
+        ...doc,
+        items: cleanItems,
+        invoiceNumber: fullNo,
+        date: doc.jwDetail.date,
+        total: doc.grandTotal,
+        customerName: doc.customerInfo.ms,
+        docType: doc.docType || 'Job Work'
+      };
       let result;
       if (id) result = await updateItem('documents', id, final, user.id);
       else result = await addItem('documents', final, user.id);
+      logActivity(id ? `Updated Job Work #${fullNo}` : `Created Job Work #${fullNo}`, user.id, user.username);
       if (print) { setSavedDoc(result || final); setShowPrintModal(true); }
       else navigate('/documents');
     } catch (err) { alert('Save failed. Please try again.'); console.error(err); }

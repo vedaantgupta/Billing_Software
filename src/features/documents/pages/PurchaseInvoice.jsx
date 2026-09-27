@@ -5,6 +5,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { postToLedger } from '@/utils/ledger';
 import ProductModal from '@/features/products/components/ProductModal';
 import ContactModal from '@/features/contacts/components/ContactModal';
+import PrintViewModal from '@/components/ui/PrintViewModal';
+import { 
+  getNextDocumentNumber, 
+  isDocumentNumberTaken, 
+  handleProductRowSelection, 
+  filterValidItems 
+} from '@/utils/documentUtils';
 import '@/features/documents/styles/PurchaseInvoice.css';
 import '@/features/products/styles/product-table.css';
 
@@ -108,6 +115,8 @@ const PurchaseInvoice = () => {
   const [additionalChargeName, setAdditionalChargeName] = useState('Freight');
   const [additionalChargeValue, setAdditionalChargeValue] = useState('');
   const [notes, setNotes] = useState([]);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [savedDoc, setSavedDoc] = useState(null);
 
   // ── document state ──
   const [doc, setDoc] = useState({
@@ -160,10 +169,60 @@ const PurchaseInvoice = () => {
       ]);
       setVendors(vendorList.filter(c => c.type === 'vendor' || !c.type));
       setProducts(productList);
+
+      const docs = await getItems('documents', user.id);
+      if (id) {
+        const existing = docs.find(d => d._dbId === id || d.id === id || d._id === id);
+        if (existing) {
+          const loadedItems = existing.items?.length > 0 ? [...existing.items] : [BLANK_ITEM()];
+          const last = loadedItems[loadedItems.length - 1];
+          if (last && (last.name || last.productId || Number(last.amount) > 0)) {
+            loadedItems.push(BLANK_ITEM());
+          }
+          setDoc({
+            ...existing,
+            items: loadedItems
+          });
+        }
+      } else {
+        const nextInvoiceNo = getNextDocumentNumber('Purchase Invoice', docs);
+
+        // Check if prefilled from conversion
+        const convertedRaw = sessionStorage.getItem('prefill_converted_document');
+        if (convertedRaw) {
+          try {
+            const draft = JSON.parse(convertedRaw);
+            sessionStorage.removeItem('prefill_converted_document');
+            if (draft.docType === 'Purchase Invoice') {
+              const draftItems = draft.items?.length > 0 ? [...draft.items, BLANK_ITEM()] : [BLANK_ITEM()];
+              setDoc(prev => ({
+                ...prev,
+                ...draft,
+                items: draftItems,
+                invoiceDetail: {
+                  ...prev.invoiceDetail,
+                  ...draft.invoiceDetail,
+                  invoiceNo: draft.invoiceDetail?.invoiceNo || nextInvoiceNo
+                }
+              }));
+              return;
+            }
+          } catch(e) {}
+        }
+
+        // Standard new auto-filled sequential number
+        setDoc(prev => ({
+          ...prev,
+          invoiceDetail: {
+            ...prev.invoiceDetail,
+            invoiceNo: nextInvoiceNo
+          }
+        }));
+      }
     } catch (err) {
       console.error('Failed to load master data:', err);
     }
-  }, [user?.id]);
+  }, [user?.id, id]);
 
   useEffect(() => {
     const init = async () => {
@@ -226,22 +285,19 @@ const PurchaseInvoice = () => {
 
   // ── Item change ──
   const handleItemChange = (idx, field, value) => {
+    if (field === 'productId') {
+      const p = products.find(x => x.id === value || x._dbId === value || x._id === value);
+      if (p) {
+        // Increment quantity if already added, populate row, and auto-add blank row at bottom
+        const updatedItems = handleProductRowSelection(doc.items, p, idx, BLANK_ITEM);
+        setDoc(prev => ({ ...prev, items: updatedItems }));
+        return;
+      }
+    }
+
     const items = [...doc.items];
     const item = { ...items[idx] };
-
-    if (field === 'productId') {
-      const p = products.find(x => x.id === value);
-      if (p) {
-        item.productId = p.id;
-        item.name = p.name;
-        item.hsn = p.hsn || '';
-        item.unit = p.unit || 'PCS';
-        item.rate = Number(p.purchasePrice || p.sellingPrice) || 0;
-        item.taxRate = Number(p.taxRate) || 0;
-      }
-    } else {
-      item[field] = value;
-    }
+    item[field] = value;
 
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
@@ -254,6 +310,12 @@ const PurchaseInvoice = () => {
     item.taxAmount = taxable * (tax / 100);
 
     items[idx] = item;
+
+    // Auto-add blank row if this is the last row and is now filled
+    if (idx === items.length - 1 && (item.name || item.productId || Number(item.amount) > 0)) {
+      items.push(BLANK_ITEM());
+    }
+
     setDoc(prev => ({ ...prev, items }));
   };
 
@@ -295,13 +357,28 @@ const PurchaseInvoice = () => {
   const handleSave = async (print = false) => {
     if (!user?.id) return;
     if (!doc.invoiceDetail.invoiceNo) { alert('Please enter Purchase Invoice No.'); return; }
-    if (doc.items.length === 0) { alert('Please add at least one item.'); return; }
+
+    const invoiceNumber = `PUR-${doc.invoiceDetail.invoiceNo}`;
+
+    // REQUIREMENT 1: Prevent duplicate invoice number reuse
+    const allDocs = await getItems('documents', user.id);
+    if (isDocumentNumberTaken('Purchase Invoice', doc.invoiceDetail.invoiceNo, id, allDocs)) {
+      alert(`Invoice number #${doc.invoiceDetail.invoiceNo} (or ${invoiceNumber}) is already in use. Please enter a unique number.`);
+      return;
+    }
+
+    // REQUIREMENT 8: Filter out empty rows so blank rows are NOT saved or printed
+    const validItems = filterValidItems(doc.items);
+    if (validItems.length === 0) {
+      alert('Please add at least one item to the invoice.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const invoiceNumber = `PUR-${doc.invoiceDetail.invoiceNo}`;
       const finalDoc = {
         ...doc,
+        items: validItems,
         invoiceNumber,
         date: doc.invoiceDetail.date,
         total: doc.grandTotal,
@@ -309,12 +386,15 @@ const PurchaseInvoice = () => {
         status: 'Outstanding',
       };
 
+      let savedRecord = null;
       if (id) {
-        // Editing existing — just update the document, no duplicate ledger entry
+        // Editing existing — update document
         await updateItem('documents', id, finalDoc, user.id);
+        savedRecord = { ...finalDoc, id };
       } else {
         // New invoice — save document then auto-post to ledger
-        await addItem('documents', finalDoc, user.id);
+        const added = await addItem('documents', finalDoc, user.id);
+        savedRecord = added || { ...finalDoc, id: Date.now().toString() };
 
         // Auto-post: You owe vendor → Credit (Cr)
         if (doc.vendorId && doc.grandTotal > 0) {
@@ -331,7 +411,13 @@ const PurchaseInvoice = () => {
         }
       }
 
-      navigate('/documents');
+      // REQUIREMENT 7: Save & Print working
+      if (print) {
+        setSavedDoc(savedRecord);
+        setShowPrintModal(true);
+      } else {
+        navigate('/documents');
+      }
     } catch (err) {
       console.error('Save failed:', err);
       alert('Failed to save Purchase Invoice.');
@@ -1251,6 +1337,16 @@ const PurchaseInvoice = () => {
           }
         }}
       />
+
+      {showPrintModal && (
+        <PrintViewModal
+          doc={savedDoc}
+          onClose={() => {
+            setShowPrintModal(false);
+            navigate('/documents');
+          }}
+        />
+      )}
     </div>
   );
 };

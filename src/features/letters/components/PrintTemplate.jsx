@@ -301,6 +301,123 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
     );
   }
 
+  // ── Letter / Official Business Document Template ──
+  if (rawDoc.docType === 'Letter' || rawDoc.docType === 'Document' || rawType === 'Letter' || rawType === 'Document') {
+    const l = rawDoc;
+    const rawDate = l.date || l.createdAt?.split('T')[0] || '';
+    const dateParts = rawDate.split('-');
+    const dateFormatted = dateParts.length === 3 && dateParts[0].length === 4
+      ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`
+      : (rawDate || new Date().toLocaleDateString('en-GB'));
+    const letterNo = l.invoiceNumber || l.letterNo || 'LTR-1';
+    const recipient = l.customerName || l.recipient || l.customerInfo?.ms || '';
+    const showLetterhead = l.includeLetterhead !== false && l.letterheadTheme !== 'stationery';
+    const accentColor = l.accentColor || '#2563eb';
+    const letterheadTheme = l.letterheadTheme || 'executive';
+    const topMargin = l.letterheadTheme === 'stationery' && l.topMargin ? `${l.topMargin}mm` : '0';
+
+    return (
+      <div className="print-container pt-letter-print single-page" style={{ boxSizing: 'border-box', width: '100%', maxWidth: '210mm', padding: '16mm 18mm', color: '#0f172a', fontSize: '13px', lineHeight: '1.7', height: 'auto', minHeight: '290mm', position: 'relative', paddingTop: topMargin !== '0' ? topMargin : '16mm' }}>
+        {/* Security Watermark */}
+        {l.watermarkEnabled && l.watermarkText && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
+            <span style={{ transform: 'rotate(-45deg)', fontSize: '5rem', fontWeight: 900, letterSpacing: '0.25em', color: '#000000', textTransform: 'uppercase', opacity: l.watermarkOpacity || 0.08 }}>
+              {l.watermarkText}
+            </span>
+          </div>
+        )}
+
+        <div className="pt-letter-sheet" style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', zIndex: 2 }}>
+          {showLetterhead && (
+            <div className="pt-letter-head" style={{ 
+              borderBottom: letterheadTheme === 'classic' ? '3px double #0f172a' : `3px solid ${accentColor}`,
+              borderLeft: letterheadTheme === 'minimal' ? `4px solid ${accentColor}` : undefined,
+              paddingLeft: letterheadTheme === 'minimal' ? '12px' : undefined,
+              textAlign: letterheadTheme === 'classic' ? 'center' : 'left',
+              paddingBottom: '12px', 
+              marginBottom: '18px' 
+            }}>
+              <div style={{ display: 'flex', justifyContent: letterheadTheme === 'classic' ? 'center' : 'space-between', alignItems: 'center', flexDirection: letterheadTheme === 'classic' ? 'column' : 'row', gap: '8px' }}>
+                <div>
+                  <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: '0 0 4px 0', fontFamily: letterheadTheme === 'classic' ? 'Merriweather, serif' : 'inherit' }}>
+                    {company?.name || 'Company Name'}
+                  </h1>
+                  <p style={{ fontSize: '12px', color: '#475569', margin: '2px 0' }}>{company?.address}</p>
+                  <p style={{ fontSize: '11px', color: '#475569', margin: '2px 0' }}>
+                    {company?.phone && `Phone: ${company.phone} `}
+                    {company?.email && `| Email: ${company.email} `}
+                    {company?.website && `| Web: ${company.website}`}
+                  </p>
+                  {(company?.gstin || company?.pan) && (
+                    <p style={{ fontSize: '11px', color: '#334155', margin: '3px 0 0', display: 'flex', gap: '15px', justifyContent: letterheadTheme === 'classic' ? 'center' : 'flex-start' }}>
+                      {company?.gstin && <span><strong>GSTIN:</strong> {company.gstin}</span>}
+                      {company?.pan && <span><strong>PAN:</strong> {company.pan}</span>}
+                    </p>
+                  )}
+                </div>
+                {company?.logo && (
+                  <img src={company.logo} alt="Logo" style={{ maxHeight: '60px', maxWidth: '140px', objectFit: 'contain' }} />
+                )}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#475569', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px dashed #cbd5e1' }}>
+            <div><strong>Ref No:</strong> {letterNo}</div>
+            <div><strong>Date:</strong> {dateFormatted}</div>
+          </div>
+
+          {recipient && (
+            <div style={{ marginBottom: '16px', fontSize: '13px', lineHeight: '1.5' }}>
+              <p style={{ margin: 0, color: '#64748b' }}>To,</p>
+              <p style={{ margin: '2px 0 0', fontWeight: 'bold', fontSize: '14px', color: '#0f172a' }}>{recipient}</p>
+              {l.customerInfo?.address && <p style={{ margin: '2px 0 0', color: '#334155' }}>{l.customerInfo.address}</p>}
+              {l.customerInfo?.phoneNo && <p style={{ margin: '2px 0 0', color: '#334155' }}>Phone: {l.customerInfo.phoneNo}</p>}
+            </div>
+          )}
+
+          {l.subject && (
+            <div style={{ margin: '14px 0', fontSize: '13px', fontWeight: 'bold', borderBottom: `1px solid ${accentColor}`, paddingBottom: '4px', color: '#0f172a' }}>
+              SUBJECT: {l.subject.toUpperCase()}
+            </div>
+          )}
+
+          <div className="pt-letter-body tiptap-preview" style={{ flex: 1, fontSize: '13px', lineHeight: '1.8' }} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+
+          {/* Signoff & Seal */}
+          <div style={{ marginTop: '36px', display: 'flex', justifyContent: 'flex-end', pageBreakInside: 'avoid' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              {l.includeSeal && (
+                <div style={{ width: '85px', height: '85px', border: '3px double #dc2626', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#dc2626', padding: '4px', userSelect: 'none', transform: 'rotate(-8deg)', background: 'rgba(254, 242, 242, 0.4)' }}>
+                  <span style={{ fontSize: '6.5px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    {(company?.name || 'OFFICIAL SEAL').slice(0, 20)}
+                  </span>
+                  <div style={{ fontSize: '8.5px', fontWeight: 900, letterSpacing: '0.1em', borderTop: '1px solid #dc2626', borderBottom: '1px solid #dc2626', padding: '1px 0', margin: '2px 0', width: '80%' }}>
+                    VERIFIED
+                  </div>
+                  <span style={{ fontSize: '6px', fontWeight: 600 }}>
+                    {dateFormatted}
+                  </span>
+                </div>
+              )}
+
+              <div style={{ minWidth: '210px', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '13px' }}>Yours faithfully,</p>
+                <p style={{ margin: '4px 0 0', fontWeight: 'bold', fontSize: '14px' }}>For {company?.name || 'Company'}</p>
+                {(l.signature || company?.signature) && (
+                  <img src={l.signature || company?.signature} alt="Signature" style={{ maxHeight: '48px', display: 'block', margin: '8px auto' }} />
+                )}
+                <div style={{ borderTop: '1px solid #475569', margin: '14px auto 4px', width: '160px' }}></div>
+                <p style={{ margin: 0, fontWeight: 'bold', fontSize: '12px' }}>{l.signatoryName || 'Authorized Signatory'}</p>
+                {l.signatoryDesignation && <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>{l.signatoryDesignation}</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Payment Receipt (Inward) Voucher Template ──
   if (rawDoc.docType === 'Payment In' || rawType === 'Payment In') {
     const p = rawDoc;
@@ -464,36 +581,80 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
   }
 
   // ── Data Normalization for different doc types ──
-  const isQuotation = rawDoc.docType === 'Quotation' || rawType === 'Quotation';
-  const isProforma = rawDoc.docType === 'Proforma Invoice' || rawType === 'Proforma Invoice';
-  const isJobWork = rawDoc.docType === 'Job Work' || rawType === 'Job Work';
-  const hasCustomerInfo = !!rawDoc.customerInfo;
+  const docType = rawDoc.docType || rawType || 'Sale Invoice';
+  const isQuotation = docType === 'Quotation' || docType === 'Offer';
+  const isProforma = docType === 'Proforma Invoice';
+  const isJobWork = docType === 'Job Work';
+  const isPurchase = docType === 'Purchase Invoice' || docType === 'Purchase Order' || docType === 'Debit Note';
+  const isChallan = docType === 'Delivery Challan';
+  const isSaleOrder = docType === 'Sale Order';
+  const isCreditNote = docType === 'Credit Note';
+  const isDebitNote = docType === 'Debit Note';
+
+  const partyName = rawDoc.customerInfo?.ms || rawDoc.customerName || rawDoc.vendorInfo?.ms || rawDoc.vendorName || rawDoc.name || '-';
+  const partyAddress = rawDoc.customerInfo?.address || rawDoc.customerAddress || rawDoc.vendorInfo?.address || rawDoc.vendorAddress || '-';
+  const partyPhone = rawDoc.customerInfo?.phoneNo || rawDoc.customerPhone || rawDoc.vendorInfo?.phoneNo || rawDoc.vendorPhone || '-';
+  const partyGstin = rawDoc.customerInfo?.gstinPan || rawDoc.customerGstin || rawDoc.vendorInfo?.gstinPan || rawDoc.vendorGstin || '-';
+  const partyPan = rawDoc.customerInfo?.pan || rawDoc.customerPan || rawDoc.vendorInfo?.pan || rawDoc.vendorPan || '-';
+  const partyPlaceOfSupply = rawDoc.customerInfo?.placeOfSupply || rawDoc.placeOfSupply || rawDoc.vendorInfo?.placeOfSupply || 'Madhya Pradesh';
+
+  let resolvedInvoiceNumber = rawDoc.invoiceNumber;
+  if (!resolvedInvoiceNumber || resolvedInvoiceNumber === '-') {
+    if (isQuotation && rawDoc.offerDetail?.offerNo) {
+      resolvedInvoiceNumber = `${rawDoc.docNumberPrefix || 'QTN/'}${rawDoc.offerDetail.offerNo}${rawDoc.docNumberPostfix || '/25-26'}`;
+    } else if (isProforma && (rawDoc.proDetail?.proNo || rawDoc.piDetail?.piNo)) {
+      resolvedInvoiceNumber = `${rawDoc.docPrefix || 'PI/'}${rawDoc.proDetail?.proNo || rawDoc.piDetail?.piNo}${rawDoc.docPostfix || '/25-26'}`;
+    } else if (isChallan && rawDoc.dcDetail?.challanNo) {
+      resolvedInvoiceNumber = `${rawDoc.docPrefix || 'DC/'}${rawDoc.dcDetail.challanNo}${rawDoc.docPostfix || '/25-26'}`;
+    } else if (isSaleOrder && rawDoc.soDetail?.soNo) {
+      resolvedInvoiceNumber = `${rawDoc.docPrefix || 'SO/'}${rawDoc.soDetail.soNo}${rawDoc.docPostfix || '/25-26'}`;
+    } else if (isCreditNote && rawDoc.cnDetail?.cnNo) {
+      resolvedInvoiceNumber = `CN-${rawDoc.cnDetail.cnNo}`;
+    } else if (isDebitNote && rawDoc.dnDetail?.dnNo) {
+      resolvedInvoiceNumber = `DN-${rawDoc.dnDetail.dnNo}`;
+    } else if (isJobWork && rawDoc.jwDetail?.jobWorkNo) {
+      resolvedInvoiceNumber = `${rawDoc.docPrefix || 'JW-'}${rawDoc.jwDetail.jobWorkNo}`;
+    } else if (rawDoc.invoiceDetail?.invoiceNo) {
+      const pfx = docType === 'Purchase Order' ? 'PO-' : docType === 'Purchase Invoice' ? 'PUR-' : 'SINV-';
+      resolvedInvoiceNumber = `${pfx}${rawDoc.invoiceDetail.invoiceNo}`;
+    } else {
+      resolvedInvoiceNumber = '-';
+    }
+  }
+
+  const resolvedDate = isQuotation ? (rawDoc.offerDetail?.date || rawDoc.date)
+    : isProforma ? (rawDoc.proDetail?.date || rawDoc.piDetail?.date || rawDoc.date)
+      : isJobWork ? (rawDoc.jwDetail?.date || rawDoc.date)
+        : isChallan ? (rawDoc.dcDetail?.date || rawDoc.date)
+          : isSaleOrder ? (rawDoc.soDetail?.date || rawDoc.date)
+            : (rawDoc.invoiceDetail?.date || rawDoc.date || '-');
 
   // Standardize the document structure for the template
   const doc = {
     ...rawDoc,
-    customerName: hasCustomerInfo ? rawDoc.customerInfo?.ms : (rawDoc.customerName || rawDoc.vendorInfo?.ms || '-'),
-    customerAddress: hasCustomerInfo ? rawDoc.customerInfo?.address : (rawDoc.customerAddress || rawDoc.vendorInfo?.address || '-'),
-    customerPhone: hasCustomerInfo ? rawDoc.customerInfo?.phoneNo : (rawDoc.customerPhone || rawDoc.vendorInfo?.phoneNo || '-'),
-    customerGstin: hasCustomerInfo ? rawDoc.customerInfo?.gstinPan : (rawDoc.customerGstin || rawDoc.vendorInfo?.gstinPan || '-'),
-    placeOfSupply: hasCustomerInfo ? rawDoc.customerInfo?.placeOfSupply : (rawDoc.placeOfSupply || rawDoc.vendorInfo?.placeOfSupply || '-'),
-    invoiceNumber: isQuotation ? `${rawDoc.docNumberPrefix}${rawDoc.offerDetail?.offerNo}${rawDoc.docNumberPostfix}`
-      : isProforma ? `${rawDoc.docPrefix || ''}${rawDoc.piDetail?.piNo || ''}${rawDoc.docPostfix || ''}`
-        : isJobWork ? `${rawDoc.docPrefix || ''}${rawDoc.jwDetail?.jobWorkNo || ''}${rawDoc.docPostfix || ''}`
-          : (rawDoc.invoiceNumber || '-'),
-    date: isQuotation ? rawDoc.offerDetail?.date
-      : isProforma ? rawDoc.piDetail?.date
-        : isJobWork ? rawDoc.jwDetail?.date
-          : (rawDoc.date || '-'),
+    customerName: partyName,
+    customerAddress: partyAddress,
+    customerPhone: partyPhone,
+    customerGstin: partyGstin,
+    customerPan: partyPan,
+    placeOfSupply: partyPlaceOfSupply,
+    invoiceNumber: resolvedInvoiceNumber,
+    date: resolvedDate,
   };
 
   // Determine Tax Columns (CGST/SGST vs IGST)
-  // Logic: In India, if Supplier State == Customer Place of Supply State -> CGST + SGST
-  // Otherwise -> IGST
   const isIntraState = (company?.state || 'Madhya Pradesh').toLowerCase() === (doc.placeOfSupply || '').split(' (')[0].toLowerCase();
 
+  // Filter out empty rows so that blank items (added in editing table) are NOT VISIBLE in print
+  const validRawItems = (doc.items || []).filter(item => {
+    if (!item) return false;
+    return Boolean(item.name && item.name.trim()) || Boolean(item.productId) || (Number(item.rate) > 0 || Number(item.amount) > 0);
+  });
+
+  const rawItemsToRender = validRawItems.length > 0 ? validRawItems : (doc.items?.length > 0 ? [doc.items[0]] : []);
+
   // Ensure items have calculated tax values
-  const items = (doc.items || []).map((item, index) => {
+  const items = rawItemsToRender.map((item, index) => {
     const quantity = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
     const taxableValue = Number(item.amount) || (rate * quantity);
@@ -539,14 +700,12 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
   }), { qty: 0, taxable: 0, cgst: 0, sgst: 0, igst: 0, total: 0 });
 
   // ── Pagination Logic ──
-  // Based on reference image: Header + Footer repeat on every page.
-  // Capacity set to 15 items per page.
-  const PAGE_CAPACITY = 15;
+  // 10 items comfortably fit on a single A4 page with full header & footer
+  const PAGE_CAPACITY = 10;
 
   const pages = [];
   let remainingItems = [...items];
 
-  // Chunking into equal sized pages
   let pageIdx = 0;
   while (remainingItems.length > 0 || pageIdx === 0) {
     const chunk = remainingItems.splice(0, PAGE_CAPACITY);
@@ -555,7 +714,44 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
     if (remainingItems.length === 0) break;
   }
 
-  const displayType = isQuotation ? 'OFFER' : isJobWork ? 'JOB WORK ORDER' : (rawType || 'TAX INVOICE');
+  const getDisplayType = (t) => {
+    switch (t) {
+      case 'Quotation':
+      case 'Offer': return 'QUOTATION / OFFER';
+      case 'Proforma Invoice': return 'PROFORMA INVOICE';
+      case 'Delivery Challan': return 'DELIVERY CHALLAN';
+      case 'Sale Order': return 'SALES ORDER';
+      case 'Purchase Order': return 'PURCHASE ORDER';
+      case 'Purchase Invoice': return 'PURCHASE INVOICE';
+      case 'Credit Note': return 'CREDIT NOTE';
+      case 'Debit Note': return 'DEBIT NOTE';
+      case 'Job Work': return 'JOB WORK ORDER';
+      case 'Letter': return 'OFFICIAL LETTER';
+      case 'Sale Invoice':
+      case 'Invoice':
+      default: return 'TAX INVOICE';
+    }
+  };
+
+  const getDocNumberLabel = (t) => {
+    switch (t) {
+      case 'Quotation':
+      case 'Offer': return 'OFFER No.';
+      case 'Proforma Invoice': return 'P.I. No.';
+      case 'Delivery Challan': return 'Challan No.';
+      case 'Sale Order': return 'Order No.';
+      case 'Purchase Order': return 'P.O. No.';
+      case 'Purchase Invoice': return 'Bill No.';
+      case 'Credit Note': return 'Credit Note No.';
+      case 'Debit Note': return 'Debit Note No.';
+      case 'Job Work': return 'Job Work No.';
+      default: return 'Invoice No.';
+    }
+  };
+
+  const displayType = getDisplayType(docType);
+  const numberLabel = getDocNumberLabel(docType);
+  const partyHeaderLabel = isPurchase ? 'Vendor Detail' : 'Customer Detail';
 
   return (
     <div className="pt-multi-page-container">
@@ -564,7 +760,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
         const isLastPage = pIdx === pages.length - 1;
 
         return (
-          <div className="print-container" key={pIdx}>
+          <div className={`print-container ${pages.length === 1 ? 'single-page' : ''}`} key={pIdx}>
             <div className="print-page-border">
               {/* Header Block - Repeats on Every Page */}
               <div className="pt-header">
@@ -596,7 +792,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
 
               <div className="pt-details-container">
                 <div className="pt-customer-details">
-                  <div className="pt-section-title">Customer Detail</div>
+                  <div className="pt-section-title">{partyHeaderLabel}</div>
                   <table className="pt-details-table">
                     <tbody>
                       <tr><th>M/S</th><td>: {doc.customerName || '-'}</td></tr>
@@ -612,15 +808,28 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                   <table className="pt-details-table" style={{ marginTop: '10px' }}>
                     <tbody>
                       <tr>
-                        <th style={{ width: '100px' }}>{isQuotation ? 'OFFER No.' : isJobWork ? 'Order No.' : 'Invoice No.'}</th>
+                        <th style={{ width: '110px' }}>{numberLabel}</th>
                         <td style={{ fontSize: '13px' }}>: <strong>{doc.invoiceNumber || '-'}</strong></td>
                       </tr>
                       <tr>
-                        <th>{isQuotation ? 'OFFER Date' : isJobWork ? 'Order Date' : 'Invoice Date'}</th>
+                        <th>Date</th>
                         <td>: {doc.date || '-'}</td>
                       </tr>
-                      {doc.challanNo && <tr><th>Challan No.</th><td>: {doc.challanNo}</td></tr>}
-                      {doc.offerDetail?.lrNo && <tr><th>L.R. No.</th><td>: {doc.offerDetail.lrNo}</td></tr>}
+                      {(doc.challanNo || doc.invoiceDetail?.challanNo || doc.dcDetail?.challanNo) && (
+                        <tr><th>Challan No.</th><td>: {doc.challanNo || doc.invoiceDetail?.challanNo || doc.dcDetail?.challanNo}</td></tr>
+                      )}
+                      {(doc.poNo || doc.invoiceDetail?.poNo) && (
+                        <tr><th>P.O. No.</th><td>: {doc.poNo || doc.invoiceDetail?.poNo}</td></tr>
+                      )}
+                      {(doc.cnDetail?.invoiceNo || doc.dnDetail?.invoiceNo) && (
+                        <tr><th>Orig. Inv No.</th><td>: {doc.cnDetail?.invoiceNo || doc.dnDetail?.invoiceNo}</td></tr>
+                      )}
+                      {(doc.offerDetail?.lrNo || doc.invoiceDetail?.lrNo || doc.dcDetail?.lrNo) && (
+                        <tr><th>L.R. No.</th><td>: {doc.offerDetail?.lrNo || doc.invoiceDetail?.lrNo || doc.dcDetail?.lrNo}</td></tr>
+                      )}
+                      {(doc.ewayNo || doc.invoiceDetail?.ewayNo || doc.dcDetail?.ewayNo) && (
+                        <tr><th>E-Way Bill:</th><td>: {doc.ewayNo || doc.invoiceDetail?.ewayNo || doc.dcDetail?.ewayNo}</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

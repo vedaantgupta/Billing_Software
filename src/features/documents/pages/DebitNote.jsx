@@ -6,6 +6,12 @@ import PrintViewModal from '@/components/ui/PrintViewModal';
 import ProductModal from '@/features/products/components/ProductModal';
 import ContactModal from '@/features/contacts/components/ContactModal';
 import {
+  getNextDocumentNumber,
+  isDocumentNumberTaken,
+  handleProductRowSelection,
+  filterValidItems
+} from '@/utils/documentUtils';
+import {
   Printer, Save, MoreVertical, RotateCcw, Mail, X
 } from 'lucide-react';
 import '@/features/documents/styles/PurchaseInvoice.css';
@@ -125,7 +131,8 @@ const DebitNote = () => {
         getItems('contacts', user.id),
         getItems('products', user.id),
       ]);
-      setCustomers(contactList.filter(c => c.type === 'customer' || !c.type));
+      // Debit Note can be issued to vendors or customers
+      setCustomers(contactList.filter(c => (c.name && c.name.trim()) || (c.companyName && c.companyName.trim())));
       setProducts(productList);
     } catch (err) { console.error('Failed to load master data:', err); }
   }, [user?.id]);
@@ -134,12 +141,57 @@ const DebitNote = () => {
     const init = async () => {
       setLoading(true);
       await loadMasterData();
-      if (id) {
+      if (user?.id) {
         try {
           const allDocs = await getItems('documents', user.id);
-          const existing = allDocs.find(d => d._dbId === id || d.id === id);
-          if (existing) setDoc(prev => ({ ...prev, ...existing }));
-        } catch (err) { console.error('Error loading document:', err); }
+          if (id) {
+            const existing = allDocs.find(d => d._dbId === id || d.id === id || d._id === id);
+            if (existing) {
+              const loadedItems = existing.items?.length > 0 ? [...existing.items] : [BLANK_ITEM()];
+              const last = loadedItems[loadedItems.length - 1];
+              if (last && (last.name || last.productId || Number(last.amount) > 0)) {
+                loadedItems.push(BLANK_ITEM());
+              }
+              setDoc({ ...existing, items: loadedItems });
+            }
+          } else {
+            const nextDnNo = getNextDocumentNumber('Debit Note', allDocs);
+            const convertedRaw = sessionStorage.getItem('prefill_converted_document');
+            if (convertedRaw) {
+              try {
+                const draft = JSON.parse(convertedRaw);
+                sessionStorage.removeItem('prefill_converted_document');
+                if (draft.docType === 'Debit Note') {
+                  const draftItems = draft.items?.length > 0 ? [...draft.items, BLANK_ITEM()] : [BLANK_ITEM()];
+                  setDoc(prev => ({
+                    ...prev,
+                    ...draft,
+                    items: draftItems,
+                    dnDetail: {
+                      ...prev.dnDetail,
+                      ...draft.dnDetail,
+                      dnNo: draft.dnDetail?.dnNo || nextDnNo
+                    }
+                  }));
+                  setLoading(false);
+                  return;
+                }
+              } catch (e) {
+                console.error('Error parsing prefilled conversion draft:', e);
+              }
+            }
+
+            setDoc(prev => ({
+              ...prev,
+              dnDetail: {
+                ...prev.dnDetail,
+                dnNo: nextDnNo
+              }
+            }));
+          }
+        } catch (err) {
+          console.error('Error initializing Debit Note:', err);
+        }
       }
       setLoading(false);
     };
@@ -209,21 +261,24 @@ const DebitNote = () => {
     setDoc(prev => ({ ...prev, [cat]: { ...prev[cat], [field]: value } }));
 
   const handleItemChange = (idx, field, value) => {
+    if (field === 'productId') {
+      const selectedProduct = products.find(x => x.id === value);
+      if (selectedProduct) {
+        const updated = handleProductRowSelection({
+          currentItems: doc.items,
+          index: idx,
+          product: selectedProduct,
+          createBlankRow: BLANK_ITEM
+        });
+        setDoc(prev => ({ ...prev, items: updated }));
+        return;
+      }
+    }
+
     const items = [...doc.items];
     const item = { ...items[idx] };
-    if (field === 'productId') {
-      const p = products.find(x => x.id === value);
-      if (p) {
-        item.productId = p.id;
-        item.name = p.name;
-        item.hsn = p.hsn || '';
-        item.unit = p.unit || 'PCS';
-        item.rate = Number(p.sellingPrice) || 0;
-        item.taxRate = Number(p.taxRate) || 0;
-      }
-    } else {
-      item[field] = value;
-    }
+    item[field] = value;
+
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
     const tax = Number(item.taxRate) || 0;
@@ -246,15 +301,30 @@ const DebitNote = () => {
     if (!doc.dnDetail.dnNo) { alert('Please enter Debit Note No.'); return; }
     setIsSubmitting(true);
     try {
+      const allDocs = await getItems('documents', user.id);
+      if (isDocumentNumberTaken('Debit Note', doc.dnDetail.dnNo, allDocs, id)) {
+        alert(`Debit Note No. "${doc.dnDetail.dnNo}" is already in use. Please use a unique number.`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const cleanItems = filterValidItems(doc.items);
+      if (cleanItems.length === 0) {
+        alert('Please add at least one product with name or quantity.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const fullNo = `${doc.docPrefix}${doc.dnDetail.dnNo}${doc.docPostfix}`;
       const finalDoc = {
         ...doc,
+        items: cleanItems,
         invoiceNumber: fullNo,
         date: doc.dnDetail.date,
         total: doc.grandTotal,
         customerName: doc.customerInfo.ms,
         status: 'Outstanding',
-        docType: 'Debit Note',
+        docType: doc.docType || 'Debit Note',
       };
       let result;
       if (id) {

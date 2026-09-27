@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getItems, addItem, logActivity } from '@/utils/db';
 import { postToLedger, getContactBalance } from '@/utils/ledger';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +8,7 @@ import '@/features/documents/styles/CreateOutwardPayment.css';
 
 const CreateOutwardPayment = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +16,7 @@ const CreateOutwardPayment = () => {
 
   const [formData, setFormData] = useState({
     paymentPrefix: 'PO-',
-    paymentNumber: Date.now().toString().slice(-6),
+    paymentNumber: '1',
     paymentPostfix: '',
     date: new Date().toISOString().split('T')[0],
     companyName: '',
@@ -34,13 +35,70 @@ const CreateOutwardPayment = () => {
   });
 
   useEffect(() => {
-    const loadContacts = async () => {
+    const loadInitial = async () => {
       if (!user?.id) return;
-      const data = await getItems('contacts', user.id);
-      setContacts(data.filter(c => (c.name && c.name.trim()) || (c.companyName && c.companyName.trim())));
+      const [contactList, existingPayments] = await Promise.all([
+        getItems('contacts', user.id),
+        getItems('outwardPayments', user.id).catch(() => [])
+      ]);
+      const validContacts = contactList.filter(c => (c.name && c.name.trim()) || (c.companyName && c.companyName.trim()));
+      setContacts(validContacts);
+
+      // Auto sequential numbering (1, 2, 3...)
+      let maxNum = 0;
+      (existingPayments || []).forEach(p => {
+        const raw = p.paymentNumber || String(p.fullPaymentNo || '').replace(/\D+/g, '');
+        const n = parseInt(raw, 10);
+        if (!isNaN(n) && n > maxNum && n < 1000000) maxNum = n;
+      });
+      const nextPaymentNo = String(maxNum + 1);
+
+      // Check conversion prefill
+      const incoming = location.state || {};
+      let prefilledName = incoming.companyName || incoming.customerName || '';
+      let prefilledId = incoming.contactId || incoming.customerId || '';
+      let prefilledAmount = incoming.amount || '';
+      let prefilledRemarks = incoming.remarks || '';
+      let prefilledAddress = '';
+      let prefilledGstin = '';
+      let asCustomer = 0;
+      let asVendor = 0;
+      let totalOut = 0;
+
+      if (prefilledName || prefilledId) {
+        const matched = validContacts.find(c => c.id === prefilledId || c.name === prefilledName || c.companyName === prefilledName);
+        if (matched) {
+          prefilledId = matched.id;
+          prefilledName = matched.companyName || matched.name;
+          prefilledAddress = matched.address || '';
+          prefilledGstin = matched.gstin || matched.panno || '';
+          try {
+            const bal = await getContactBalance(matched.id, user.id);
+            const drBal = bal.debit;
+            const crBal = bal.credit;
+            asCustomer = drBal > crBal ? +(drBal - crBal).toFixed(2) : 0;
+            asVendor   = crBal > drBal ? +(crBal - drBal).toFixed(2) : 0;
+            totalOut   = +(asCustomer + asVendor).toFixed(2);
+          } catch(e) {}
+        }
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        paymentNumber: nextPaymentNo,
+        companyName: prefilledName || prev.companyName,
+        contactId: prefilledId || prev.contactId,
+        address: prefilledAddress || prev.address,
+        gstinPan: prefilledGstin || prev.gstinPan,
+        asCustomer,
+        asVendor,
+        totalOutstanding: totalOut,
+        amount: prefilledAmount || prev.amount,
+        remarks: prefilledRemarks || prev.remarks
+      }));
     };
-    loadContacts();
-  }, [user?.id]);
+    loadInitial();
+  }, [user?.id, location.state]);
 
   const handleContactChange = async (e) => {
     const name = e.target.value;
@@ -84,6 +142,13 @@ const CreateOutwardPayment = () => {
     }
 
     const fullPaymentNo = `${formData.paymentPrefix}${formData.paymentNumber}${formData.paymentPostfix}`;
+    const existingPayments = await getItems('outwardPayments', user.id).catch(() => []);
+    const duplicate = (existingPayments || []).some(p => p.fullPaymentNo === fullPaymentNo || String(p.paymentNumber) === String(formData.paymentNumber));
+    if (duplicate) {
+      alert(`Payment Voucher No. "${fullPaymentNo}" is already in use! Please choose a unique number.`);
+      return;
+    }
+
     const paymentToSave = { ...formData, fullPaymentNo, timestamp: new Date().toISOString() };
 
     const result = await addItem('outwardPayments', paymentToSave, user.id, user.username);

@@ -4,6 +4,13 @@ import { getItems, addItem, updateItem } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
 import ProductModal from '@/features/products/components/ProductModal';
 import ContactModal from '@/features/contacts/components/ContactModal';
+import PrintViewModal from '@/components/ui/PrintViewModal';
+import { 
+  getNextDocumentNumber, 
+  isDocumentNumberTaken, 
+  handleProductRowSelection, 
+  filterValidItems 
+} from '@/utils/documentUtils';
 import '@/features/documents/styles/PurchaseOrder.css';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -105,6 +112,8 @@ const PurchaseOrder = () => {
   const [additionalChargeModal, setAdditionalChargeModal] = useState(false);
   const [additionalChargeName, setAdditionalChargeName] = useState('Freight');
   const [additionalChargeValue, setAdditionalChargeValue] = useState('');
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [savedDoc, setSavedDoc] = useState(null);
 
   // ── document state ──
   const [doc, setDoc] = useState({
@@ -157,10 +166,56 @@ const PurchaseOrder = () => {
       ]);
       setVendors(vendorList.filter(c => c.type === 'vendor' || !c.type));
       setProducts(productList);
+
+      const docs = await getItems('documents', user.id);
+      if (id) {
+        const existing = docs.find(d => d._dbId === id || d.id === id || d._id === id);
+        if (existing) {
+          const loadedItems = existing.items?.length > 0 ? [...existing.items] : [BLANK_ITEM()];
+          const last = loadedItems[loadedItems.length - 1];
+          if (last && (last.name || last.productId || Number(last.amount) > 0)) {
+            loadedItems.push(BLANK_ITEM());
+          }
+          setDoc({ ...existing, items: loadedItems });
+        }
+      } else {
+        const nextNo = getNextDocumentNumber('Purchase Order', docs);
+
+        // Check for conversion draft
+        const convertedRaw = sessionStorage.getItem('prefill_converted_document');
+        if (convertedRaw) {
+          try {
+            const draft = JSON.parse(convertedRaw);
+            sessionStorage.removeItem('prefill_converted_document');
+            if (draft.docType === 'Purchase Order') {
+              const draftItems = draft.items?.length > 0 ? [...draft.items, BLANK_ITEM()] : [BLANK_ITEM()];
+              setDoc(prev => ({
+                ...prev,
+                ...draft,
+                items: draftItems,
+                invoiceDetail: {
+                  ...prev.invoiceDetail,
+                  ...draft.invoiceDetail,
+                  invoiceNo: draft.invoiceDetail?.invoiceNo || nextNo
+                }
+              }));
+              return;
+            }
+          } catch(e) {}
+        }
+
+        setDoc(prev => ({
+          ...prev,
+          invoiceDetail: {
+            ...prev.invoiceDetail,
+            invoiceNo: nextNo
+          }
+        }));
+      }
     } catch (err) {
       console.error('Failed to load master data:', err);
     }
-  }, [user?.id]);
+  }, [user?.id, id]);
 
   useEffect(() => {
     const init = async () => {
@@ -223,22 +278,19 @@ const PurchaseOrder = () => {
 
   // ── Item change ──
   const handleItemChange = (idx, field, value) => {
+    if (field === 'productId') {
+      const p = products.find(x => x.id === value || x._dbId === value || x._id === value);
+      if (p) {
+        // Increment quantity if already added, populate row, and auto-add blank row at bottom
+        const updatedItems = handleProductRowSelection(doc.items, p, idx, BLANK_ITEM);
+        setDoc(prev => ({ ...prev, items: updatedItems }));
+        return;
+      }
+    }
+
     const items = [...doc.items];
     const item = { ...items[idx] };
-
-    if (field === 'productId') {
-      const p = products.find(x => x.id === value);
-      if (p) {
-        item.productId = p.id;
-        item.name = p.name;
-        item.hsn = p.hsn || '';
-        item.unit = p.unit || 'PCS';
-        item.rate = Number(p.purchasePrice || p.sellingPrice) || 0;
-        item.taxRate = Number(p.taxRate) || 0;
-      }
-    } else {
-      item[field] = value;
-    }
+    item[field] = value;
 
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
@@ -251,6 +303,12 @@ const PurchaseOrder = () => {
     item.taxAmount = taxable * (tax / 100);
 
     items[idx] = item;
+
+    // Auto-add blank row if this is the last row and is now filled
+    if (idx === items.length - 1 && (item.name || item.productId || Number(item.amount) > 0)) {
+      items.push(BLANK_ITEM());
+    }
+
     setDoc(prev => ({ ...prev, items }));
   };
 
@@ -266,26 +324,50 @@ const PurchaseOrder = () => {
   const handleSave = async (print = false) => {
     if (!user?.id) return;
     if (!doc.invoiceDetail.invoiceNo) { alert('Please enter Purchase Order No.'); return; }
-    if (doc.items.length === 0) { alert('Please add at least one item.'); return; }
+
+    const fullNo = `PO-${doc.invoiceDetail.invoiceNo}`;
+
+    // REQUIREMENT 1: Prevent duplicate PO number reuse
+    const allDocs = await getItems('documents', user.id);
+    if (isDocumentNumberTaken('Purchase Order', doc.invoiceDetail.invoiceNo, id, allDocs)) {
+      alert(`Purchase Order number #${doc.invoiceDetail.invoiceNo} (or ${fullNo}) is already in use. Please enter a unique number.`);
+      return;
+    }
+
+    // REQUIREMENT 8: Filter out empty rows so that blank items are NOT saved or printed
+    const validItems = filterValidItems(doc.items);
+    if (validItems.length === 0) {
+      alert('Please add at least one item to the purchase order.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       const finalDoc = {
         ...doc,
-        invoiceNumber: `PO-${doc.invoiceDetail.invoiceNo}`,
+        items: validItems,
+        invoiceNumber: fullNo,
         date: doc.invoiceDetail.date,
         total: doc.grandTotal,
         vendorName: doc.vendorInfo.ms,
         status: 'Outstanding',
       };
 
+      let savedRecord = null;
       if (id) {
         await updateItem('documents', id, finalDoc, user.id);
+        savedRecord = { ...finalDoc, id };
       } else {
-        await addItem('documents', finalDoc, user.id);
+        const added = await addItem('documents', finalDoc, user.id);
+        savedRecord = added || { ...finalDoc, id: Date.now().toString() };
       }
 
-      navigate('/documents');
+      if (print) {
+        setSavedDoc(savedRecord);
+        setShowPrintModal(true);
+      } else {
+        navigate('/documents');
+      }
     } catch (err) {
       console.error('Save failed:', err);
       alert('Failed to save Purchase Order.');
@@ -1113,6 +1195,16 @@ const PurchaseOrder = () => {
           }
         }}
       />
+
+      {showPrintModal && (
+        <PrintViewModal
+          doc={savedDoc}
+          onClose={() => {
+            setShowPrintModal(false);
+            navigate('/documents');
+          }}
+        />
+      )}
     </div>
   );
 };

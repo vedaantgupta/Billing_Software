@@ -1,264 +1,1211 @@
-/* Letters.css */
-.letters-module-container {
-  display: flex;
-  height: 100vh;
-  background: #f8fafc;
-  color: #1e293b;
-  overflow: hidden;
-  font-family: 'Inter', sans-serif;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* ==========================================================================
+   Letters Studio - Hi-Tech, Full-Featured Document & Letter Creator
+   ========================================================================== */
 
-/* Sidebar Columns */
-.letters-sidebar-col {
-  width: 280px;
-  min-width: 280px;
-  background: white;
-  border-right: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  z-index: 20;
-  transition: all 0.3s ease;
-}
-
-.left-collapsed .letters-sidebar-col {
-  margin-left: -280px;
-}
-
-.letters-editor-col {
-  flex: 1;
-  min-width: 0; /* Critical for flex shrinking */
-  display: flex;
-  flex-direction: column;
+.letters-studio-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
   background: #f1f5f9;
+  color: #0f172a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   position: relative;
-  overflow: hidden;
 }
 
-.letters-right-col {
-  width: 320px;
-  min-width: 320px;
-  background: white;
-  border-left: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  z-index: 20;
-  transition: all 0.3s ease;
-}
-
-.right-collapsed .letters-right-col {
-  margin-right: -320px;
-}
-
-/* Sidebar Headers */
-.sidebar-header, .right-sidebar-header {
-  height: 64px;
-  padding: 0 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.sidebar-toggle {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 0.4rem;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.sidebar-toggle:hover {
-  background: #f1f5f9;
-  color: #4f46e5;
-}
-
-.sidebar-toggle-mini {
-  background: white;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  padding: 0.4rem;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Header Refinement */
-.letters-editor-header {
-  height: 64px;
-  background: white;
+/* ── Top Header Bar ─────────────────────────────────────────────────────── */
+.letters-studio-header {
+  height: 54px;
+  min-height: 54px;
+  flex-shrink: 0 !important;
+  background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
-  flex-shrink: 0;
-  gap: 1rem;
+  position: relative;
+  z-index: 50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  gap: 0.75rem;
 }
 
-.title-section {
+.letters-header-left {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.letter-title-input {
-  border: 1px solid transparent;
-  background: transparent;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-  padding: 0.4rem 0.5rem;
-  border-radius: 6px;
-  width: 100%;
-  min-width: 0;
-  transition: all 0.2s;
-}
-
-.letter-title-input:focus {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  outline: none;
-}
-
-.action-section {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  gap: 0.65rem;
   flex-shrink: 0;
 }
 
-.action-btn {
+.letters-back-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 36px;
-  padding: 0 0.75rem;
-  border-radius: 8px;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
   font-size: 0.8rem;
   font-weight: 600;
-  background: white;
-  border: 1px solid #e2e8f0;
   color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
-.action-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #4f46e5;
-}
-
-.action-btn.primary {
-  background: #4f46e5;
-  border-color: #4338ca;
-  color: white;
-}
-
-.ai-btn {
-  background: #f5f3ff;
-  border-color: #ddd6fe;
-  color: #7c3aed;
-}
-
-.v-divider {
-  width: 1px;
-  height: 20px;
+.letters-back-btn:hover {
   background: #e2e8f0;
-  margin: 0 0.25rem;
+  color: #0f172a;
 }
 
-/* Sidebar Navigation Tabs */
-.right-sidebar-tabs {
-  display: flex;
-  background: #f8fafc;
-  padding: 0.25rem;
-  gap: 0.15rem;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
-.right-sidebar-tabs button {
-  width: 36px;
-  height: 32px;
+.letters-title-group {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: #64748b;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
+  gap: 0.5rem;
 }
 
-.right-sidebar-tabs button:hover {
-  color: #1e293b;
-}
-
-.right-sidebar-tabs button.active {
-  background: white;
-  color: #4f46e5;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.right-sidebar-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.25rem;
-}
-
-.preview-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
+.letters-doc-badge {
   background: #e0e7ff;
-  color: #4f46e5;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+  color: #4338ca;
+  font-size: 0.72rem;
   font-weight: 700;
-  width: fit-content;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
 }
 
-.back-btn {
+.letters-title-input {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  outline: none;
+  min-width: 140px;
+  max-width: 220px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.letters-title-input:hover,
+.letters-title-input:focus {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Header Buttons Scroller Container */
+.letters-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+  padding: 2px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.letters-header-right::-webkit-scrollbar {
+  height: 4px;
+}
+
+.letters-header-right::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.letters-header-right::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 2px;
+}
+
+.letters-header-right::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.letters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.letters-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.letters-btn-secondary {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.letters-btn-secondary:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.letters-btn-template {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.letters-btn-template:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.letters-btn-design {
+  background: #faf5ff;
+  border-color: #e9d5ff;
+  color: #7e22ce;
+}
+
+.letters-btn-design:hover:not(:disabled) {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+}
+
+.letters-btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+}
+
+.letters-btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ── Streamlined Properties Strip ───────────────────────────────────────── */
+.letters-properties-strip {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.35rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  z-index: 30;
+  flex-shrink: 0 !important;
+}
+
+.letters-prop-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+  flex: 1;
+}
+
+.letters-prop-field {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  white-space: nowrap;
+}
+
+.letters-prop-field label {
+  font-size: 0.72rem;
+  font-weight: 700;
   color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.letters-input,
+.letters-select {
+  height: 30px;
+  padding: 0 0.55rem;
+  font-size: 0.82rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.letters-input:focus,
+.letters-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.letters-prop-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.25rem 0.55rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  height: 30px;
+  box-sizing: border-box;
+  margin: 0;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.letters-prop-toggle:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.letters-prop-toggle input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: #2563eb;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Modern Toolbar Strip ───────────────────────────────────────────────── */
+.letters-toolbar-strip {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.35rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+  z-index: 25;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  flex-shrink: 0 !important;
+}
+
+.letters-toolbar-strip::-webkit-scrollbar {
+  height: 4px;
+}
+
+.letters-toolbar-strip::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.letters-toolbar-strip::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.letters-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.letters-tool-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.letters-tool-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.letters-tool-btn.active {
+  background: #e0e7ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
+}
+
+.letters-tool-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.letters-tool-btn.letters-btn-pill {
+  width: auto;
+  padding: 0 0.55rem;
+  gap: 0.3rem;
+  font-weight: 600;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.letters-tool-btn.letters-btn-pill:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.letters-tool-divider {
+  width: 1px;
+  height: 20px;
+  background: #e2e8f0;
+  margin: 0 0.35rem;
+  flex-shrink: 0;
+}
+
+/* Dropdown Menus in Toolbar */
+.letters-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.5rem;
+  z-index: 100;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 170px;
+}
+
+.letters-dropdown-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.letters-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #334155;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.letters-dropdown-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.letters-dropdown-item.text-danger {
+  color: #dc2626;
+}
+
+.letters-dropdown-item.text-danger:hover {
+  background: #fee2e2;
+}
+
+.letters-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 4px;
+}
+
+.letters-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.letters-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+/* ── Centered A4 Desk Workspace with Dedicated Tactile Scroller ─────────── */
+.letters-canvas-viewport {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: scroll !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding: 1.5rem 1rem 12rem !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  background: #cbd5e1 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  scrollbar-width: auto !important;
+  scrollbar-color: #475569 #f1f5f9 !important;
+}
+
+.letters-canvas-viewport::-webkit-scrollbar {
+  width: 14px !important;
+  height: 14px !important;
+  display: block !important;
+}
+
+.letters-canvas-viewport::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-left: 1px solid #cbd5e1 !important;
+}
+
+.letters-canvas-viewport::-webkit-scrollbar-thumb {
+  background: #475569 !important;
+  border-radius: 8px !important;
+  border: 3px solid #f1f5f9 !important;
+}
+
+.letters-canvas-viewport::-webkit-scrollbar-thumb:hover {
+  background: #1e293b !important;
+}
+
+.letters-canvas-viewport::-webkit-scrollbar-thumb:active {
+  background: #0f172a !important;
+}
+
+/* Floating Quick Jump Nav */
+.letters-floating-nav {
+  position: fixed;
+  top: 175px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  z-index: 45;
+}
+
+.letters-jump-btn {
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.letters-jump-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+/* Official A4 Sheet Specifications */
+.letters-sheet-paper {
+  width: 210mm;
+  min-height: 297mm;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 18mm 20mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: box-shadow 0.2s ease;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #0f172a;
+}
+
+/* Inline Direct Editing on Paper */
+.letters-sheet-inline-input {
+  border: 1px dashed transparent;
+  background: transparent;
+  padding: 2px 4px;
+  border-radius: 4px;
+  outline: none;
+  color: #0f172a;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.letters-sheet-inline-input:hover,
+.letters-sheet-inline-input:focus {
+  border-color: #94a3b8;
+  background: rgba(241, 245, 249, 0.7);
+}
+
+/* ── Dynamic Letterhead Themes ─────────────────────────────────────────── */
+
+/* 1. Theme: Executive (Default) */
+.letters-sheet-paper.theme-executive .letters-sheet-header-block {
+  border-bottom: 3px solid var(--theme-accent, #2563eb);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+
+/* 2. Theme: Classic Corporate */
+.letters-sheet-paper.theme-classic .letters-sheet-header-block {
+  text-align: center;
+  border-bottom: 3px double #0f172a;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.letters-sheet-paper.theme-classic .letters-sheet-company-row {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.letters-sheet-paper.theme-classic .letters-sheet-company-name {
+  font-family: 'Merriweather', serif;
+  font-size: 24px;
+}
+
+/* 3. Theme: Minimalist Luxury */
+.letters-sheet-paper.theme-minimal .letters-sheet-header-block {
+  border-left: 4px solid var(--theme-accent, #2563eb);
+  padding-left: 14px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+/* 4. Theme: Bold Tech */
+.letters-sheet-paper.theme-tech .letters-sheet-header-block {
+  background: linear-gradient(to right, #f8fafc, #ffffff);
+  border-top: 4px solid var(--theme-accent, #2563eb);
+  border-bottom: 1px solid #cbd5e1;
+  padding: 12px;
+  margin-bottom: 18px;
+  border-radius: 4px;
+}
+
+/* 5. Theme: Pre-Printed Stationery */
+.letters-sheet-paper.theme-stationery .letters-sheet-header-block {
+  display: none !important;
+}
+
+/* Header Content Inside Sheet */
+.letters-sheet-company-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.letters-sheet-company-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.letters-sheet-company-address {
+  font-size: 11.5px;
+  color: #475569;
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+.letters-sheet-company-detail {
+  font-size: 11px;
+  color: #64748b;
+  margin: 2px 0;
+}
+
+.letters-sheet-company-tax {
+  font-size: 11px;
+  color: #334155;
+  margin-top: 4px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.letters-sheet-logo {
+  max-height: 65px;
+  max-width: 150px;
+  object-fit: contain;
+}
+
+/* ── Watermark Overlay ─────────────────────────────────────────────────── */
+.letters-watermark-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+  overflow: hidden;
+}
+
+.letters-watermark-text {
+  transform: rotate(-45deg);
+  font-size: 5rem;
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  color: #000000;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: var(--watermark-opacity, 0.08);
+}
+
+/* ── Metadata Reference & Date ─────────────────────────────────────────── */
+.letters-sheet-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #cbd5e1;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Recipient Details ─────────────────────────────────────────────────── */
+.letters-sheet-recipient {
+  margin-bottom: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  position: relative;
+  z-index: 2;
+}
+
+.letters-recipient-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 2px 0;
+}
+
+.letters-recipient-sub {
+  color: #334155;
+  font-size: 12px;
+  margin: 1px 0;
+}
+
+/* ── Subject Line ──────────────────────────────────────────────────────── */
+.letters-sheet-subject {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 14px 0 16px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--theme-accent, #2563eb);
+  position: relative;
+  z-index: 2;
+}
+
+/* ── TipTap ProseMirror Editor Body ────────────────────────────────────── */
+.letters-sheet-editor-body {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.letters-sheet-editor-body .ProseMirror {
+  outline: none;
+  min-height: 380px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #0f172a;
+}
+
+.letters-sheet-editor-body .ProseMirror p {
+  margin-bottom: 12px;
+}
+
+.letters-sheet-editor-body .ProseMirror blockquote {
+  border-left: 4px solid var(--theme-accent, #2563eb);
+  padding: 8px 14px;
+  margin: 12px 0;
+  background: #f8fafc;
+  font-style: italic;
+  color: #334155;
+  border-radius: 0 6px 6px 0;
+}
+
+.letters-sheet-editor-body .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+.letters-sheet-editor-body .ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.letters-sheet-editor-body .ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.letters-sheet-editor-body .ProseMirror table td,
+.letters-sheet-editor-body .ProseMirror table th {
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.letters-sheet-editor-body .ProseMirror table th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #0f172a;
+  border-bottom: 2px solid var(--theme-accent, #2563eb);
+}
+
+.letters-sheet-editor-body .ProseMirror hr {
+  border: none;
+  border-top: 1px solid #cbd5e1;
+  margin: 18px 0;
+}
+
+.letters-sheet-editor-body .ProseMirror .page-break {
+  page-break-after: always;
+  border-top: 2px dashed #94a3b8;
+  margin: 24px 0;
+  position: relative;
+  text-align: center;
+}
+
+.letters-sheet-editor-body .ProseMirror .page-break::after {
+  content: 'PAGE BREAK';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e2e8f0;
+  padding: 0 8px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  border-radius: 4px;
+}
+
+/* ── Signoff & Official Seal Block ─────────────────────────────────────── */
+.letters-sheet-signoff {
+  margin-top: 36px;
+  display: flex;
+  justify-content: flex-end;
+  page-break-inside: avoid;
+  position: relative;
+  z-index: 2;
+}
+
+.letters-signoff-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Official Rubber Verification Stamp */
+.letters-official-seal {
+  width: 90px;
+  height: 90px;
+  border: 3px double #dc2626;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #dc2626;
+  padding: 4px;
+  user-select: none;
+  transform: rotate(-8deg);
+  box-shadow: 0 0 2px rgba(220, 38, 38, 0.4);
+  background: rgba(254, 242, 242, 0.4);
+}
+
+.letters-seal-outer-text {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.letters-seal-center-badge {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  border-top: 1px solid #dc2626;
+  border-bottom: 1px solid #dc2626;
+  padding: 1px 0;
+  margin: 2px 0;
+  width: 80%;
+}
+
+.letters-seal-date {
+  font-size: 6.5px;
+  font-weight: 600;
+}
+
+.letters-signoff-box {
+  min-width: 210px;
+  text-align: center;
+}
+
+.letters-signoff-img {
+  max-height: 52px;
+  display: block;
+  margin: 6px auto;
+}
+
+.letters-signoff-line {
+  border-top: 1px solid #475569;
+  margin: 12px auto 4px;
+  width: 160px;
+}
+
+/* ── Live Document Stats Status Bar ─────────────────────────────────────── */
+.letters-stats-bar {
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  padding: 0.4rem 1.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  bottom: 0;
+  z-index: 35;
+}
+
+.letters-stats-items {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.letters-stats-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* ── Design & Letterhead Drawer ─────────────────────────────────────────── */
+.letters-design-drawer {
+  position: fixed;
+  top: 60px;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.06);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.letters-design-drawer.open {
+  transform: translateX(0);
+}
+
+.letters-drawer-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.letters-drawer-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.letters-drawer-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.letters-drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.letters-drawer-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.letters-theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.letters-theme-option {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.letters-theme-option:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.letters-theme-option.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* ── Toast Notification ─────────────────────────────────────────────────── */
+.letters-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.85rem 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  z-index: 1000;
   font-size: 0.85rem;
+  animation: slideUpToast 0.25s ease-out;
+}
+
+@keyframes slideUpToast {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.letters-toast-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.letters-toast-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-/* Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.letters-toast-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+/* ── Document Statistics Status Bar ─────────────────────────────────────── */
+.letters-stats-bar {
+  flex-shrink: 0 !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  background: #ffffff !important;
+  border-top: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 1.25rem !important;
+  font-size: 0.75rem !important;
+  color: #64748b !important;
+  z-index: 40 !important;
+  box-sizing: border-box !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
+.letters-stats-items {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1.25rem !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.letters-stats-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+/* ── High-Resolution Print Media Optimization ───────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  body, html {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Completely hide all UI elements and Layout */
+  .sidebar,
+  .topbar,
+  .mobile-bottom-dock,
+  .floating-ai-btn,
+  .ai-assistant-bubble,
+  .sidebar-toggle-floating-btn,
+  .letters-studio-header,
+  .letters-properties-strip,
+  .letters-toolbar-strip,
+  .letters-stats-bar,
+  .letters-design-drawer,
+  .letters-toast,
+  .letters-template-modal-overlay,
+  .print-hide {
+    display: none !important;
+  }
+
+  .app-layout,
+  .main-content,
+  .content-area,
+  .content-area.no-padding,
+  .letters-studio-wrapper {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .letters-canvas-viewport {
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    scrollbar-width: none !important;
+  }
+
+  .letters-sheet-paper {
+    width: 100% !important;
+    max-width: 210mm !important;
+    height: auto !important;
+    min-height: 296mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 auto !important;
+    padding: 16mm 18mm !important;
+    box-sizing: border-box !important;
+    page-break-after: avoid !important;
+    page-break-inside: auto !important;
+  }
+
+  .letters-sheet-inline-input {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .letters-sheet-inline-input::placeholder {
+    color: transparent !important;
+  }
+
+  .letters-sheet-editor-body .ProseMirror {
+    min-height: 0 !important;
+  }
+
+  .letters-sheet-editor-body .ProseMirror .page-break {
+    page-break-after: always !important;
+    border: none !important;
+    margin: 0 !important;
+    height: 0 !important;
+  }
+
+  .letters-sheet-editor-body .ProseMirror .page-break::after {
+    display: none !important;
+  }
 }

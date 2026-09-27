@@ -6,6 +6,12 @@ import PrintViewModal from '@/components/ui/PrintViewModal';
 import ProductModal from '@/features/products/components/ProductModal';
 import ContactModal from '@/features/contacts/components/ContactModal';
 import {
+   getNextDocumentNumber,
+   isDocumentNumberTaken,
+   handleProductRowSelection,
+   filterValidItems
+} from '@/utils/documentUtils';
+import {
    ArrowLeft, Trash2, Printer, Save, Plus,
    MoreVertical, RotateCcw, FileText, Truck, Mail, Calendar, Building2,
    ChevronDown, ChevronRight, X, Search, Info, HelpCircle
@@ -145,13 +151,56 @@ const CreditNote = () => {
       const init = async () => {
          setLoading(true);
          await loadMasterData();
-         if (id) {
+         if (user?.id) {
             try {
                const allDocs = await getItems('documents', user.id);
-               const existing = allDocs.find(d => d._dbId === id || d.id === id);
-               if (existing) setDoc(prev => ({ ...prev, ...existing }));
+               if (id) {
+                  const existing = allDocs.find(d => d._dbId === id || d.id === id || d._id === id);
+                  if (existing) {
+                     const loadedItems = existing.items?.length > 0 ? [...existing.items] : [BLANK_ITEM()];
+                     const last = loadedItems[loadedItems.length - 1];
+                     if (last && (last.name || last.productId || Number(last.amount) > 0)) {
+                        loadedItems.push(BLANK_ITEM());
+                     }
+                     setDoc({ ...existing, items: loadedItems });
+                  }
+               } else {
+                  const nextCnNo = getNextDocumentNumber('Credit Note', allDocs);
+                  const convertedRaw = sessionStorage.getItem('prefill_converted_document');
+                  if (convertedRaw) {
+                     try {
+                        const draft = JSON.parse(convertedRaw);
+                        sessionStorage.removeItem('prefill_converted_document');
+                        if (draft.docType === 'Credit Note') {
+                           const draftItems = draft.items?.length > 0 ? [...draft.items, BLANK_ITEM()] : [BLANK_ITEM()];
+                           setDoc(prev => ({
+                              ...prev,
+                              ...draft,
+                              items: draftItems,
+                              cnDetail: {
+                                 ...prev.cnDetail,
+                                 ...draft.cnDetail,
+                                 cnNo: draft.cnDetail?.cnNo || nextCnNo
+                              }
+                           }));
+                           setLoading(false);
+                           return;
+                        }
+                     } catch (e) {
+                        console.error('Error parsing prefilled conversion draft:', e);
+                     }
+                  }
+
+                  setDoc(prev => ({
+                     ...prev,
+                     cnDetail: {
+                        ...prev.cnDetail,
+                        cnNo: nextCnNo
+                     }
+                  }));
+               }
             } catch (err) {
-               console.error("Error loading document:", err);
+               console.error("Error initializing Credit Note:", err);
             }
          }
          setLoading(false);
@@ -224,22 +273,24 @@ const CreditNote = () => {
    };
 
    const handleItemChange = (idx, field, value) => {
+      if (field === 'productId') {
+         const selectedProduct = products.find(x => x.id === value);
+         if (selectedProduct) {
+            const updated = handleProductRowSelection({
+               currentItems: doc.items,
+               index: idx,
+               product: selectedProduct,
+               createBlankRow: BLANK_ITEM
+            });
+            setDoc(prev => ({ ...prev, items: updated }));
+            return;
+         }
+      }
+
       const items = [...doc.items];
       const item = { ...items[idx] };
 
-      if (field === 'productId') {
-         const p = products.find(x => x.id === value);
-         if (p) {
-            item.productId = p.id;
-            item.name = p.name;
-            item.hsn = p.hsn || '';
-            item.unit = p.unit || 'PCS';
-            item.rate = Number(p.sellingPrice) || 0;
-            item.taxRate = Number(p.taxRate) || 0;
-         }
-      } else {
-         item[field] = value;
-      }
+      item[field] = value;
 
       const qty = Number(item.quantity) || 0;
       const rate = Number(item.rate) || 0;
@@ -267,15 +318,30 @@ const CreditNote = () => {
 
       setIsSubmitting(true);
       try {
+         const allDocs = await getItems('documents', user.id);
+         if (isDocumentNumberTaken('Credit Note', doc.cnDetail.cnNo, allDocs, id)) {
+            alert(`Credit Note No. "${doc.cnDetail.cnNo}" is already in use. Please use a unique number.`);
+            setIsSubmitting(false);
+            return;
+         }
+
+         const cleanItems = filterValidItems(doc.items);
+         if (cleanItems.length === 0) {
+            alert('Please add at least one product with name or quantity.');
+            setIsSubmitting(false);
+            return;
+         }
+
          const fullNo = `${doc.docPrefix}${doc.cnDetail.cnNo}${doc.docPostfix}`;
          const finalDoc = {
             ...doc,
+            items: cleanItems,
             invoiceNumber: fullNo,
             date: doc.cnDetail.date,
             total: doc.grandTotal,
             customerName: doc.customerInfo.ms,
             status: 'Outstanding',
-            docType: doc.docType
+            docType: doc.docType || 'Credit Note'
          };
 
          let result;

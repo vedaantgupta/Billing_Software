@@ -279,6 +279,22 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/documents/letters" element={
+              <Navigate to="/documents/letters/new" replace />
+            } />
+            <Route path="/letters" element={
+              <Navigate to="/documents/letters/new" replace />
+            } />
+            <Route path="/letters/new" element={
+              <Navigate to="/documents/letters/new" replace />
+            } />
+            <Route path="/letters/edit/:id" element={
+              <ProtectedRoute>
+                <Layout noWrapper={true}>
+                  <Letters />
+                </Layout>
+              </ProtectedRoute>
+            } />
             <Route path="/editor" element={
               <ProtectedRoute>
                 <Layout>

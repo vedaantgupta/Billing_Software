@@ -10,6 +10,12 @@ import {
 } from 'lucide-react';
 import '@/features/documents/styles/ProformaInvoice.css';
 import "@/features/products/styles/product-table.css";
+import { 
+  getNextDocumentNumber, 
+  isDocumentNumberTaken, 
+  handleProductRowSelection, 
+  filterValidItems 
+} from '@/utils/documentUtils';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -146,10 +152,51 @@ const ProformaInvoice = () => {
     const init = async () => {
       setLoading(true);
       await loadMasterData();
+      const allDocs = await getItems('documents', user.id);
       if (id) {
-        const allDocs = await getItems('documents', user.id);
-        const existing = allDocs.find(d => d._dbId === id || d.id === id);
-        if (existing) setDoc(prev => ({ ...prev, ...existing }));
+        const existing = allDocs.find(d => d._dbId === id || d.id === id || d._id === id);
+        if (existing) {
+          const loadedItems = existing.items?.length > 0 ? [...existing.items] : [BLANK_ITEM()];
+          const last = loadedItems[loadedItems.length - 1];
+          if (last && (last.name || last.productId || Number(last.amount) > 0)) {
+            loadedItems.push(BLANK_ITEM());
+          }
+          setDoc(prev => ({ ...prev, ...existing, items: loadedItems }));
+        }
+      } else {
+        const nextNo = getNextDocumentNumber('Proforma Invoice', allDocs);
+
+        // Check for conversion draft
+        const convertedRaw = sessionStorage.getItem('prefill_converted_document');
+        if (convertedRaw) {
+          try {
+            const draft = JSON.parse(convertedRaw);
+            sessionStorage.removeItem('prefill_converted_document');
+            if (draft.docType === 'Proforma Invoice') {
+              const draftItems = draft.items?.length > 0 ? [...draft.items, BLANK_ITEM()] : [BLANK_ITEM()];
+              setDoc(prev => ({
+                ...prev,
+                ...draft,
+                items: draftItems,
+                proDetail: {
+                  ...prev.proDetail,
+                  ...draft.proDetail,
+                  proNo: draft.proDetail?.proNo || nextNo
+                }
+              }));
+              setLoading(false);
+              return;
+            }
+          } catch(e) {}
+        }
+
+        setDoc(prev => ({
+          ...prev,
+          proDetail: {
+            ...prev.proDetail,
+            proNo: nextNo
+          }
+        }));
       }
       setLoading(false);
     };
@@ -228,32 +275,38 @@ const ProformaInvoice = () => {
   };
 
   const handleItemChange = (idx, field, value) => {
+    if (field === 'productId') {
+      const p = products.find(x => x.id === value || x._dbId === value || x._id === value);
+      if (p) {
+        // Increment quantity if already added, populate row, and auto-add blank row at bottom
+        const updatedItems = handleProductRowSelection(doc.items, p, idx, BLANK_ITEM);
+        setDoc(prev => ({ ...prev, items: updatedItems }));
+        return;
+      }
+    }
+
     const items = [...doc.items];
     const item = { ...items[idx] };
-
-    if (field === 'productId') {
-      const p = products.find(x => x.id === value);
-      if (p) {
-        item.productId = p.id;
-        item.name = p.name;
-        item.hsn = p.hsn || '';
-        item.unit = p.unit || 'PCS';
-        item.rate = Number(p.sellingPrice) || 0;
-        item.taxRate = Number(p.taxRate) || 0;
-      }
-    } else {
-      item[field] = value;
-    }
+    item[field] = value;
 
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
+    const disc = Number(item.discountPercent) || 0;
     const tax = Number(item.taxRate) || 0;
-    const taxableTotal = qty * rate;
+    const base = qty * rate;
+    const discAmt = base * (disc / 100);
+    const taxableTotal = base - discAmt;
 
     item.amount = taxableTotal;
     item.taxAmount = taxableTotal * (tax / 100);
 
     items[idx] = item;
+
+    // Auto-add blank row if this is the last row and is now filled
+    if (idx === items.length - 1 && (item.name || item.productId || Number(item.amount) > 0)) {
+      items.push(BLANK_ITEM());
+    }
+
     setDoc(prev => ({ ...prev, items }));
   };
 
@@ -269,11 +322,27 @@ const ProformaInvoice = () => {
     if (!user?.id) return;
     if (!doc.proDetail.proNo) { alert('Please enter Proforma No.'); return; }
 
+    const fullNo = `${doc.docPrefix}${doc.proDetail.proNo}${doc.docPostfix}`;
+
+    // REQUIREMENT 1: Prevent duplicate proforma number reuse
+    const allDocs = await getItems('documents', user.id);
+    if (isDocumentNumberTaken('Proforma Invoice', doc.proDetail.proNo, id, allDocs)) {
+      alert(`Proforma Invoice number #${doc.proDetail.proNo} (or ${fullNo}) is already in use. Please enter a unique number.`);
+      return;
+    }
+
+    // REQUIREMENT 8: Filter out empty rows so that blank items are NOT saved or printed
+    const validItems = filterValidItems(doc.items);
+    if (validItems.length === 0) {
+      alert('Please add at least one item to the proforma invoice.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const fullNo = `${doc.docPrefix}${doc.proDetail.proNo}${doc.docPostfix}`;
       const finalDoc = {
         ...doc,
+        items: validItems,
         invoiceNumber: fullNo,
         date: doc.proDetail.date,
         total: doc.grandTotal,

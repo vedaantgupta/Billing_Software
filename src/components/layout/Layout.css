@@ -99,7 +99,8 @@
   font-size: 1.15rem;
   letter-spacing: -0.5px;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
-  border: 1px solid rgba(251, 191, 36, 0.4); /* Gold ring accent */
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  /* Gold ring accent */
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
@@ -490,8 +491,15 @@
 }
 
 @keyframes slideDownFade {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .search-status {
@@ -719,12 +727,35 @@
   flex-shrink: 0;
 }
 
-.create-icon-badge.green { background: #dcfce7; color: #15803d; }
-.create-icon-badge.purple { background: #f3e8ff; color: #7e22ce; }
-.create-icon-badge.blue { background: #dbeafe; color: #1d4ed8; }
-.create-icon-badge.red { background: #fee2e2; color: #b91c1c; }
-.create-icon-badge.indigo { background: #e0e7ff; color: #4338ca; }
-.create-icon-badge.amber { background: #fef3c7; color: #b45309; }
+.create-icon-badge.green {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.create-icon-badge.purple {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.create-icon-badge.blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.create-icon-badge.red {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.create-icon-badge.indigo {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.create-icon-badge.amber {
+  background: #fef3c7;
+  color: #b45309;
+}
 
 /* AI Assistant Topbar Button (AI Logo Button) */
 .topbar-ai-btn {
@@ -777,8 +808,17 @@
 }
 
 @keyframes aiDotPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.75; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.75;
+  }
 }
 
 /* Subtle Topbar Divider */
@@ -886,8 +926,15 @@
 }
 
 @keyframes notifBadgePop {
-  0% { transform: scale(0.3); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .notification-dot-clean {
@@ -1038,12 +1085,36 @@
   margin-top: 2px;
 }
 
-.notif-icon-badge.red { background: #fee2e2; color: #dc2626; }
-.notif-icon-badge.amber { background: #fef3c7; color: #d97706; }
-.notif-icon-badge.blue { background: #dbeafe; color: #2563eb; }
-.notif-icon-badge.green { background: #dcfce7; color: #16a34a; }
-.notif-icon-badge.indigo { background: #e0e7ff; color: #4f46e5; }
-.notif-icon-badge.purple { background: #f3e8ff; color: #9333ea; }
+.notif-icon-badge.red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.notif-icon-badge.amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.notif-icon-badge.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.notif-icon-badge.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.notif-icon-badge.indigo {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.notif-icon-badge.purple {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
 .notif-icon-badge.gemini {
   background: linear-gradient(135deg, rgba(243, 232, 255, 0.9), rgba(224, 231, 255, 0.9));
   color: #7c3aed;
@@ -1423,7 +1494,7 @@
    MOBILE APP RESPONSIVE SYSTEM (<= 1024px)
    ======================================================== */
 @media (max-width: 1024px) {
-  
+
   /* Desktop sidebar becomes an off-canvas drawer */
   .sidebar {
     position: fixed;
@@ -1458,8 +1529,13 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   .drawer-close-btn {
@@ -1550,7 +1626,8 @@
   /* Content area gets bottom padding for bottom dock */
   .content-area {
     padding: 1rem;
-    padding-bottom: 84px; /* Essential: Prevents bottom dock overlap */
+    padding-bottom: 84px;
+    /* Essential: Prevents bottom dock overlap */
   }
 
   .content-area.no-padding {
@@ -1658,8 +1735,13 @@
   }
 
   @keyframes slideUpSheet {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
   }
 
   .sheet-grabber {
@@ -1743,12 +1825,35 @@
     justify-content: center;
   }
 
-  .sheet-action-item.green .sheet-action-icon { background: var(--green-100); color: var(--green-700); }
-  .sheet-action-item.purple .sheet-action-icon { background: var(--purple-100); color: var(--purple-700); }
-  .sheet-action-item.blue .sheet-action-icon { background: var(--cobalt-100); color: var(--cobalt-700); }
-  .sheet-action-item.red .sheet-action-icon { background: var(--red-100); color: var(--red-700); }
-  .sheet-action-item.indigo .sheet-action-icon { background: var(--indigo-100); color: var(--indigo-700); }
-  .sheet-action-item.amber .sheet-action-icon { background: var(--yellow-100); color: var(--yellow-800); }
+  .sheet-action-item.green .sheet-action-icon {
+    background: var(--green-100);
+    color: var(--green-700);
+  }
+
+  .sheet-action-item.purple .sheet-action-icon {
+    background: var(--purple-100);
+    color: var(--purple-700);
+  }
+
+  .sheet-action-item.blue .sheet-action-icon {
+    background: var(--cobalt-100);
+    color: var(--cobalt-700);
+  }
+
+  .sheet-action-item.red .sheet-action-icon {
+    background: var(--red-100);
+    color: var(--red-700);
+  }
+
+  .sheet-action-item.indigo .sheet-action-icon {
+    background: var(--indigo-100);
+    color: var(--indigo-700);
+  }
+
+  .sheet-action-item.amber .sheet-action-icon {
+    background: var(--yellow-100);
+    color: var(--yellow-800);
+  }
 }
 
 /* Micro-Screens (<= 480px) */
@@ -1763,5 +1868,77 @@
 
   .page-container {
     padding: 0.75rem !important;
+  }
+}
+
+/* Content Area Viewport & No-Padding Mode */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-area.no-padding {
+  padding: 0;
+  height: calc(100vh - 66px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================================
+   GLOBAL PRINT MEDIA PURIFICATION
+   ======================================================== */
+@media print {
+
+  .sidebar,
+  .topbar,
+  .mobile-bottom-dock,
+  .floating-ai-btn,
+  .ai-assistant-bubble,
+  .sidebar-toggle-floating-btn,
+  .print-hide {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .app-layout {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .main-content {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .content-area,
+  .content-area.no-padding {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
   }
 }
