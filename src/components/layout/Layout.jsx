@@ -611,12 +611,22 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
-              onFocus={() => searchQuery.length >= 1 && setShowSearchDropdown(true)}
+              onFocus={() => {
+                setIsMobileSearchOpen(true);
+                if (searchQuery.length >= 1) setShowSearchDropdown(true);
+              }}
+              onBlur={() => {
+                if (!searchQuery) setIsMobileSearchOpen(false);
+              }}
             />
             {searchQuery && (
               <button 
                 className="search-clear-btn" 
-                onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); }}
+                onClick={() => { 
+                  setSearchQuery(''); 
+                  setShowSearchDropdown(false); 
+                  setIsMobileSearchOpen(false); 
+                }}
                 aria-label="Clear search"
               >
                 <X size={15} />

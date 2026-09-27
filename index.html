@@ -53,7 +53,7 @@
       window.__FIREBASE_SIGN_OUT__ = () => signOut(auth);
       window.__FIREBASE_ON_AUTH__ = (cb) => onAuthStateChanged(auth, cb);
 
-      try { getAnalytics(app); } catch (e) {}
+      try { getAnalytics(app); } catch (e) { }
       window.dispatchEvent(new CustomEvent('firebase-initialized', { detail: { app, auth } }));
     } catch (err) {
       console.warn('Firebase CDN initialization notice:', err);

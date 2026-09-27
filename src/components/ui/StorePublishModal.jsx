@@ -138,32 +138,32 @@ const StorePublishModal = ({ isOpen, onClose, productData, onPublish }) => {
   };
 
   return ReactDOM.createPortal(
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', paddingLeft: '270px' }}>
-      <div className="glass" style={{ width: '1000px', maxWidth: '100%', height: '85vh', background: 'white', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
+    <div className="modal-overlay-universal">
+      <div className="glass modal-card-universal" style={{ width: '1000px', maxWidth: '100%', height: '88vh', background: 'white', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
 
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+        <div style={{ padding: 'clamp(1rem, 2vw, 1.5rem)', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Publish to Store: {formData.name}</h2>
-            <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Fill in comprehensive details to optimize your storefront listing.</p>
+            <h2 style={{ margin: 0, fontSize: 'clamp(1.15rem, 2vw, 1.5rem)', fontWeight: 800 }}>Publish to Store: {formData.name}</h2>
+            <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Fill in comprehensive details to optimize your storefront listing.</p>
           </div>
-          <button type="button" onClick={onClose} className="btn" style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px' }}><X size={20} /></button>
+          <button type="button" onClick={onClose} className="btn" style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '8px' }}><X size={18} /></button>
         </div>
 
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Sidebar Tabs */}
-          <div style={{ width: '240px', background: '#f1f5f9', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', padding: '1rem 0', overflowY: 'auto' }}>
+        <div className="store-publish-body-layout">
+          {/* Sidebar / Topbar Tabs */}
+          <div className="store-publish-tabs-sidebar">
             {tabs.map(tab => (
               <button
                 type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 1.5rem',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
                   background: activeTab === tab.id ? 'white' : 'transparent',
                   border: 'none', borderLeft: `4px solid ${activeTab === tab.id ? 'var(--primary-color)' : 'transparent'}`,
                   color: activeTab === tab.id ? 'var(--primary-color)' : 'var(--text-secondary)',
                   fontWeight: activeTab === tab.id ? 700 : 500,
-                  cursor: 'pointer', textAlign: 'left', width: '100%',
+                  cursor: 'pointer', textAlign: 'left',
                   boxShadow: activeTab === tab.id ? '0 1px 3px rgba(0,0,0,0.05)' : 'none'
                 }}
               >
@@ -173,7 +173,7 @@ const StorePublishModal = ({ isOpen, onClose, productData, onPublish }) => {
           </div>
 
           {/* Form Content */}
-          <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+          <div style={{ flex: 1, padding: 'clamp(1rem, 2vw, 2rem)', overflowY: 'auto' }}>
             <form
               id="publishForm"
               className="inventory-form"

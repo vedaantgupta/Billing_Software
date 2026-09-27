@@ -273,7 +273,7 @@ const Products = () => {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header page-header-responsive">
         <div>
           <h1 className="page-title">Products & Inventory</h1>
           {lowStockCount > 0 && (
@@ -282,7 +282,7 @@ const Products = () => {
             </p>
           )}
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3" style={{ flexWrap: 'wrap' }}>
           <input 
              type="file" 
              accept=".csv" 
@@ -290,7 +290,7 @@ const Products = () => {
              ref={fileInputRef} 
              onChange={handleFileUpload} 
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
              <button 
                 title="Download CSV Template"
                 className="btn" 
@@ -343,7 +343,7 @@ const Products = () => {
         </div>
       </div>
 
-      <div className="glass" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+      <div className="glass table-responsive" style={{ padding: '1rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border-color)', background: '#f8fafc' }}>

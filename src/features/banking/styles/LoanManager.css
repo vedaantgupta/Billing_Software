@@ -297,7 +297,9 @@
   border: 1px solid var(--lm-border-strong);
   border-radius: var(--lm-radius-md);
   padding: 0.55rem 0.85rem;
-  width: 340px;
+  width: 100%;
+  max-width: 340px;
+  box-sizing: border-box;
   box-shadow: var(--lm-shadow-sm);
   transition: all 0.15s ease;
 }
@@ -638,4 +640,113 @@
   background: var(--lm-bg-subtle);
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .lm-container {
+    padding: 1.25rem 1rem 4rem;
+  }
+
+  .lm-account-left {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .lm-container {
+    padding: 1rem 0.75rem 4rem;
+  }
+
+  .lm-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .lm-header-actions {
+    width: 100%;
+    display: flex;
+  }
+
+  .lm-btn-primary,
+  .lm-btn-outline {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .lm-hub-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    scrollbar-width: thin;
+  }
+
+  .lm-hub-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .lm-control-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .lm-search-box {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .lm-filters {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    scrollbar-width: thin;
+  }
+
+  .lm-filter-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .lm-account-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .lm-account-middle {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .lm-account-right {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px dashed var(--lm-border);
+    padding-top: 0.5rem;
+  }
+
+  .lm-balance-wrapper {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .lm-title {
+    font-size: 1.35rem;
+  }
+
+  .lm-card-value {
+    font-size: 1.4rem;
+  }
+
+  .lm-cmd-box {
+    width: 95%;
+    margin: 0 auto;
+  }
 }

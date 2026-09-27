@@ -319,3 +319,56 @@
   font-size: 0.95rem;
   font-weight: 500;
 }
+
+/* ── RESPONSIVE WORD PROCESSOR CONTROLS ─────────────────────────────── */
+@media (max-width: 768px) {
+  .wp-header {
+    height: auto;
+    min-height: 50px;
+    padding: 0.4rem 0.65rem;
+    gap: 0.4rem;
+  }
+
+  .wp-title-section {
+    gap: 0.4rem;
+  }
+
+  .wp-badge {
+    display: none;
+  }
+
+  .wp-title-input {
+    width: 130px !important;
+    max-width: 130px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .wp-stats-badge {
+    display: none;
+  }
+
+  .wp-status-pill {
+    display: none;
+  }
+
+  .wp-icon-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .wp-primary-save-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .wp-kbd-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .wp-title-input {
+    width: 100px !important;
+    max-width: 100px !important;
+  }
+}

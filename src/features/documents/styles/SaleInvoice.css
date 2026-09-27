@@ -1488,19 +1488,95 @@ input:checked+.si-toggle-thumb::before {
   .si-bottom-grid {
     grid-template-columns: 1fr;
   }
+
+  .si-field-row.two-col {
+    grid-template-columns: 130px 1fr 130px 1fr;
+  }
 }
 
 @media (max-width: 768px) {
   .si-page {
-    padding: 1rem;
+    padding: 0.85rem 0.65rem;
+  }
+
+  .si-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .si-header-left {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .si-title {
+    font-size: 1.2rem;
+  }
+
+  .si-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem;
   }
 
   .si-field-row {
     grid-template-columns: 1fr;
-    gap: 0.3rem;
+    gap: 0.4rem;
+  }
+
+  .si-field-row.two-col {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .si-card-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .si-table-actions {
+    flex-wrap: wrap;
+  }
+
+  .si-product-table {
+    min-width: 860px;
+  }
+
+  .si-footer-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .si-footer-right {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .si-btn,
+  .si-btn-back,
+  .si-btn-save,
+  .si-btn-print {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .si-page {
+    padding: 0.5rem;
   }
 
   .si-field-row.two-col {
     grid-template-columns: 1fr;
+  }
+
+  .si-bottom-grid {
+    gap: 0.75rem;
   }
 }

@@ -293,3 +293,74 @@
   color: #64748b;
   line-height: 1.5;
 }
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .document-list-page {
+    padding: 1.25rem 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .document-list-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .document-list-page .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .document-list-page .page-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .document-list-page .page-title {
+    font-size: 1.5rem;
+  }
+
+  .document-list-page .tabs-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    scrollbar-width: thin;
+    padding-bottom: 0.5rem;
+  }
+
+  .document-list-page .tabs-scroll .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .document-list-page .glass.table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    border-radius: 12px !important;
+  }
+
+  .document-list-page table {
+    min-width: 760px;
+  }
+
+  .document-list-page .action-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .document-list-page {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .document-list-page .page-title {
+    font-size: 1.35rem;
+  }
+}
+

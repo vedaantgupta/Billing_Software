@@ -143,14 +143,38 @@
 }
 
 /* Responsive */
-@media (max-width: 680px) {
+@media (max-width: 860px) {
   .editor-hub-grid {
     grid-template-columns: 1fr;
   }
   .editor-hub {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
+  }
+  .editor-hub-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .recent-docs-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .recent-docs-table {
+    min-width: 580px;
   }
 }
+
+@media (max-width: 480px) {
+  .editor-hub {
+    padding: 1rem 0.5rem;
+  }
+  .editor-hub-header-text h1 {
+    font-size: 1.5rem;
+  }
+  .editor-hub-card {
+    padding: 0.85rem;
+  }
+}
+
 
 /* Recent Documents Section */
 .recent-docs-section {

@@ -261,3 +261,52 @@
   font-size: 0.95rem;
   font-weight: 500;
 }
+
+/* ── RESPONSIVE WORKBOOK HEADER CONTROLS ────────────────────────────── */
+@media (max-width: 768px) {
+  .spreadsheet-header {
+    height: auto;
+    min-height: 50px;
+    padding: 0.4rem 0.65rem;
+    gap: 0.4rem;
+  }
+
+  .spreadsheet-title-section {
+    gap: 0.5rem;
+  }
+
+  .spreadsheet-badge {
+    display: none;
+  }
+
+  .spreadsheet-title-wrapper {
+    padding: 0.2rem 0.5rem;
+  }
+
+  .spreadsheet-title-input {
+    width: 120px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .spreadsheet-actions-section {
+    gap: 0.35rem;
+  }
+
+  .spreadsheet-status-pill {
+    display: none;
+  }
+
+  .spreadsheet-icon-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .spreadsheet-primary-save-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .spreadsheet-kbd-hint {
+    display: none;
+  }
+}

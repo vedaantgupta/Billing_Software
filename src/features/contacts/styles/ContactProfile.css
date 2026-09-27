@@ -722,3 +722,13 @@
   .cp-hero-name { font-size: 1.75rem; }
   .cp-content { padding: 1rem; }
 }
+
+@media (max-width: 600px) {
+  .cp-content { padding: 0.75rem 0.5rem; }
+  .cp-hero { border-radius: 16px; }
+  .cp-hero-body { padding: 1.25rem; gap: 1rem; }
+  .cp-hero-name { font-size: clamp(1.25rem, 5vw, 1.5rem); }
+  .cp-hero-actions { width: 100%; flex-wrap: wrap; }
+  .cp-hero-actions .btn { width: 100%; justify-content: center; }
+}
+

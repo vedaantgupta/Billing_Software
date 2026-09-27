@@ -188,7 +188,51 @@
   background: #14b8a6;
 }
 
-/* Teal */
+/* Responsive Mobile Controls */
+@media (max-width: 768px) {
+  .pvm-container {
+    width: 98vw;
+    height: 96vh;
+    border-radius: 12px;
+  }
+
+  .pvm-header {
+    padding: 8px 12px;
+  }
+
+  .pvm-body {
+    padding: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: flex-start;
+  }
+
+  .pvm-checkbox-row {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-size: 11px;
+    padding: 8px;
+  }
+
+  .pvm-actions-row {
+    flex-direction: column;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .pvm-right-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .pvm-action-btn {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
 
 /* Critical Logic: Print Media completely overrides the interface to ONLY show the rendered page wrappers */
 @media print {

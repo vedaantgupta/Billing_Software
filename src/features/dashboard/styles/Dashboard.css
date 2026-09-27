@@ -188,7 +188,7 @@
 /* --- SPARKLINE SUMMARY CARDS (Top Row) --- */
 .db-spark-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 1.25rem;
 }
 
@@ -693,7 +693,7 @@
 /* Charts Section & India Map Stacking Isolation Fix */
 .db-charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 1.25rem;
 }
 
@@ -965,6 +965,111 @@
 .badge-urgency.sufficient {
   background: #d1fae5;
   color: #065f46;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .db-spark-grid {
+    gap: 1rem;
+  }
+
+  .db-charts-grid {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .db-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .db-header-left h1 {
+    font-size: 1.45rem;
+  }
+
+  .db-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .db-tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .db-quick-actions {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 4px;
+  }
+
+  .db-quick-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .db-table-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .db-search-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .db-filter-pills,
+  .db-type-pills {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: flex-start;
+  }
+
+  .db-filter-pill,
+  .db-type-pill {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .db-inv-stats-row {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .db-header-left h1 {
+    font-size: 1.3rem;
+  }
+
+  .db-spark-card {
+    padding: 1rem;
+  }
+
+  .db-spark-val {
+    font-size: 1.35rem;
+  }
+
+  .db-ring-card-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .db-inv-chips-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Print export formatting */

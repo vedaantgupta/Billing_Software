@@ -1,0 +1,485 @@
+/* ==========================================================================
+   BANIYABOOK UNIVERSAL COMMON CSS ENGINE (universal.css)
+   Universal, device-agnostic, responsive design architecture.
+   Ensures flawless rendering across:
+     - Micro & Compact Phones (320px - 375px)
+     - Standard Modern Phones (390px - 430px)
+     - Large Phones / Phablets (431px - 640px)
+     - Tablets Portrait & Landscape (641px - 1024px)
+     - Laptops & Notebooks (1025px - 1440px)
+     - Desktop & Ultrawide Monitors (1441px - 2560px+)
+   ========================================================================== */
+
+/* ── 1. GLOBAL ROOT VARIABLES & SAFE-AREA METRICS ─────────────────────── */
+:root {
+  /* Safe-area insets for notched phones (iPhone X/11/12/13/14/15/Android notches) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Dynamic Viewport units */
+  --viewport-height: 100vh;
+  --viewport-dvh: 100dvh;
+
+  /* Universal Fluid Spacing */
+  --space-2xs: clamp(0.2rem, 0.5vw, 0.25rem);
+  --space-xs:  clamp(0.4rem, 0.8vw, 0.5rem);
+  --space-sm:  clamp(0.65rem, 1.2vw, 0.75rem);
+  --space-md:  clamp(0.85rem, 1.8vw, 1.25rem);
+  --space-lg:  clamp(1.2rem, 2.5vw, 1.75rem);
+  --space-xl:  clamp(1.5rem, 3.5vw, 2.5rem);
+
+  /* Fluid Page Padding */
+  --page-padding: clamp(0.75rem, 2.5vw, 2rem);
+  --card-padding: clamp(0.85rem, 2vw, 1.5rem);
+
+  /* Universal Border Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* Universal Touch Targets */
+  --min-tap-target: 44px;
+}
+
+/* ── 2. GLOBAL VIEWPORT & ZERO-OVERFLOW PROTECTION ────────────────────── */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden !important;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure no elements can push screen width out */
+img, svg, video, canvas, audio, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── 3. IOS SAFARI AUTO-ZOOM PREVENTION ON FORM INPUTS ────────────────── */
+/* When font-size < 16px on mobile viewports, iOS Safari automatically zooms in,
+   breaking the user's viewport alignment. This rule strictly eliminates that. */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="date"],
+  input[type="datetime-local"],
+  select,
+  textarea,
+  .form-input,
+  .form-select,
+  .form-textarea,
+  .si-cell-input,
+  .si-cell-select,
+  .search-input {
+    font-size: 16px !important;
+  }
+}
+
+/* ── 4. TOUCH ERGONOMICS & TAP HANDLING ───────────────────────────────── */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+.clickable {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Accessible tap target size helper */
+.tap-target {
+  min-height: var(--min-tap-target);
+  min-width: var(--min-tap-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── 5. UNIVERSAL RESPONSIVE TABLE ENGINE ─────────────────────────────── */
+/* Dense data tables (invoices, ledger, inventory) will NEVER blow out screens */
+.table-responsive {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch !important;
+  position: relative;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1rem;
+}
+
+.table-responsive table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Modern slim scrollbar for table scroller */
+.table-responsive::-webkit-scrollbar {
+  height: 5px;
+}
+.table-responsive::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.4);
+  border-radius: 999px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Subtle swipe hint gradient indicator on overflowing tables on mobile */
+@media (max-width: 768px) {
+  .table-responsive-hint {
+    position: relative;
+  }
+  .table-responsive-hint::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 5px;
+    width: 24px;
+    background: linear-gradient(90deg, transparent 0%, rgba(15, 23, 42, 0.06) 100%);
+    pointer-events: none;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  }
+}
+
+/* ── 6. UNIVERSAL FLUID TYPOGRAPHY ────────────────────────────────────── */
+.fluid-h1 {
+  font-size: clamp(1.4rem, 2.5vw, 2rem) !important;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.fluid-h2 {
+  font-size: clamp(1.2rem, 2vw, 1.6rem) !important;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.fluid-h3 {
+  font-size: clamp(1rem, 1.5vw, 1.3rem) !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.fluid-stat-value {
+  font-size: clamp(1.4rem, 3.2vw, 2.4rem) !important;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* ── 7. UNIVERSAL RESPONSIVE GRID PRIMITIVES ──────────────────────────── */
+.grid-responsive-1-2-3-4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+@media (min-width: 640px) {
+  .grid-responsive-1-2-3-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .grid-responsive-1-2-3-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 1280px) {
+  .grid-responsive-1-2-3-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.grid-responsive-1-2-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+@media (min-width: 640px) {
+  .grid-responsive-1-2-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .grid-responsive-1-2-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.grid-responsive-1-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+@media (min-width: 768px) {
+  .grid-responsive-1-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Auto-fit card grid that never overflows */
+.grid-auto-fit-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--space-md);
+}
+
+/* ── 8. UNIVERSAL PAGE HEADER COMPONENT ───────────────────────────────── */
+.page-header-responsive {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: var(--space-lg);
+}
+
+.page-header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.page-header-actions-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .page-header-responsive {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header-actions-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .page-header-actions-group .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* ── 9. UNIVERSAL MODAL & DIALOG FRAMEWORK ────────────────────────────── */
+/* Completely replaces fragile hardcoded offsets like paddingLeft: '270px' */
+.modal-overlay-universal {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: clamp(0.5rem, 2vw, 1.5rem) !important;
+  box-sizing: border-box !important;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card-universal {
+  background: #ffffff !important;
+  border-radius: var(--radius-xl) !important;
+  width: 100% !important;
+  max-width: min(95vw, 880px) !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35) !important;
+  border: 1px solid var(--border-color) !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .modal-overlay-universal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .modal-card-universal {
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding-bottom: calc(1rem + var(--safe-bottom)) !important;
+  }
+}
+
+/* ── 10. UNIVERSAL CONTROL BAR & FILTER STRIP ─────────────────────────── */
+.control-bar-responsive {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: var(--space-md);
+}
+
+.control-search-responsive {
+  flex: 1 1 240px;
+  max-width: 480px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.control-pills-responsive {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+.control-pills-responsive::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .control-bar-responsive {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .control-search-responsive {
+    max-width: 100%;
+    width: 100%;
+  }
+  .control-pills-responsive {
+    width: 100%;
+  }
+}
+
+/* ── 11. UNIVERSAL RESPONSIVE UTILITIES ───────────────────────────────── */
+@media (max-width: 768px) {
+  .stack-on-mobile {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .w-full-mobile {
+    width: 100% !important;
+  }
+  .text-center-mobile {
+    text-align: center !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-on-mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .show-on-tablet-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hide-on-tablet-mobile {
+    display: none !important;
+  }
+}
+
+/* Text Truncation with Tooltip readiness */
+.truncate-responsive {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Modal form responsive grids */
+.product-modal-responsive-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .product-modal-responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Store Publish Modal Responsive Tab Layout */
+.store-publish-body-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.store-publish-tabs-sidebar {
+  width: 240px;
+  background: #f1f5f9;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .store-publish-body-layout {
+    flex-direction: column !important;
+  }
+  .store-publish-tabs-sidebar {
+    width: 100% !important;
+    height: auto !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0.5rem !important;
+    border-right: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .store-publish-tabs-sidebar button {
+    padding: 0.5rem 0.85rem !important;
+    border-left: none !important;
+    border-bottom: 3px solid transparent !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+}

@@ -2,13 +2,14 @@
 .pres-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
-  min-height: 580px;
+  height: 100%;
+  min-height: 0;
   width: 100%;
   background: #090d16;
   font-family: 'Inter', sans-serif;
   color: #f1f5f9;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Page Loader styling */
@@ -1161,6 +1162,102 @@
 .color-dot.active {
   border-color: #a5b4fc;
   box-shadow: 0 0 8px rgba(255,255,255,0.4);
+}
+
+/* ── RESPONSIVE PRESENTATION STUDIO (Tablets & Phones) ───────────────── */
+@media (max-width: 1024px) {
+  .pres-header {
+    height: auto;
+    min-height: 52px;
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .pres-slide-panel {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .pres-canvas-wrap {
+    padding: 1rem;
+  }
+
+  .pres-right-panel {
+    width: 200px;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pres-header {
+    padding: 0.4rem 0.6rem;
+  }
+
+  .pres-title-input {
+    width: 140px;
+    font-size: 0.85rem;
+  }
+
+  .pres-slide-count {
+    display: none;
+  }
+
+  .pres-header-right {
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+    padding: 2px 0;
+  }
+
+  .pres-btn {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .insert-tool-shelf {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.35rem 0.5rem;
+    gap: 0.35rem;
+  }
+
+  .shelf-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .pres-slide-panel {
+    width: 80px;
+    min-width: 80px;
+  }
+
+  .pres-panel-header span {
+    display: none;
+  }
+
+  .pres-thumb-num {
+    display: none;
+  }
+
+  .pres-toolbar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .pres-canvas-wrap {
+    padding: 0.5rem;
+  }
+
+  .pres-right-panel {
+    display: none; /* Hide right sidebar on mobile screens to give canvas full width */
+  }
 }
 
 /* Hide presentation components when printing editor page */

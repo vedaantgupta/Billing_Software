@@ -172,22 +172,9 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
-    <div style={{ 
-      position: 'fixed', 
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.6)', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      zIndex: 9999, 
-      padding: '20px',
-      paddingLeft: '270px' // Offset by sidebar (250px) + some extra margin
-    }}>
+    <div className="modal-overlay-universal">
       {postSaveResult ? (
-        <div className="glass" style={{ padding: '3rem', width: '450px', maxWidth: '100%', background: 'white', borderRadius: '16px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="glass modal-card-universal" style={{ padding: 'clamp(1.5rem, 4vw, 3rem)', width: '450px', maxWidth: '100%', background: 'white', borderRadius: '16px', textAlign: 'center', animation: 'scaleIn 0.3s ease-out', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div style={{ width: '80px', height: '80px', background: '#dcfce7', color: '#166534', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
             <CheckCircle size={40} />
           </div>
@@ -212,32 +199,25 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
           </div>
         </div>
       ) : (
-      <div className="glass" style={{ 
-        padding: '2.5rem', 
-        width: '900px', 
-        maxWidth: '100%', 
-        background: 'white', 
-        maxHeight: '90vh', 
-        overflowY: 'auto', 
-        position: 'relative',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        borderRadius: '16px'
+      <div className="modal-card-universal" style={{ 
+        padding: 'clamp(1rem, 2.5vw, 2.25rem)', 
+        maxWidth: '920px'
       }}>
         <button 
            type="button" 
            onClick={onClose} 
-           style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: '#f1f5f9', border: 'none', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+           style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: '#f1f5f9', border: 'none', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', zIndex: 10 }}
         >
           <X size={18} />
         </button>
 
-        <div className="flex justify-between items-center mb-6">
-          <h2 style={{ margin: 0, fontWeight: 800 }}>{editingId ? (formData.itemType === 'product' ? 'Edit Product' : 'Edit Service') : (formData.itemType === 'product' ? 'Add New Product' : 'Add New Service')}</h2>
-          <div className="flex bg-slate-100 p-1 rounded-lg" style={{ background: '#f1f5f9', borderRadius: '8px', padding: '4px', marginRight: '3rem' }}>
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-3" style={{ paddingRight: '2.5rem' }}>
+          <h2 style={{ margin: 0, fontWeight: 800, fontSize: 'clamp(1.1rem, 2vw, 1.4rem)' }}>{editingId ? (formData.itemType === 'product' ? 'Edit Product' : 'Edit Service') : (formData.itemType === 'product' ? 'Add New Product' : 'Add New Service')}</h2>
+          <div className="flex bg-slate-100 p-1 rounded-lg" style={{ background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
             <button 
               type="button" 
               className={`btn btn-sm ${formData.itemType === 'product' ? 'btn-primary' : ''}`} 
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 16px', fontSize: '0.875rem', background: formData.itemType === 'product' ? 'var(--primary-color)' : 'transparent', color: formData.itemType === 'product' ? 'white' : 'var(--text-secondary)', border: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', fontSize: '0.85rem', background: formData.itemType === 'product' ? 'var(--primary-color)' : 'transparent', color: formData.itemType === 'product' ? 'white' : 'var(--text-secondary)', border: 'none' }}
               onClick={() => setFormData({...formData, itemType: 'product'})}
             >
               <Package size={16} /> Product
@@ -245,7 +225,7 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
             <button 
               type="button" 
               className={`btn btn-sm ${formData.itemType === 'service' ? 'btn-primary' : ''}`} 
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 16px', fontSize: '0.875rem', background: formData.itemType === 'service' ? 'var(--primary-color)' : 'transparent', color: formData.itemType === 'service' ? 'white' : 'var(--text-secondary)', border: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', fontSize: '0.85rem', background: formData.itemType === 'service' ? 'var(--primary-color)' : 'transparent', color: formData.itemType === 'service' ? 'white' : 'var(--text-secondary)', border: 'none' }}
               onClick={() => setFormData({...formData, itemType: 'service'})}
             >
               <Briefcase size={16} /> Service
@@ -254,7 +234,7 @@ const ProductModal = ({ isOpen, onClose, onSave, editingId = null, initialData =
         </div>
 
         <form onSubmit={handleSubmit} className="inventory-form">
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 250px', gap: '2rem' }}>
+          <div className="product-modal-responsive-grid">
             {/* Left Side: Fields */}
             <div className="flex flex-col gap-6">
                <section>

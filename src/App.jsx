@@ -346,14 +346,14 @@ function App() {
             <Route path="/editor/business-card/editor" element={<Navigate to="/documents" replace />} />
             <Route path="/presentations" element={
               <ProtectedRoute>
-                <Layout>
+                <Layout noWrapper={true}>
                   <PresentationEditor />
                 </Layout>
               </ProtectedRoute>
             } />
             <Route path="/presentations/edit/:id" element={
               <ProtectedRoute>
-                <Layout>
+                <Layout noWrapper={true}>
                   <PresentationEditor />
                 </Layout>
               </ProtectedRoute>

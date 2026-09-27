@@ -1626,13 +1626,17 @@
   /* Content area gets bottom padding for bottom dock */
   .content-area {
     padding: 1rem;
-    padding-bottom: 84px;
-    /* Essential: Prevents bottom dock overlap */
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + 1.5rem + var(--safe-bottom)) !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .content-area.no-padding {
-    height: calc(100vh - 60px);
-    padding-bottom: 74px;
+    height: calc(100vh - 60px - var(--mobile-bottom-nav-height) - var(--safe-bottom)) !important;
+    max-height: calc(100vh - 60px - var(--mobile-bottom-nav-height) - var(--safe-bottom)) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
   }
 
   /* ========================================================
@@ -1858,8 +1862,28 @@
 
 /* Micro-Screens (<= 480px) */
 @media (max-width: 480px) {
+  .topbar {
+    padding: 0 0.5rem;
+    gap: 0.35rem;
+  }
+
+  .mobile-brand-name {
+    display: none;
+  }
+
   .search-bar {
-    max-width: 140px;
+    max-width: 120px;
+    height: 36px;
+    padding: 0 8px;
+  }
+
+  .search-bar.mobile-search-active {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    max-width: none;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   }
 
   .sheet-actions-grid {
@@ -1867,29 +1891,9 @@
   }
 
   .page-container {
-    padding: 0.75rem !important;
+    padding: 0.65rem !important;
+    border-radius: 8px !important;
   }
-}
-
-/* Content Area Viewport & No-Padding Mode */
-.content-area {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.content-area.no-padding {
-  padding: 0;
-  height: calc(100vh - 66px);
-  max-height: calc(100vh - 66px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  flex: 1;
-  min-height: 0;
 }
 
 /* ========================================================
