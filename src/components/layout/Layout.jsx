@@ -5,16 +5,20 @@ import {
   Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet, 
   Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag,
   MessageSquareShare, Menu, X, Plus, ArrowDownLeft, ArrowUpRight, CheckCircle2,
-  FilePlus, ShoppingCart, UserPlus, PackagePlus, Receipt, TrendingUp, Check
+  FilePlus, ShoppingCart, UserPlus, PackagePlus, Receipt, TrendingUp, Check, Download
 } from 'lucide-react';
 import '@/components/layout/Layout.css';
 import AIAssistant from '@/features/dashboard/components/AIAssistant';
 import GeminiStarLogo from '@/components/ai/GeminiStarLogo';
 import { getDB, getItems } from '@/utils/db';
 import { useAuth } from '@/hooks/useAuth';
+import { usePwa } from '@/utils/pwaManager';
+import NetworkStatusBadge from '@/components/pwa/NetworkStatusBadge';
+import PwaInstallPrompt from '@/components/pwa/PwaInstallPrompt';
 
 const Layout = ({ children, noWrapper = false, extended = false }) => {
   const { user, logout } = useAuth();
+  const { isInstallable, isInstalled, promptInstall } = usePwa();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
@@ -745,6 +749,22 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               )}
             </div>
 
+            {/* Network Real-Time Status & Offline Queue Sync */}
+            <NetworkStatusBadge />
+
+            {/* Desktop PWA Install App Button */}
+            {isInstallable && !isInstalled && (
+              <button 
+                className="topbar-pwa-install-btn hide-on-mobile"
+                onClick={promptInstall}
+                title="Install BaniyaBook as native desktop application"
+                aria-label="Install Desktop Application"
+              >
+                <Download size={14} />
+                <span>Install App</span>
+              </button>
+            )}
+
             {/* AI Assistant Button (AI Logo instead of text AI) */}
             <NavLink 
               to="/ai" 
@@ -924,6 +944,11 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
                     <button className="dropdown-action-btn" onClick={() => { navigate('/catalog-manager'); setShowDropdown(false); }}>
                       <ShoppingBag size={16} /> Online Store Config
                     </button>
+                    {isInstallable && !isInstalled && (
+                      <button className="dropdown-action-btn" onClick={() => { promptInstall(); setShowDropdown(false); }}>
+                        <Download size={16} /> Install Desktop Application
+                      </button>
+                    )}
                     <div className="dropdown-divider"></div>
                     <button onClick={handleLogout} className="dropdown-action-btn danger">
                       <LogOut size={16} /> Secure Logout
@@ -1062,6 +1087,9 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
       {/* Floating AI Assistant bubble */}
       {location.pathname !== '/ai' && <AIAssistant />}
+
+      {/* PWA Mobile Banner and Update Alert */}
+      <PwaInstallPrompt />
     </div>
   );
 };

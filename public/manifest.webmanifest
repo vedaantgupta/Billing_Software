@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "id": "com.baniyabook.app",
+  "name": "BaniyaBook | Smart Billing, Accounting & Business OS",
+  "short_name": "BaniyaBook",
+  "description": "High-Tech Billing, GST Invoicing, Inventory & Business Operating System with Offline Support",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#0b1325",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "finance",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x46",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Sale Invoice",
+      "short_name": "Sale Invoice",
+      "description": "Create a new GST Tax Invoice",
+      "url": "/documents/sale/new",
+      "icons": [
+        {
+          "src": "/icons/icon-192.svg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "New Purchase Bill",
+      "short_name": "Purchase Bill",
+      "description": "Record an inward purchase invoice",
+      "url": "/documents/purchase/new",
+      "icons": [
+        {
+          "src": "/icons/icon-192.svg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Business Ledger",
+      "short_name": "Ledger",
+      "description": "View party statements and balances",
+      "url": "/ledger",
+      "icons": [
+        {
+          "src": "/icons/icon-192.svg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Products & Stock",
+      "short_name": "Inventory",
+      "description": "Manage products, barcodes and stock",
+      "url": "/products",
+      "icons": [
+        {
+          "src": "/icons/icon-192.svg",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Gemini AI Copilot",
+      "short_name": "Gemini AI",
+      "description": "Ask business questions and forecast cash flow",
+      "url": "/ai",
+      "icons": [
+        {
+          "src": "/icons/icon-192.svg",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}
