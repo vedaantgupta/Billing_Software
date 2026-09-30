@@ -7,7 +7,8 @@ const DashboardRingGauge = ({
   segments = [],
   size = 110,
   strokeWidth = 10,
-  icon: Icon
+  icon: Icon,
+  privacyMode = false
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -84,7 +85,7 @@ const DashboardRingGauge = ({
         <div className="db-ring-info">
           <div className="db-ring-total-label">{totalLabel}</div>
           <div className="db-ring-total-value">
-            ₹ {Number(totalValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {privacyMode ? '₹ ••••••' : `₹ ${Number(totalValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           </div>
 
           <div className="db-ring-segments-list">
@@ -106,7 +107,7 @@ const DashboardRingGauge = ({
                       {pct}%
                     </span>
                     <span className="db-ring-seg-val">
-                      ₹ {val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {privacyMode ? '₹ ••••••' : `₹ ${val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     </span>
                   </div>
                 </div>

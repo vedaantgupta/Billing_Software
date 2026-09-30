@@ -6,7 +6,8 @@ import {
   RefreshCw, LayoutDashboard, BarChart3, PieChart as PieIcon, CreditCard, 
   Search, Download, ArrowDownLeft, ArrowUpRight, ShoppingBag, Sparkles, MapPin,
   Calendar, CheckCircle2, Clock, AlertCircle, PlusCircle, DollarSign, Layers,
-  ShieldAlert, ShoppingCart, Tag, Percent
+  ShieldAlert, ShoppingCart, Tag, Percent, Eye, EyeOff, MessageCircle, Copy,
+  Check, Printer, Wallet, Landmark, ChevronRight, Activity, ShieldCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import IndiaMap from '@/pages/IndiaMap';
@@ -24,17 +25,26 @@ import InventoryAlertWidget from '@/features/dashboard/components/InventoryAlert
 import DashboardRingGauge from '@/features/dashboard/components/DashboardRingGauge';
 import PerformanceTablesGrid from '@/features/dashboard/components/PerformanceTablesGrid';
 import HumanVoiceBusinessExplainer from '@/features/dashboard/components/HumanVoiceBusinessExplainer';
+import FinancialPulseRibbon from '@/features/dashboard/components/FinancialPulseRibbon';
+import SmartBusinessIntelligence from '@/features/dashboard/components/SmartBusinessIntelligence';
+import LiveActivityAuditFeed from '@/features/dashboard/components/LiveActivityAuditFeed';
+import CashFlowForecastWidget from '@/features/dashboard/components/CashFlowForecastWidget';
 
 dayjs.extend(isBetween);
 
 const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#3b82f6'];
 
-const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
+const OutstandingCard = ({ title, typeLabel, amount, aging, privacyMode = false }) => {
   const tot = aging.total > 0 ? aging.total : 1;
   const pctC = (aging.current / tot) * 100;
   const pct1 = (aging.days1_15 / tot) * 100;
   const pct2 = (aging.days16_30 / tot) * 100;
   const pct3 = (aging.days30plus / tot) * 100;
+
+  const maskVal = (val, dec = 2) => {
+    if (privacyMode) return '₹ ••••••';
+    return `₹ ${Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: dec, maximumFractionDigits: dec })}`;
+  };
 
   return (
     <div className="glass" style={{ flex: 1, padding: '1.25rem', display: 'flex', flexDirection: 'column', minWidth: '300px' }}>
@@ -46,7 +56,7 @@ const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
       <div style={{ fontSize: '0.825rem', color: '#64748b', fontWeight: 600, marginBottom: '0.65rem', display: 'flex', gap: '0.5rem', alignItems: 'baseline', flexWrap: 'wrap' }}>
         <span>{typeLabel}:</span>
         <span style={{ color: '#0f172a', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-          ₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {maskVal(amount, 2)}
         </span>
       </div>
 
@@ -68,7 +78,7 @@ const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }} />
             <span style={{ fontSize: '0.825rem', fontWeight: 800, color: '#0f172a' }}>
-              ₹ {aging.current.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {maskVal(aging.current, 2)}
             </span>
           </div>
         </div>
@@ -82,7 +92,7 @@ const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#facc15' }} />
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>
-                  ₹ {aging.days1_15.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                  {maskVal(aging.days1_15, 0)}
                 </span>
               </div>
               <div style={{ fontSize: '0.7rem', color: '#94a3b8', paddingLeft: '11px' }}>1-15 Days</div>
@@ -92,7 +102,7 @@ const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#f97316' }} />
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>
-                  ₹ {aging.days16_30.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                  {maskVal(aging.days16_30, 0)}
                 </span>
               </div>
               <div style={{ fontSize: '0.7rem', color: '#94a3b8', paddingLeft: '11px' }}>16-30 Days</div>
@@ -102,7 +112,7 @@ const OutstandingCard = ({ title, typeLabel, amount, aging }) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#dc2626' }} />
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>
-                  ₹ {aging.days30plus.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                  {maskVal(aging.days30plus, 0)}
                 </span>
               </div>
               <div style={{ fontSize: '0.7rem', color: '#94a3b8', paddingLeft: '11px' }}>30+ Days</div>
@@ -528,6 +538,48 @@ const Dashboard = () => {
     return ((stats.netProfit / stats.sales) * 100).toFixed(1);
   }, [stats.netProfit, stats.sales]);
 
+  // Privacy Mode & Masking
+  const [privacyMode, setPrivacyMode] = useState(false);
+  const [copiedDocId, setCopiedDocId] = useState(null);
+
+  const mask = (val, prefix = '₹ ') => {
+    if (privacyMode) return `${prefix}••••••`;
+    if (typeof val === 'number') {
+      return `${prefix}${val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `${prefix}${val}`;
+  };
+
+  const handleCopyDoc = (id, docNo) => {
+    navigator.clipboard?.writeText(docNo);
+    setCopiedDocId(id);
+    setTimeout(() => setCopiedDocId(null), 1800);
+  };
+
+  // Summary KPIs for Recent Documents Table
+  const tableSummary = useMemo(() => {
+    let totalVal = 0;
+    let paidVal = 0;
+    let pendingVal = 0;
+
+    displayedUnifiedInvoices.forEach(inv => {
+      const amt = Number(inv.total || inv.grandTotal || 0);
+      totalVal += amt;
+      const dueDate = inv.dueDate || inv.date || inv.invoiceDetail?.date;
+      const isOverdue = inv.status ? inv.status.toLowerCase() === 'overdue' : dayjs(dueDate).isBefore(dayjs(), 'day');
+      const invStatus = (inv.status || (isOverdue ? 'Overdue' : 'Paid')).toLowerCase();
+      if (invStatus === 'paid') paidVal += amt;
+      else pendingVal += amt;
+    });
+
+    return {
+      count: displayedUnifiedInvoices.length,
+      total: totalVal,
+      paid: paidVal,
+      pending: pendingVal
+    };
+  }, [displayedUnifiedInvoices]);
+
   // Clean name extraction for greeting
   const rawUserName = user?.firstName ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}` : (user?.displayName || user?.name || user?.username || user?.businessName || '');
   const cleanGreetingName = rawUserName ? rawUserName.trim() : '';
@@ -559,6 +611,16 @@ const Dashboard = () => {
         </div>
 
         <div className="db-header-actions">
+          {/* Privacy Toggle */}
+          <button 
+            className={`db-privacy-toggle ${privacyMode ? 'active' : ''}`}
+            onClick={() => setPrivacyMode(!privacyMode)}
+            title={privacyMode ? "Show Sensitive Numbers" : "Hide Sensitive Numbers (Privacy Mode)"}
+          >
+            {privacyMode ? <EyeOff size={15} color="var(--primary-color)" /> : <Eye size={15} />}
+            <span>{privacyMode ? 'Privacy On' : 'Privacy'}</span>
+          </button>
+
           <button 
             className="btn btn-secondary" 
             onClick={() => window.location.reload()}
@@ -600,6 +662,29 @@ const Dashboard = () => {
       {/* QUICK ACTIONS BAR */}
       <DashboardQuickActions />
 
+      {/* EXECUTIVE FINANCIAL PULSE RIBBON */}
+      <FinancialPulseRibbon
+        stats={stats}
+        inwardBreakdown={inwardBreakdown}
+        outwardBreakdown={outwardBreakdown}
+        agingSales={agingSales}
+        agingPurchases={agingPurchases}
+        inventoryStats={inventoryStats}
+        staffCount={staffCount}
+        activeProjectsCount={activeProjectsCount}
+        privacyMode={privacyMode}
+      />
+
+      {/* SMART BUSINESS COPILOT INSIGHTS */}
+      <SmartBusinessIntelligence
+        stats={stats}
+        agingSales={agingSales}
+        inventoryStats={inventoryStats}
+        topState={stateWiseSales.length > 0 ? stateWiseSales[0]?.state : ''}
+        stateWiseSales={stateWiseSales}
+        privacyMode={privacyMode}
+      />
+
       {/* NAVIGATION TABS */}
       <div className="db-tabs">
         <button 
@@ -626,6 +711,12 @@ const Dashboard = () => {
         >
           <CreditCard size={16} /> Receivables & Payables
         </button>
+        <button 
+          className={`db-tab ${activeTab === 'cashflow' ? 'active' : ''}`}
+          onClick={() => setActiveTab('cashflow')}
+        >
+          <Wallet size={16} /> Cash Flow & Banking Hub
+        </button>
       </div>
 
       {/* TAB 1: EXECUTIVE OVERVIEW */}
@@ -643,10 +734,10 @@ const Dashboard = () => {
                 </div>
                 <div className="db-spark-month">{dayjs(dateRange.end).format('MMM YYYY')}</div>
                 <div className="db-spark-val">
-                  ₹ {stats.sales.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {mask(stats.sales)}
                 </div>
                 <div className="db-spark-sub">
-                  + GST ₹ {stats.gstSales.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  + GST {mask(stats.gstSales)}
                 </div>
               </div>
               <div className="db-spark-bars">
@@ -664,7 +755,7 @@ const Dashboard = () => {
                 </div>
                 <div className="db-spark-month">{dayjs(dateRange.end).format('MMM YYYY')}</div>
                 <div className="db-spark-val">
-                  ₹ {stats.purchases.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {mask(stats.purchases)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem', fontWeight: 600 }}>
                   Tracked Purchase Bills
@@ -686,6 +777,7 @@ const Dashboard = () => {
                 { label: 'Income', value: stats.otherIncome || (stats.sales * 0.1), color: '#10b981' }
               ]}
               icon={BarChart3}
+              privacyMode={privacyMode}
             />
           </div>
 
@@ -765,6 +857,7 @@ const Dashboard = () => {
                 { label: 'CASH', value: inwardBreakdown.cash, color: '#6366f1' }
               ]}
               icon={ArrowDownLeft}
+              privacyMode={privacyMode}
             />
 
             <DashboardRingGauge
@@ -777,6 +870,7 @@ const Dashboard = () => {
                 { label: 'CHEQUE', value: outwardBreakdown.cheque, color: '#8b5cf6' }
               ]}
               icon={ArrowUpRight}
+              privacyMode={privacyMode}
             />
           </div>
 
@@ -791,9 +885,27 @@ const Dashboard = () => {
 
           {/* OUTSTANDING AGING CARDS */}
           <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
-            <OutstandingCard title="Sales Outstanding (Receivables)" typeLabel="Total Receivables" amount={agingSales.total} aging={agingSales} />
-            <OutstandingCard title="Purchase Outstanding (Payables)" typeLabel="Total Payables" amount={agingPurchases.total} aging={agingPurchases} />
+            <OutstandingCard title="Sales Outstanding (Receivables)" typeLabel="Total Receivables" amount={agingSales.total} aging={agingSales} privacyMode={privacyMode} />
+            <OutstandingCard title="Purchase Outstanding (Payables)" typeLabel="Total Payables" amount={agingPurchases.total} aging={agingPurchases} privacyMode={privacyMode} />
           </div>
+
+          {/* 30-DAY WORKING CAPITAL & CASH FLOW FORECAST */}
+          <CashFlowForecastWidget
+            agingSales={agingSales}
+            agingPurchases={agingPurchases}
+            stats={stats}
+            inwardBreakdown={inwardBreakdown}
+            outwardBreakdown={outwardBreakdown}
+            privacyMode={privacyMode}
+          />
+
+          {/* LIVE BUSINESS ACTIVITY & AUDIT STREAM */}
+          <LiveActivityAuditFeed
+            allUnifiedInvoices={allUnifiedInvoices}
+            expensesList={expensesList}
+            inwardBreakdown={inwardBreakdown}
+            privacyMode={privacyMode}
+          />
 
           {/* INDIA MAP & TOP STATES WITH STACKING ISOLATION FIX */}
           <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start', flexWrap: 'wrap', position: 'relative', zIndex: 5 }}>
@@ -901,6 +1013,26 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* Table KPI Summary Strip */}
+            <div className="db-table-kpi-strip">
+              <div className="db-table-kpi">
+                <span className="db-table-kpi-label">Filtered Docs:</span>
+                <span className="db-table-kpi-val">{tableSummary.count}</span>
+              </div>
+              <div className="db-table-kpi">
+                <span className="db-table-kpi-label">Total Volume:</span>
+                <span className="db-table-kpi-val">{mask(tableSummary.total)}</span>
+              </div>
+              <div className="db-table-kpi">
+                <span className="db-table-kpi-label">Paid Volume:</span>
+                <span className="db-table-kpi-val green">{mask(tableSummary.paid)}</span>
+              </div>
+              <div className="db-table-kpi">
+                <span className="db-table-kpi-label">Pending / Overdue:</span>
+                <span className="db-table-kpi-val amber">{mask(tableSummary.pending)}</span>
+              </div>
+            </div>
+
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
@@ -912,6 +1044,7 @@ const Dashboard = () => {
                     <th style={{ padding: '0.75rem 0.85rem', color: 'var(--text-secondary)', fontWeight: 700, fontSize: '0.775rem', textTransform: 'uppercase' }}>Due Date</th>
                     <th style={{ padding: '0.75rem 0.85rem', color: 'var(--text-secondary)', fontWeight: 700, fontSize: '0.775rem', textTransform: 'uppercase' }}>Amount</th>
                     <th style={{ padding: '0.75rem 0.85rem', color: 'var(--text-secondary)', fontWeight: 700, fontSize: '0.775rem', textTransform: 'uppercase' }}>Status</th>
+                    <th style={{ padding: '0.75rem 0.85rem', color: 'var(--text-secondary)', fontWeight: 700, fontSize: '0.775rem', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -941,18 +1074,48 @@ const Dashboard = () => {
                         <td style={{ padding: '0.8rem 0.85rem', color: isOverdue ? '#dc2626' : 'var(--text-primary)', fontWeight: isOverdue ? 800 : 600 }}>
                           {dueDate}
                         </td>
-                        <td style={{ padding: '0.8rem 0.85rem', fontWeight: 800, fontSize: '0.9rem' }}>₹{amountVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style={{ padding: '0.8rem 0.85rem', fontWeight: 800, fontSize: '0.9rem' }}>{mask(amountVal)}</td>
                         <td style={{ padding: '0.8rem 0.85rem' }}>
                           <span className={`badge-status ${statusLabel.toLowerCase()}`}>
                             {statusLabel}
                           </span>
+                        </td>
+                        <td style={{ padding: '0.8rem 0.85rem', textAlign: 'right' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                            {statusLabel.toLowerCase() !== 'paid' && (
+                              <button 
+                                className="db-wa-pill-btn"
+                                onClick={() => {
+                                  const text = encodeURIComponent(`Namaste ${name}, gentle reminder regarding pending ${kind} document ${docNo} for ₹${amountVal.toLocaleString()} due on ${dueDate}. Please review and update payment status. Thank you!`);
+                                  window.open(`https://wa.me/?text=${text}`, '_blank');
+                                }}
+                                title="Send WhatsApp Payment Reminder"
+                              >
+                                <MessageCircle size={12} color="#16a34a" /> Remind
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleCopyDoc(inv.id || idx, docNo)}
+                              style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '5px', padding: '3px 7px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', color: '#475569', fontSize: '0.725rem', gap: '3px' }}
+                              title="Copy Document Number"
+                            >
+                              {copiedDocId === (inv.id || idx) ? <Check size={12} color="#059669" /> : <Copy size={12} />}
+                            </button>
+                            <button
+                              onClick={() => navigate('/documents')}
+                              style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '5px', padding: '3px 7px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', color: '#475569', fontSize: '0.725rem' }}
+                              title="View in Documents List"
+                            >
+                              <ArrowRight size={12} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
                   })}
                   {displayedUnifiedInvoices.length === 0 && (
                     <tr>
-                      <td colSpan="7" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      <td colSpan="8" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                           <FileText size={28} color="#cbd5e1" />
                           <span style={{ fontWeight: 600 }}>No matching documents found for current filters.</span>
@@ -1281,8 +1444,156 @@ const Dashboard = () => {
       {activeTab === 'receivables' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
-            <OutstandingCard title="Sales Receivables Aging" typeLabel="Total Pending Customer Invoices" amount={agingSales.total} aging={agingSales} />
-            <OutstandingCard title="Purchase Payables Aging" typeLabel="Total Pending Vendor Bills" amount={agingPurchases.total} aging={agingPurchases} />
+            <OutstandingCard title="Sales Receivables Aging" typeLabel="Total Pending Customer Invoices" amount={agingSales.total} aging={agingSales} privacyMode={privacyMode} />
+            <OutstandingCard title="Purchase Payables Aging" typeLabel="Total Pending Vendor Bills" amount={agingPurchases.total} aging={agingPurchases} privacyMode={privacyMode} />
+          </div>
+
+          {/* 30-DAY CASH FLOW FORECAST FOR RECEIVABLES & PAYABLES */}
+          <CashFlowForecastWidget
+            agingSales={agingSales}
+            agingPurchases={agingPurchases}
+            stats={stats}
+            inwardBreakdown={inwardBreakdown}
+            outwardBreakdown={outwardBreakdown}
+            privacyMode={privacyMode}
+          />
+        </div>
+      )}
+
+      {/* TAB 5: CASH FLOW & BANKING HUB */}
+      {activeTab === 'cashflow' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* STATS OVERVIEW CARDS */}
+          <div className="db-stat-grid">
+            <div className="db-stat-card">
+              <span className="db-stat-title">Net Operating Cash Flow</span>
+              <div className="db-stat-value" style={{ color: (inwardBreakdown.total - outwardBreakdown.total) >= 0 ? '#059669' : '#dc2626' }}>
+                {mask(inwardBreakdown.total - outwardBreakdown.total)}
+              </div>
+              <div className="db-stat-footer">
+                <span>Inward collections minus outward spending</span>
+              </div>
+            </div>
+
+            <div className="db-stat-card">
+              <span className="db-stat-title">Total Inward Collected</span>
+              <div className="db-stat-value" style={{ color: '#059669' }}>
+                {mask(inwardBreakdown.total)}
+              </div>
+              <div className="db-stat-footer">
+                <span>Total payments received into accounts</span>
+              </div>
+            </div>
+
+            <div className="db-stat-card">
+              <span className="db-stat-title">Total Outward Disbursed</span>
+              <div className="db-stat-value" style={{ color: '#dc2626' }}>
+                {mask(outwardBreakdown.total)}
+              </div>
+              <div className="db-stat-footer">
+                <span>Total vendor & expense payouts</span>
+              </div>
+            </div>
+
+            <div className="db-stat-card">
+              <span className="db-stat-title">Estimated Net GST Due</span>
+              <div className="db-stat-value" style={{ color: '#7c3aed' }}>
+                {mask(Math.max(0, (stats.gstSales || 0) - ((stats.purchases || 0) * 0.18)))}
+              </div>
+              <div className="db-stat-footer">
+                <span>Output tax after Input Tax Credit (ITC)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 30-DAY FORECAST WIDGET */}
+          <CashFlowForecastWidget
+            agingSales={agingSales}
+            agingPurchases={agingPurchases}
+            stats={stats}
+            inwardBreakdown={inwardBreakdown}
+            outwardBreakdown={outwardBreakdown}
+            privacyMode={privacyMode}
+          />
+
+          {/* INWARD/OUTWARD PAYMENT RINGS */}
+          <div className="db-charts-grid">
+            <DashboardRingGauge
+              title="Inward Collection Breakdown"
+              totalLabel="Total Received"
+              totalValue={inwardBreakdown.total}
+              segments={[
+                { label: 'ONLINE / UPI', value: inwardBreakdown.online, color: '#10b981' },
+                { label: 'CHEQUE', value: inwardBreakdown.cheque, color: '#8b5cf6' },
+                { label: 'CASH', value: inwardBreakdown.cash, color: '#6366f1' }
+              ]}
+              icon={ArrowDownLeft}
+            />
+
+            <DashboardRingGauge
+              title="Outward Spending Breakdown"
+              totalLabel="Total Disbursed"
+              totalValue={outwardBreakdown.total}
+              segments={[
+                { label: 'CASH', value: outwardBreakdown.cash, color: '#10b981' },
+                { label: 'ONLINE / BANK', value: outwardBreakdown.online, color: '#6366f1' },
+                { label: 'CHEQUE', value: outwardBreakdown.cheque, color: '#8b5cf6' }
+              ]}
+              icon={ArrowUpRight}
+            />
+          </div>
+
+          {/* QUICK BANKING & LEDGER SHORTCUTS */}
+          <div className="glass" style={{ padding: '1.25rem' }}>
+            <div className="db-card-header">
+              <h3 className="db-card-title">
+                <Landmark size={18} color="var(--primary-color)" />
+                Banking & Khata Quick Launch
+              </h3>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginTop: '0.85rem' }}>
+              <div 
+                className="glass" 
+                style={{ padding: '1.1rem', borderRadius: '10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid #e2e8f0', background: '#ffffff' }}
+                onClick={() => navigate('/ledger')}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <strong style={{ fontSize: '0.925rem', color: '#0f172a' }}>Digital Khata (Ledger)</strong>
+                  <ArrowRight size={15} color="var(--primary-color)" />
+                </div>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Complete debit & credit audit trails for all customer & vendor accounts.
+                </p>
+              </div>
+
+              <div 
+                className="glass" 
+                style={{ padding: '1.1rem', borderRadius: '10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid #e2e8f0', background: '#ffffff' }}
+                onClick={() => navigate('/banking/loans')}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <strong style={{ fontSize: '0.925rem', color: '#0f172a' }}>Loan & Credit Manager</strong>
+                  <ArrowRight size={15} color="#8b5cf6" />
+                </div>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Manage business credit facilities, EMI repayments and credit scoring.
+                </p>
+              </div>
+
+              <div 
+                className="glass" 
+                style={{ padding: '1.1rem', borderRadius: '10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid #e2e8f0', background: '#ffffff' }}
+                onClick={() => navigate('/expenses/daily')}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <strong style={{ fontSize: '0.925rem', color: '#0f172a' }}>Daily Expense Vouchers</strong>
+                  <ArrowRight size={15} color="#f43f5e" />
+                </div>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Log operational petty cash, vendor disbursements, rent and utility bills.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}

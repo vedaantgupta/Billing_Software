@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowDownLeft, ArrowUpRight, UserPlus, PackagePlus, ShoppingCart } from 'lucide-react';
+import { 
+  FileText, ArrowDownLeft, ArrowUpRight, UserPlus, PackagePlus, ShoppingCart, 
+  Truck, BookOpen 
+} from 'lucide-react';
 
 const DashboardQuickActions = () => {
   const navigate = useNavigate();
@@ -41,6 +44,18 @@ const DashboardQuickActions = () => {
       icon: <PackagePlus size={16} />,
       path: '/products',
       color: '#f59e0b'
+    },
+    {
+      label: 'Delivery Challan',
+      icon: <Truck size={16} />,
+      path: '/documents/challan/new',
+      color: '#0284c7'
+    },
+    {
+      label: 'Ledger Khata',
+      icon: <BookOpen size={16} />,
+      path: '/ledger',
+      color: '#7c3aed'
     }
   ];
 
