@@ -329,13 +329,13 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
 
         <div className="pt-letter-sheet" style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', zIndex: 2 }}>
           {showLetterhead && (
-            <div className="pt-letter-head" style={{ 
+            <div className="pt-letter-head" style={{
               borderBottom: letterheadTheme === 'classic' ? '3px double #0f172a' : `3px solid ${accentColor}`,
               borderLeft: letterheadTheme === 'minimal' ? `4px solid ${accentColor}` : undefined,
               paddingLeft: letterheadTheme === 'minimal' ? '12px' : undefined,
               textAlign: letterheadTheme === 'classic' ? 'center' : 'left',
-              paddingBottom: '12px', 
-              marginBottom: '18px' 
+              paddingBottom: '12px',
+              marginBottom: '18px'
             }}>
               <div style={{ display: 'flex', justifyContent: letterheadTheme === 'classic' ? 'center' : 'space-between', alignItems: 'center', flexDirection: letterheadTheme === 'classic' ? 'column' : 'row', gap: '8px' }}>
                 <div>
@@ -418,161 +418,209 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
     );
   }
 
-  // ── Payment Receipt (Inward) Voucher Template ──
-  if (rawDoc.docType === 'Payment In' || rawType === 'Payment In') {
+  // ── Official Standard Payment In (Receipt) & Payment Out (Voucher) Print Template ──
+  if (
+    rawDoc.docType === 'Payment In' || rawType === 'Payment In' ||
+    rawDoc.docType === 'Payment Out' || rawType === 'Payment Out'
+  ) {
     const p = rawDoc;
+    const isOutward = rawDoc.docType === 'Payment Out' || rawType === 'Payment Out';
     const amount = Number(p.amount) || 0;
+    const docNo = p.fullReceiptNo || p.receiptNumber || p.fullVoucherNo || p.voucherNumber || p.fullPaymentNo || p.paymentNumber || '-';
+    const partyName = isOutward ? (p.vendorName || p.companyName || '-') : (p.customerName || p.companyName || '-');
 
     return (
-      <div className="print-container pt-payment-voucher">
-        <div className="pt-pv-wrapper">
+      <div className="print-container single-page">
+        <div className="print-page-border">
 
-          {/* 1. Top Header */}
-          <div className="pt-pv-top-header">
-            <div className="pt-pv-company-meta">
-              <h1 className="pt-pv-company-name">{company?.name || 'VEDAANT POOLS TECHNOLOGY'}</h1>
-              <div className="pt-pv-company-address">
-                {company?.address || 'HOUSE NO L-1, VANDANA VIHAR COLONGY, BHANGAD ROAD BEHIND PAGARE GAS GODOWN indore, Madhya Pradesh - 452011'}
-              </div>
+          {/* 1. Header Block */}
+          <div className="pt-header">
+            <div className="pt-header-left">
+              {company?.logo ? (
+                <img src={company.logo} alt={company.name} style={{ maxHeight: '80px', maxWidth: '280px', objectFit: 'contain', marginBottom: '8px' }} />
+              ) : (
+                <h1>{company?.name || 'Company Name'}</h1>
+              )}
+              <p>{company?.address || 'Company Address'}</p>
             </div>
-            <div className="pt-pv-owner-meta">
+            <div className="pt-header-right">
               <table>
                 <tbody>
-                  <tr><th>Name</th><td>: {company?.ownerName || '-'}</td></tr>
-                  <tr><th>Phone</th><td>: {company?.phone || '-'}</td></tr>
-                  <tr><th>Email</th><td>: {company?.email || '-'}</td></tr>
-                  <tr><th>PAN</th><td>: {company?.pan || '-'}</td></tr>
+                  <tr><td>Name</td><td>: {company?.ownerName || '-'}</td></tr>
+                  <tr><td>Phone</td><td>: {company?.phone || '-'}</td></tr>
+                  <tr><td>Email</td><td>: {company?.email || '-'}</td></tr>
+                  <tr><td>PAN</td><td>: {company?.pan || '-'}</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
 
           {/* 2. Title Bar */}
-          <div className="pt-pv-title-bar">
-            <div className="pt-pv-gstin">GSTIN : {company?.gstin || '-'}</div>
-            <div className="pt-pv-title-text">RECEIPT VOUCHER</div>
-            <div className="pt-pv-placeholder"></div>
+          <div className="pt-title-bar">
+            <div className="pt-title-gstin"><strong>GSTIN :</strong> {company?.gstin || '-'}</div>
+            <div className="pt-title-text">{isOutward ? 'PAYMENT VOUCHER' : 'RECEIPT VOUCHER'}</div>
+            <div className="pt-title-original">{copyType || 'ORIGINAL'}</div>
           </div>
 
-          {/* 3. Customer Detail Box */}
-          <div className="pt-pv-customer-section">
-            <div className="pt-pv-customer-grid">
-              <div className="pt-pv-grid-left">
-                <div className="pt-pv-section-header">Customer Detail</div>
-                <div className="pt-pv-details-content">
-                  <table>
-                    <tbody>
-                      <tr><th>M/S</th><td>: {p.customerName || '-'}</td></tr>
-                      <tr><th style={{ verticalAlign: 'top' }}>Address</th><td>: {p.address || '-'}</td></tr>
-                      <tr><th>Phone</th><td>: {p.phone || '-'}</td></tr>
-                      <tr><th>GSTIN</th><td>: {p.gstinPan || '-'}</td></tr>
-                      <tr><th>State</th><td>: {p.state || 'Madhya Pradesh (23)'}</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="pt-pv-grid-right">
-                <div className="pt-pv-section-header-blank">&nbsp;</div>
-                <div className="pt-pv-receipt-meta-content">
-                  <table>
-                    <tbody>
-                      <tr><th>Receipt No.</th><td>RP-690607</td></tr>
-                      <tr><th>Receipt Date</th><td>2026-04-06</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+          {/* 3. Details Container */}
+          <div className="pt-details-container">
+            <div className="pt-customer-details">
+              <div className="pt-section-title">{isOutward ? 'Paid To / Vendor Detail' : 'Received From / Customer Detail'}</div>
+              <table className="pt-details-table">
+                <tbody>
+                  <tr><th>M/S</th><td>: <strong>{partyName}</strong></td></tr>
+                  <tr><th style={{ verticalAlign: 'top' }}>Address</th><td style={{ whiteSpace: 'pre-wrap' }}>: {p.address || '-'}</td></tr>
+                  <tr><th>Phone</th><td>: {p.phone || '-'}</td></tr>
+                  <tr><th>GSTIN</th><td>: {p.gstinPan || '-'}</td></tr>
+                  <tr><th>State</th><td>: {p.state || company?.state || 'Madhya Pradesh (23)'}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="pt-invoice-details">
+              <table className="pt-details-table" style={{ marginTop: '10px' }}>
+                <tbody>
+                  <tr>
+                    <th style={{ width: '120px' }}>{isOutward ? 'Voucher No.' : 'Receipt No.'}</th>
+                    <td style={{ fontSize: '13px' }}>: <strong>{docNo}</strong></td>
+                  </tr>
+                  <tr>
+                    <th>Date</th>
+                    <td>: {p.date || '-'}</td>
+                  </tr>
+                  <tr>
+                    <th>Payment Mode</th>
+                    <td>: <strong>{p.paymentType || 'Bank Transfer'}</strong></td>
+                  </tr>
+                  {p.invoiceList && (
+                    <tr>
+                      <th>Reference / Bill</th>
+                      <td>: {p.invoiceList}</td>
+                    </tr>
+                  )}
+                  {isOutward && p.category && (
+                    <tr>
+                      <th>Category</th>
+                      <td>: {p.category}</td>
+                    </tr>
+                  )}
+                  <tr>
+                    <th>Status</th>
+                    <td>: <span style={{ color: isOutward ? '#e11d48' : '#059669', fontWeight: 700 }}>{p.status || (isOutward ? 'Paid' : 'Received')}</span></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* 4. Main Body Table */}
-          <div className="pt-pv-table-container">
-            <table className="pt-pv-main-table">
+          {/* 4. Main Particulars Table */}
+          <div className="pt-table-container">
+            <table className="pt-main-table">
               <thead>
                 <tr>
-                  <th className="th-sr">Sr.No.</th>
-                  <th className="th-particulars">Particulars</th>
-                  <th className="th-amount">Amount</th>
+                  <th className="th-sr" style={{ width: '45px' }}>Sr.<br />No.</th>
+                  <th className="th-product">Particulars / Account Description</th>
+                  <th className="th-hsn" style={{ width: '140px' }}>Payment Mode</th>
+                  <th className="th-qty" style={{ width: '140px' }}>Reference / Bill</th>
+                  <th className="th-total" style={{ width: '160px' }}>Amount (₹)</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="pt-pv-item-row">
-                  <td className="td-sr">1</td>
-                  <td className="td-particulars">
-                    <div className="pt-pv-account-block">
-                      <strong>Account :</strong>
-                      <div className="pt-pv-account-name">{p.customerName}</div>
-                      {p.invoiceList && <div className="pt-pv-invoice-no">Invoice No : {p.invoiceList}</div>}
+                <tr className="pt-item-row">
+                  <td className="td-center">1</td>
+                  <td className="td-left">
+                    <div style={{ fontWeight: 700, fontSize: '12px' }}>
+                      {isOutward ? `Payment disbursed to ${partyName}` : `Payment received from ${partyName}`}
                     </div>
-
-                    <div className="pt-pv-remarks-block">
-                      <strong>Remarks :</strong>
-                      <div className="pt-pv-remarks-text">{p.remarks || '-'}</div>
-                    </div>
-
-                    <div className="pt-pv-through-block">
-                      <strong>Through :</strong>
-                      <div className="pt-pv-through-text">{p.paymentType || 'ONLINE'}</div>
-                    </div>
+                    {p.remarks && (
+                      <div style={{ fontSize: '11px', color: '#475569', marginTop: '6px' }}>
+                        <strong>Remarks:</strong> {p.remarks}
+                      </div>
+                    )}
                   </td>
-                  <td className="td-amount">
-                    {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  <td className="td-center" style={{ fontWeight: 600 }}>{p.paymentType || 'Bank Transfer'}</td>
+                  <td className="td-center">{p.invoiceList || '-'}</td>
+                  <td className="td-right" style={{ fontSize: '13px', fontWeight: 800 }}>
+                    {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
-                {/* Spacer row to push footer down */}
-                <tr className="pt-pv-spacer-row">
-                  <td className="td-sr"></td>
-                  <td className="td-particulars"></td>
-                  <td className="td-amount"></td>
+
+                {/* Empty spacer row for standard full-height print balance */}
+                <tr className="pt-empty-row">
+                  <td colSpan={5} style={{ height: '100%' }}></td>
                 </tr>
               </tbody>
               <tfoot>
-                <tr>
-                  <td colSpan="2" className="td-total-label"></td>
-                  <td className="td-total-value">{amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <tr className="pt-totals-row">
+                  <td colSpan="4" className="td-right"><strong>Total Amount</strong></td>
+                  <td className="td-right" style={{ fontSize: '13px', fontWeight: 900 }}>
+                    ₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
                 </tr>
               </tfoot>
             </table>
           </div>
 
-          {/* 5. Footer Sections */}
-          <div className="pt-pv-footer">
-            <div className="pt-pv-footer-row">
-              <div className="pt-pv-words-box">
-                <div className="pt-pv-footer-label">Total in words</div>
-                <div className="pt-pv-words-text">{toWords(Math.round(amount))}</div>
+          {/* 5. Footer Area */}
+          <div className="pt-footer-container">
+            <div className="pt-footer-left">
+              <div className="pt-footer-box" style={{ minHeight: '40px' }}>
+                <div className="pt-section-title-small">Total in words</div>
+                <div className="pt-words-text">{toWords(Math.round(amount))}</div>
               </div>
-              <div className="pt-pv-amount-summary">
-                <div className="pt-pv-summary-item">
-                  <span>Total Amount</span>
-                  <span className="pt-pv-final-amount">₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+
+              {company?.bankName && (
+                <div className="pt-footer-box pt-bank-box">
+                  <div className="pt-section-title-small">Bank Details</div>
+                  <table className="pt-bank-table">
+                    <tbody>
+                      <tr><th>Bank Name</th><td>{company.bankName}</td></tr>
+                      {company.bankBranch && <tr><th>Branch</th><td>{company.bankBranch}</td></tr>}
+                      {company.bankAccNumber && <tr><th>Acc. Number</th><td>{company.bankAccNumber}</td></tr>}
+                      {company.bankIfsc && <tr><th>IFSC Code</th><td>{company.bankIfsc}</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="pt-footer-box pt-terms-box" style={{ borderBottom: 'none' }}>
+                <div className="pt-section-title-small">Terms & Conditions</div>
+                <div className="pt-terms-text" style={{ whiteSpace: 'pre-line' }}>
+                  {isOutward
+                    ? '1. Payment issued subject to clearance and internal audit verification.\n2. Please preserve this payment voucher for your statutory accounting records.'
+                    : '1. Payment received subject to realization of cheque / bank clearance.\n2. This is a computer generated official payment receipt voucher.'}
                 </div>
               </div>
             </div>
 
-            <div className="pt-pv-footer-row">
-              <div className="pt-pv-terms-box">
-                <div className="pt-pv-footer-label">Terms and Conditions</div>
-                <div className="pt-pv-terms-text">
-                  Subject to our home Jurisdiction.<br />
-                  Our Responsibility Ceases as soon as goods leaves our Premises.<br />
-                  Goods once sold will not taken back.<br />
-                  Delivery Ex-Premises.
-                </div>
-              </div>
-              <div className="pt-pv-signature-box">
-                <div className="pt-pv-certified-text">Certified that the particulars given above are true and correct.</div>
-                <div className="pt-pv-for-comp">For {company?.name || 'VEDAANT POOLS TECHNOLOGY'}</div>
+            <div className="pt-footer-right">
+              <table className="pt-summary-table">
+                <tbody>
+                  <tr className="pt-grand-total">
+                    <th>{isOutward ? 'Total Amount Paid' : 'Total Amount Received'}</th>
+                    <td>₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                  <tr><td colSpan="2" className="pt-eoe">(E & O.E.)</td></tr>
+                </tbody>
+              </table>
+
+              <div className="pt-signature-box">
+                <div className="pt-certify-text">Certified that the particulars given above are true and correct.</div>
+                <div className="pt-sig-company">For {company?.name || 'Company'}</div>
                 {company?.signature ? (
                   <div style={{ textAlign: 'center', padding: '5px 0' }}>
                     <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
                   </div>
                 ) : (
-                  <div className="pt-pv-sig-space"></div>
+                  <div style={{ height: '40px' }}></div>
                 )}
-                <div className="pt-pv-sig-label">Authorised Signatory</div>
+                <div className="pt-sig-label">Authorised Signatory</div>
               </div>
             </div>
+          </div>
+
+          {/* Page indicator */}
+          <div style={{ textAlign: 'center', padding: '4px', fontSize: '9px', fontWeight: 600, borderTop: '1px dashed #eee' }}>
+            Page 1 of 1
           </div>
 
         </div>

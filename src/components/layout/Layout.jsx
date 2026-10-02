@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, Sparkles, Users, FileText, Package, BarChart3, Settings as SettingsIcon, 
-  Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet, 
+import {
+  LayoutDashboard, Sparkles, Users, FileText, Package, BarChart3, Settings as SettingsIcon,
+  Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet,
   Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag,
   MessageSquareShare, Menu, X, Plus, ArrowDownLeft, ArrowUpRight, CheckCircle2,
   FilePlus, ShoppingCart, UserPlus, PackagePlus, Receipt, TrendingUp, Check, Download
@@ -41,12 +41,12 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const companyInfo = getDB().company || { name: user?.firstName ? `${user.firstName} ${user.lastName}` : (user?.username || 'BaniyaBook Merchant') };
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
-  
+
   const searchRef = useRef(null);
   const inputRef = useRef(null);
   const mobileInputRef = useRef(null);
@@ -353,11 +353,11 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
   return (
     <div className={`layout-container ${isCollapsed ? 'sidebar-collapsed' : ''} ${isMobileDrawerOpen ? 'drawer-open' : ''}`}>
-      
+
       {/* Mobile Drawer Backdrop Overlay */}
       {isMobileDrawerOpen && (
-        <div 
-          className="mobile-drawer-backdrop" 
+        <div
+          className="mobile-drawer-backdrop"
           onClick={() => setIsMobileDrawerOpen(false)}
           aria-label="Close menu backdrop"
         />
@@ -365,10 +365,10 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
       {/* --- SIDEBAR NAVIGATION --- */}
       <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileDrawerOpen ? 'mobile-open' : ''}`}>
-        
+
         {/* Desktop Collapse Toggle */}
-        <button 
-          className="sidebar-toggle-floating-btn hide-on-mobile" 
+        <button
+          className="sidebar-toggle-floating-btn hide-on-mobile"
           onClick={toggleSidebar}
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           aria-label="Toggle Sidebar"
@@ -394,7 +394,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
           {/* Close button for Mobile Drawer */}
           {isMobileDrawerOpen && (
-            <button 
+            <button
               className="drawer-close-btn"
               onClick={() => setIsMobileDrawerOpen(false)}
               aria-label="Close navigation"
@@ -407,79 +407,79 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
         {/* Navigation Items */}
         <nav className="sidebar-nav">
           {(!isCollapsed || isMobileDrawerOpen) && <div className="nav-section-title">Core Business</div>}
-          
+
           <NavLink to="/" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Dashboard">
-            <LayoutDashboard size={19} className="nav-icon" /> 
+            <LayoutDashboard size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Dashboard</span>}
           </NavLink>
 
           <NavLink to="/documents" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Documents & Billing">
-            <FileText size={19} className="nav-icon" /> 
+            <FileText size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Documents & Invoices</span>}
           </NavLink>
 
           <NavLink to="/ai" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="AI Copilot">
-            <Sparkles size={19} className="nav-icon" /> 
+            <Sparkles size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>AI Copilot</span>}
           </NavLink>
 
           <NavLink to="/catalog-manager" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Digital Catalog & Online Store">
-            <ShoppingBag size={19} className="nav-icon" /> 
+            <ShoppingBag size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Digital Catalog</span>}
           </NavLink>
 
           {(!isCollapsed || isMobileDrawerOpen) && <div className="nav-section-title">Operations</div>}
-          
+
           <NavLink to="/products" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Inventory Management">
-            <Package size={19} className="nav-icon" /> 
+            <Package size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Inventory & Stock</span>}
           </NavLink>
 
           <NavLink to="/contacts" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Contacts & Customers">
-            <Users size={19} className="nav-icon" /> 
+            <Users size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Parties & Contacts</span>}
           </NavLink>
 
           <NavLink to="/communications" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Communications Hub">
-            <MessageSquareShare size={19} className="nav-icon" /> 
+            <MessageSquareShare size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Communications Hub</span>}
           </NavLink>
 
           <NavLink to="/staff" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Staff Management">
-            <UserCog size={19} className="nav-icon" /> 
+            <UserCog size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Staff & Payroll</span>}
           </NavLink>
 
           <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Projects">
-            <Briefcase size={19} className="nav-icon" /> 
+            <Briefcase size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Projects</span>}
           </NavLink>
 
           {(!isCollapsed || isMobileDrawerOpen) && <div className="nav-section-title">Finance & Khata</div>}
-          
+
           <NavLink to="/ledger" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Digital Ledger Khata">
-            <CreditCard size={19} className="nav-icon" /> 
+            <CreditCard size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Digital Ledger (Khata)</span>}
           </NavLink>
 
           <NavLink to="/loans" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Loan Manager">
-            <Banknote size={19} className="nav-icon" /> 
+            <Banknote size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Loan Manager</span>}
           </NavLink>
 
           <NavLink to="/banks" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Bank Accounts">
-            <Landmark size={19} className="nav-icon" /> 
+            <Landmark size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Bank Accounts</span>}
           </NavLink>
 
           {/* Payment Dropdown Group */}
           <div className="nav-group">
-            <button 
-              className={`nav-item ${isPaymentOpen ? 'group-active' : ''}`} 
-              onClick={() => setIsPaymentOpen(!isPaymentOpen)} 
+            <button
+              className={`nav-item ${isPaymentOpen ? 'group-active' : ''}`}
+              onClick={() => setIsPaymentOpen(!isPaymentOpen)}
               title="Payment Management"
             >
-              <CreditCard size={19} className="nav-icon" /> 
+              <CreditCard size={19} className="nav-icon" />
               {(!isCollapsed || isMobileDrawerOpen) && (
                 <>
                   <span>Payments</span>
@@ -504,12 +504,12 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
           {/* Expenses Dropdown Group */}
           <div className="nav-group">
-            <button 
-              className={`nav-item ${isExpensesOpen ? 'group-active' : ''}`} 
+            <button
+              className={`nav-item ${isExpensesOpen ? 'group-active' : ''}`}
               onClick={() => setIsExpensesOpen(!isExpensesOpen)}
               title="Income & Expenses"
             >
-              <Wallet size={19} className="nav-icon" /> 
+              <Wallet size={19} className="nav-icon" />
               {(!isCollapsed || isMobileDrawerOpen) && (
                 <>
                   <span>Income & Expenses</span>
@@ -532,27 +532,27 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           {(!isCollapsed || isMobileDrawerOpen) && <div className="nav-section-title">Analytics & Tools</div>}
 
           <NavLink to="/analytics" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Analytics 360°">
-            <TrendingUp size={19} className="nav-icon" /> 
+            <TrendingUp size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Analytics 360°</span>}
           </NavLink>
-          
+
           <NavLink to="/meet" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Meet & Connect">
-            <Video size={19} className="nav-icon" /> 
+            <Video size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Meet & Connect</span>}
           </NavLink>
 
           <NavLink to="/history" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Audit History">
-            <History size={19} className="nav-icon" /> 
+            <History size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Audit History</span>}
           </NavLink>
 
           <NavLink to="/compliance" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Compliance & GST">
-            <FileText size={19} className="nav-icon" /> 
+            <FileText size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Compliance</span>}
           </NavLink>
 
           <NavLink to="/settings" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"} title="Settings">
-            <SettingsIcon size={19} className="nav-icon" /> 
+            <SettingsIcon size={19} className="nav-icon" />
             {(!isCollapsed || isMobileDrawerOpen) && <span>Settings</span>}
           </NavLink>
         </nav>
@@ -568,9 +568,9 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
                 <span className="user-name-text">{companyInfo.name || 'Merchant'}</span>
                 <span className="user-plan-badge">BaniyaBook PRO</span>
               </div>
-              <button 
-                className="btn-quick-logout" 
-                onClick={handleLogout} 
+              <button
+                className="btn-quick-logout"
+                onClick={handleLogout}
                 title="Logout"
                 aria-label="Logout"
               >
@@ -583,13 +583,13 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
       {/* --- MAIN CONTENT WRAPPER --- */}
       <div className="main-content">
-        
+
         {/* Topbar Header */}
         <header className="topbar glass">
-          
+
           {/* Mobile Hamburger Menu Toggle */}
-          <button 
-            className="mobile-hamburger-btn" 
+          <button
+            className="mobile-hamburger-btn"
             onClick={() => setIsMobileDrawerOpen(true)}
             aria-label="Open navigation menu"
           >
@@ -624,12 +624,12 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               }}
             />
             {searchQuery && (
-              <button 
-                className="search-clear-btn" 
-                onClick={() => { 
-                  setSearchQuery(''); 
-                  setShowSearchDropdown(false); 
-                  setIsMobileSearchOpen(false); 
+              <button
+                className="search-clear-btn"
+                onClick={() => {
+                  setSearchQuery('');
+                  setShowSearchDropdown(false);
+                  setIsMobileSearchOpen(false);
                 }}
                 aria-label="Clear search"
               >
@@ -678,10 +678,10 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
           {/* Topbar Actions */}
           <div className="topbar-actions">
-            
+
             {/* Quick Create '+' Button & Dropdown */}
             <div className="create-menu-wrapper" ref={createMenuRef}>
-              <button 
+              <button
                 className={`topbar-create-btn ${showCreateDropdown ? 'active' : ''}`}
                 onClick={() => setShowCreateDropdown(!showCreateDropdown)}
                 title="Quick Create (+)"
@@ -754,7 +754,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
             {/* Desktop PWA Install App Button */}
             {isInstallable && !isInstalled && (
-              <button 
+              <button
                 className="topbar-pwa-install-btn hide-on-mobile"
                 onClick={promptInstall}
                 title="Install BaniyaBook as native desktop application"
@@ -766,8 +766,8 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
             )}
 
             {/* AI Assistant Button (AI Logo instead of text AI) */}
-            <NavLink 
-              to="/ai" 
+            <NavLink
+              to="/ai"
               className={({ isActive }) => `topbar-ai-btn hide-on-mobile ${isActive ? 'active' : ''}`}
               title="Google Gemini AI Copilot • Connected"
               aria-label="Google Gemini AI Copilot"
@@ -781,8 +781,8 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
             {/* Notifications Bell */}
             <div className="notification-btn-wrapper" ref={notificationsMenuRef}>
-              <button 
-                className={`topbar-icon-btn ${showNotificationsDropdown ? 'active' : ''}`} 
+              <button
+                className={`topbar-icon-btn ${showNotificationsDropdown ? 'active' : ''}`}
                 onClick={() => setShowNotificationsDropdown(!showNotificationsDropdown)}
                 aria-label={`Notifications (${unreadCount} unread)`}
                 title={`Notifications (${unreadCount} unread)`}
@@ -810,7 +810,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
                     </div>
                     <div className="notifications-header-actions">
                       {unreadCount > 0 && (
-                        <button 
+                        <button
                           className="notifications-clear-btn"
                           onClick={handleMarkAllNotificationsAsRead}
                           title="Mark all as read"
@@ -823,13 +823,13 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
                   {/* Filter Tabs */}
                   <div className="notifications-tabs-bar">
-                    <button 
+                    <button
                       className={`notif-tab ${notificationFilter === 'all' ? 'active' : ''}`}
                       onClick={() => setNotificationFilter('all')}
                     >
                       All ({notifications.length})
                     </button>
-                    <button 
+                    <button
                       className={`notif-tab ${notificationFilter === 'unread' ? 'active' : ''}`}
                       onClick={() => setNotificationFilter('unread')}
                     >
@@ -849,15 +849,15 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
                             </div>
                             <p className="notif-empty-title">All caught up!</p>
                             <p className="notif-empty-desc">
-                              {notificationFilter === 'unread' 
-                                ? 'No unread notifications at the moment.' 
+                              {notificationFilter === 'unread'
+                                ? 'No unread notifications at the moment.'
                                 : 'No active alerts or notifications right now.'}
                             </p>
                           </div>
                         );
                       }
                       return displayed.map((notif) => (
-                        <div 
+                        <div
                           key={notif.id}
                           className={`notification-item ${!notif.isRead ? 'unread' : 'read'}`}
                           onClick={() => handleNotificationClick(notif)}
@@ -883,7 +883,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
                             </div>
                           </div>
 
-                          <button 
+                          <button
                             className="notif-dismiss-btn"
                             onClick={(e) => handleDismissNotification(e, notif.id)}
                             title="Dismiss notification"
@@ -897,7 +897,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
                   </div>
 
                   <div className="notifications-footer">
-                    <button 
+                    <button
                       className="notifications-view-all"
                       onClick={() => { navigate('/history'); setShowNotificationsDropdown(false); }}
                     >
@@ -910,8 +910,8 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
 
             {/* User Profile Dropdown */}
             <div className="user-profile-wrapper" ref={profileMenuRef}>
-              <div 
-                className={`user-profile-badge ${showDropdown ? 'active' : ''}`} 
+              <div
+                className={`user-profile-badge ${showDropdown ? 'active' : ''}`}
                 onClick={() => setShowDropdown(!showDropdown)}
               >
                 <div className="user-avatar-circle">
@@ -987,8 +987,8 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
         </NavLink>
 
         {/* Central Floating Action Button (FAB) */}
-        <button 
-          className="dock-fab-btn" 
+        <button
+          className="dock-fab-btn"
           onClick={() => setShowMobileActionSheet(true)}
           aria-label="Quick Action Menu"
         >
@@ -1000,7 +1000,7 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
           <span>Khata</span>
         </NavLink>
 
-        <button 
+        <button
           className={`dock-item ${isMobileDrawerOpen ? 'active' : ''}`}
           onClick={() => setIsMobileDrawerOpen(true)}
           aria-label="Open Full Menu"
@@ -1017,13 +1017,13 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
         <div className="mobile-sheet-overlay" onClick={() => setShowMobileActionSheet(false)}>
           <div className="mobile-sheet-card" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-grabber"></div>
-            
+
             <div className="sheet-header">
               <div className="sheet-title">
                 <h3>Quick Actions</h3>
                 <p>Create document or record transaction</p>
               </div>
-              <button 
+              <button
                 className="sheet-close-btn"
                 onClick={() => setShowMobileActionSheet(false)}
                 aria-label="Close action sheet"
@@ -1033,48 +1033,48 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
             </div>
 
             <div className="sheet-actions-grid">
-              <button 
-                className="sheet-action-item green" 
+              <button
+                className="sheet-action-item green"
                 onClick={() => { navigate('/documents/sale/new'); setShowMobileActionSheet(false); }}
               >
                 <div className="sheet-action-icon"><Receipt size={22} /></div>
                 <span>Sale Invoice</span>
               </button>
 
-              <button 
-                className="sheet-action-item purple" 
+              <button
+                className="sheet-action-item purple"
                 onClick={() => { navigate('/documents/purchase/new'); setShowMobileActionSheet(false); }}
               >
                 <div className="sheet-action-icon"><ShoppingCart size={22} /></div>
                 <span>Purchase Bill</span>
               </button>
 
-              <button 
-                className="sheet-action-item blue" 
+              <button
+                className="sheet-action-item blue"
                 onClick={() => { navigate('/payments/inward'); setShowMobileActionSheet(false); }}
               >
                 <div className="sheet-action-icon"><ArrowDownLeft size={22} /></div>
                 <span>Payment In</span>
               </button>
 
-              <button 
-                className="sheet-action-item red" 
+              <button
+                className="sheet-action-item red"
                 onClick={() => { navigate('/expenses/daily'); setShowMobileActionSheet(false); }}
               >
                 <div className="sheet-action-icon"><Wallet size={22} /></div>
                 <span>Daily Expense</span>
               </button>
 
-              <button 
-                className="sheet-action-item indigo" 
+              <button
+                className="sheet-action-item indigo"
                 onClick={() => { navigate('/contacts'); setShowMobileActionSheet(false); }}
               >
                 <div className="sheet-action-icon"><UserPlus size={22} /></div>
                 <span>New Party</span>
               </button>
 
-              <button 
-                className="sheet-action-item amber" 
+              <button
+                className="sheet-action-item amber"
                 onClick={() => { navigate('/products'); setShowMobileActionSheet(false); }}
               >
                 <div className="sheet-action-icon"><PackagePlus size={22} /></div>

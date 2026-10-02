@@ -1,49 +1,40 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { getItems, addItem, deleteItem, logActivity } from '@/utils/db';
-import { postToLedger } from '@/utils/ledger';
-import { useAuth } from '@/hooks/useAuth';
-
-import { Plus, Search, Filter, Trash2, Edit, X, ArrowUpRight, Paperclip, Mail } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getItems, deleteItem, logActivity } from '@/utils/db';
+import { useAuth } from '@/hooks/useAuth';
+import PrintViewModal from '@/components/ui/PrintViewModal';
+import CommunicationModal from '@/features/communication/components/CommunicationModal';
+import '@/features/documents/styles/PaymentPages.css';
+
+import { 
+  Plus, 
+  Search, 
+  Trash2, 
+  Edit, 
+  ArrowUpRight, 
+  Printer, 
+  Send, 
+  CheckCircle2,
+  Receipt
+} from 'lucide-react';
 
 const OutwardPayment = () => {
-  const navigate = useNavigate();
   const [payments, setPayments] = useState([]);
-  const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [printDoc, setPrintDoc] = useState(null);
+  const [commDoc, setCommDoc] = useState(null);
+
   const { user } = useAuth();
-
-  const [newPayment, setNewPayment] = useState({
-    voucherPrefix: 'VP',
-    voucherNumber: Date.now().toString().slice(-6),
-    voucherPostfix: '',
-    date: new Date().toISOString().split('T')[0],
-    vendorName: '',
-    address: '',
-    gstinPan: '',
-    totalOutstanding: '0.00',
-    amount: '',
-    invoiceList: '',
-    paymentType: 'Bank Transfer',
-    shareEmail: false,
-    remarks: '',
-    status: 'Paid',
-    vendorId: ''
-  });
-
+  const navigate = useNavigate();
 
   const loadData = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const [paymentData, contactData] = await Promise.all([
-        getItems('outwardPayments', user.id),
-        getItems('contacts', user.id)
-      ]);
-      setPayments(paymentData.sort((a, b) => new Date(b.date) - new Date(a.date)));
-      setContacts(contactData.filter(c => c.type === 'vendor'));
+      const paymentData = await getItems('outwardPayments', user.id);
+      setPayments((paymentData || []).sort((a, b) => new Date(b.date || b.timestamp || 0) - new Date(a.date || a.timestamp || 0)));
     } catch (err) {
       console.error('Failed to load outward payment data:', err);
     } finally {
@@ -55,176 +46,250 @@ const OutwardPayment = () => {
     loadData();
   }, [loadData]);
 
-  const handleVendorChange = (e) => {
-    const name = e.target.value;
-    const selectedContact = contacts.find(c => c.name === name);
-    if (selectedContact) {
-      setNewPayment({
-        ...newPayment,
-        vendorName: name,
-        vendorId: selectedContact.id,
-        address: selectedContact.address || '',
-        gstinPan: selectedContact.gstin || ''
-      });
+  const handleDelete = async (payment) => {
+    if (!user?.id) return;
+    const docId = payment._dbId || payment.id;
+    const voucherNo = payment.fullVoucherNo || payment.voucherNumber || payment.fullPaymentNo || payment.paymentNumber || 'this voucher';
+    
+    if (window.confirm(`Are you sure you want to delete payment voucher "${voucherNo}"?`)) {
+      try {
+        await deleteItem('outwardPayments', docId, user.id, user.username);
+        // Clean linked ledger transaction
+        try {
+          const ledgerTxs = await getItems('ledger_transactions', user.id);
+          const linkedTx = ledgerTxs.find(t => t.referenceId === (payment.fullVoucherNo || payment.fullPaymentNo));
+          if (linkedTx) {
+            await deleteItem('ledger_transactions', linkedTx._dbId || linkedTx.id, user.id);
+          }
+        } catch (le) {
+          console.warn('Notice: linked ledger entry cleanup skipped:', le);
+        }
 
-    } else {
-      setNewPayment({ ...newPayment, vendorName: name });
+        logActivity(`Deleted Outward Payment Voucher #${voucherNo}`, user.id, user.username);
+        loadData();
+      } catch (err) {
+        console.error('Failed to delete payment voucher:', err);
+        alert('Failed to delete payment. Please try again.');
+      }
     }
   };
 
-  const handleAddPayment = async (e) => {
-    e.preventDefault();
-    if (!user?.id) return;
-    
-    const fullVoucherNo = `${newPayment.voucherPrefix}${newPayment.voucherNumber}${newPayment.voucherPostfix}`;
-    const paymentToSave = {
-        ...newPayment,
-        fullVoucherNo
-    };
+  const filteredPayments = useMemo(() => {
+    return payments.filter(p => {
+      const party = p.vendorName || p.companyName || '';
+      const docNo = p.fullVoucherNo || p.voucherNumber || p.fullPaymentNo || p.paymentNumber || '';
+      const q = searchQuery.toLowerCase().trim();
 
-    const result = await addItem('outwardPayments', paymentToSave, user.id, user.username);
-    if (result) {
-      // Post to Ledger (Debit Vendor)
-      if (newPayment.vendorId) {
-        await postToLedger({
-          contactId: newPayment.vendorId,
-          contactName: newPayment.vendorName,
-          type: 'dr',
-          amount: newPayment.amount,
-          date: newPayment.date,
-          description: `Payment Made (Voucher #${fullVoucherNo})`,
-          referenceId: fullVoucherNo,
-          docType: 'Payment Out'
-        }, user.id);
+      const matchSearch = !q || 
+        party.toLowerCase().includes(q) ||
+        docNo.toLowerCase().includes(q) ||
+        (p.remarks && p.remarks.toLowerCase().includes(q)) ||
+        (p.gstinPan && p.gstinPan.toLowerCase().includes(q)) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
+        (p.invoiceList && p.invoiceList.toLowerCase().includes(q));
+
+      if (!matchSearch) return false;
+
+      if (filterCategory !== 'all' && p.category !== filterCategory) {
+        return false;
       }
 
-      setShowAddModal(false);
+      return true;
+    });
+  }, [payments, searchQuery, filterCategory]);
 
-      setNewPayment({
-        voucherPrefix: 'VP',
-        voucherNumber: Date.now().toString().slice(-6),
-        voucherPostfix: '',
-        date: new Date().toISOString().split('T')[0],
-        vendorName: '',
-        address: '',
-        gstinPan: '',
-        totalOutstanding: '0.00',
-        amount: '',
-        invoiceList: '',
-        paymentType: 'Bank Transfer',
-        shareEmail: false,
-        remarks: '',
-        status: 'Paid'
-      });
-      loadData();
-      logActivity(`Created Outward Payment Voucher #${fullVoucherNo}`, user.id, user.username);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!user?.id) return;
-    if (window.confirm('Delete this payment record?')) {
-      await deleteItem('outwardPayments', id, user.id);
-      loadData();
-    }
-  };
-
-  const filteredPayments = payments.filter(p => 
-    p.vendorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.fullVoucherNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.remarks?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalPaid = payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
-
-  if (loading && user) {
-    return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading Outward Payments...</div>;
-  }
+  const totalAmount = useMemo(() => {
+    return filteredPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+  }, [filteredPayments]);
 
   return (
-    <div>
-      <div className="page-header">
-        <h1 className="page-title">Outward Payments (Vouchers)</h1>
-        <button className="btn btn-primary" onClick={() => navigate('/payments/outward/new')}>
+    <div className="pl-page">
+      {/* ── Header ── */}
+      <div className="pl-header">
+        <div className="pl-title-group">
+          <div className="pl-title-icon outward">
+            <ArrowUpRight size={24} />
+          </div>
+          <div>
+            <h1 className="pl-title">Outward Payments</h1>
+            <p className="pl-subtitle">Manage supplier payments, expense vouchers, and cash outflows</p>
+          </div>
+        </div>
+
+        <button className="pl-btn-primary outward" onClick={() => navigate('/payments/outward/new')}>
           <Plus size={18} /> Add Outward Payment
         </button>
       </div>
 
-      <div className="flex gap-4 mb-6">
-         <div className="glass w-full" style={{ padding: '1.5rem', background: '#fef2f2', border: '1px solid #fecaca' }}>
-            <div className="flex items-center gap-3">
-               <div style={{ background: '#ef4444', color: 'white', padding: '0.75rem', borderRadius: '12px' }}>
-                  <ArrowUpRight size={24} />
-               </div>
-               <div>
-                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#991b1b' }}>Total Paid</p>
-                  <h2 style={{ margin: 0, fontSize: '1.75rem', color: '#7f1d1d' }}>₹{totalPaid.toLocaleString()}</h2>
-               </div>
-            </div>
-         </div>
-         <div className="glass w-full" style={{ padding: '1.5rem' }}>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Total Vouchers Generated</p>
-            <h2 style={{ margin: 0, fontSize: '1.75rem' }}>{payments.length}</h2>
-         </div>
-      </div>
-
-      <div className="glass" style={{ padding: '1.5rem' }}>
-        <div className="flex justify-between items-center mb-6">
-          <div style={{ position: 'relative', width: '300px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="Search vouchers..." 
-              style={{ paddingLeft: '40px' }} 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <button className="btn btn-secondary">
-            <Filter size={18} /> Filters
-          </button>
+      {/* ── Control Bar (Ledger Style) ── */}
+      <div className="pl-control-bar">
+        <div className="pl-search-box">
+          <Search className="pl-search-icon" size={18} />
+          <input 
+            className="pl-search-input" 
+            placeholder="Search accounts, voucher number, remarks..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <div className="pl-filters">
+          <button 
+            className={`pl-filter-btn ${filterCategory === 'all' ? 'active' : ''}`}
+            onClick={() => setFilterCategory('all')}
+          >
+            All Vouchers
+          </button>
+          <button 
+            className={`pl-filter-btn ${filterCategory === 'Purchase' ? 'active' : ''}`}
+            onClick={() => setFilterCategory('Purchase')}
+          >
+            Purchase
+          </button>
+          <button 
+            className={`pl-filter-btn ${filterCategory === 'Salary' ? 'active' : ''}`}
+            onClick={() => setFilterCategory('Salary')}
+          >
+            Salary
+          </button>
+          <button 
+            className={`pl-filter-btn ${filterCategory === 'Rent' ? 'active' : ''}`}
+            onClick={() => setFilterCategory('Rent')}
+          >
+            Rent
+          </button>
+          <button 
+            className={`pl-filter-btn ${filterCategory === 'Other Expenses' ? 'active' : ''}`}
+            onClick={() => setFilterCategory('Other Expenses')}
+          >
+            Other Expenses
+          </button>
+        </div>
+      </div>
+
+      {/* ── Table Section (Ledger Style) ── */}
+      <div className="pl-table-card">
+        <div className="pl-table-header">
+          <div className="pl-table-title">
+            <Receipt size={18} color="#e11d48" />
+            Voucher Records ({filteredPayments.length})
+          </div>
+          <div className="pl-table-summary">
+            Total Paid: <strong className="outward">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+          </div>
+        </div>
+
+        <div className="pl-table-wrap">
+          <table className="pl-table">
             <thead>
-              <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Date</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Voucher #</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Vendor / Supplier</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Payment Type</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Amount</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Status</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Actions</th>
+              <tr>
+                <th style={{ width: '130px' }}>Date</th>
+                <th style={{ width: '140px' }}>Voucher #</th>
+                <th>Account / Vendor</th>
+                <th style={{ width: '130px' }}>Category</th>
+                <th style={{ width: '140px' }}>Payment Mode</th>
+                <th style={{ width: '160px' }}>Amount</th>
+                <th style={{ width: '110px' }}>Status</th>
+                <th style={{ width: '150px', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPayments.map(p => (
-                <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '1rem' }}>{p.date}</td>
-                  <td style={{ padding: '1rem', fontWeight: 600 }}>{p.fullVoucherNo}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <div><strong>{p.vendorName}</strong></div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>GST: {p.gstinPan || 'N/A'}</div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>{p.paymentType}</td>
-                  <td style={{ padding: '1rem', fontWeight: 600, color: '#ef4444' }}>₹{Number(p.amount).toFixed(2)}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{ background: '#fee2e2', color: '#991b1b', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>{p.status}</span>
-                  </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                      <button className="btn btn-secondary" style={{ padding: '0.5rem' }}><Edit size={16} /></button>
-                      <button className="btn btn-danger" style={{ padding: '0.5rem', background: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleDelete(p.id)}><Trash2 size={16} /></button>
+              {filteredPayments.map(p => {
+                const vendor = p.vendorName || p.companyName || 'Vendor';
+                const voucherNo = p.fullVoucherNo || p.voucherNumber || p.fullPaymentNo || p.paymentNumber || '-';
+
+                return (
+                  <tr key={p._dbId || p.id}>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{p.date}</div>
+                    </td>
+                    <td>
+                      <span className="pl-badge">
+                        {voucherNo}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="pl-party-name">{vendor}</div>
+                      <div className="pl-party-sub">
+                        {p.gstinPan ? `GST: ${p.gstinPan}` : 'No GST'}
+                        {p.invoiceList ? ` • Ref: ${p.invoiceList}` : ''}
+                      </div>
+                    </td>
+                    <td>
+                      <span className="pl-mode-pill">
+                        {p.category || 'Purchase'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="pl-mode-pill">
+                        {p.paymentType || 'Bank Transfer'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="pl-amount-cr">
+                        ₹ {Number(p.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="pl-status-tag outward">
+                        <CheckCircle2 size={11} style={{ display: 'inline', marginRight: '3px' }} />
+                        {p.status || 'Paid'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="pl-actions">
+                        <button 
+                          className="pl-action-btn send" 
+                          onClick={() => setCommDoc({ ...p, docType: 'Payment Voucher', customerName: vendor, name: vendor })} 
+                          title="Send Voucher via WhatsApp / Email"
+                        >
+                          <Send size={14} />
+                        </button>
+                        <button 
+                          className="pl-action-btn print" 
+                          onClick={() => setPrintDoc({ ...p, docType: 'Payment Out', vendorName: vendor, companyName: vendor })} 
+                          title="Print / View Payment Voucher"
+                        >
+                          <Printer size={14} />
+                        </button>
+                        <button 
+                          className="pl-action-btn edit" 
+                          onClick={() => navigate('/payments/outward/new', { state: { editPayment: p } })} 
+                          title="Edit Payment Voucher"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button 
+                          className="pl-action-btn delete" 
+                          onClick={() => handleDelete(p)} 
+                          title="Delete Payment Voucher"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {filteredPayments.length === 0 && !loading && (
+                <tr>
+                  <td colSpan="8">
+                    <div className="pl-empty">
+                      <h3>No Outward Payments Found</h3>
+                      <p>Record your vendor settlements, expense payments, and cash vouchers.</p>
+                      <button className="pl-btn-primary outward" style={{ marginTop: '1rem' }} onClick={() => navigate('/payments/outward/new')}>
+                        <Plus size={16} /> Add Outward Payment
+                      </button>
                     </div>
                   </td>
                 </tr>
-              ))}
-              {filteredPayments.length === 0 && (
+              )}
+
+              {loading && (
                 <tr>
-                  <td colSpan="7" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    No outward payments found.
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+                    Loading outward payments...
                   </td>
                 </tr>
               )}
@@ -233,121 +298,23 @@ const OutwardPayment = () => {
         </div>
       </div>
 
-      {showAddModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass" style={{ background: 'white', width: '700px', padding: '2rem', borderRadius: '16px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div className="flex justify-between items-center mb-6">
-              <h2 style={{ margin: 0 }}>Create Outward Payment</h2>
-              <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddPayment}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Voucher Prefix</label>
-                  <input type="text" className="form-input" value={newPayment.voucherPrefix} onChange={e => setNewPayment({...newPayment, voucherPrefix: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Voucher No*</label>
-                  <input type="text" className="form-input" required value={newPayment.voucherNumber} onChange={e => setNewPayment({...newPayment, voucherNumber: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Voucher Postfix</label>
-                  <input type="text" className="form-input" value={newPayment.voucherPostfix} onChange={e => setNewPayment({...newPayment, voucherPostfix: e.target.value})} />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Vendor Name*</label>
-                    <select className="form-input" required value={newPayment.vendorName} onChange={handleVendorChange}>
-                        <option value="">Select Vendor</option>
-                        {contacts.filter(c => c.name && c.name.trim()).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">GSTIN / PAN</label>
-                    <input type="text" className="form-input" placeholder="GSTIN or PAN" value={newPayment.gstinPan} onChange={e => setNewPayment({...newPayment, gstinPan: e.target.value})} />
-                  </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Address</label>
-                <textarea className="form-input" rows="2" placeholder="Vendor address..." value={newPayment.address} onChange={e => setNewPayment({...newPayment, address: e.target.value})}></textarea>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Total Outstanding</label>
-                    <input type="number" className="form-input" placeholder="0.00" value={newPayment.totalOutstanding} onChange={e => setNewPayment({...newPayment, totalOutstanding: e.target.value})} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Payment Date*</label>
-                    <input type="date" className="form-input" required placeholder="Enter your payment date" value={newPayment.date} onChange={e => setNewPayment({...newPayment, date: e.target.value})} />
-                  </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Amount*</label>
-                    <input type="number" className="form-input" required placeholder="Enter your amount" value={newPayment.amount} onChange={e => setNewPayment({...newPayment, amount: e.target.value})} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Payment Type*</label>
-                    <select className="form-input" required value={newPayment.paymentType} onChange={e => setNewPayment({...newPayment, paymentType: e.target.value})}>
-                        <option value="">Select Payment Type</option>
-                        <option>Bank Transfer</option>
-                        <option>Cash</option>
-                        <option>UPI</option>
-                        <option>Cheque</option>
-                        <option>Credit Card</option>
-                    </select>
-                  </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Bill / Invoice List (Optional)</label>
-                <input type="text" className="form-input" placeholder="Reference purchase bill numbers" value={newPayment.invoiceList} onChange={e => setNewPayment({...newPayment, invoiceList: e.target.value})} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Remarks</label>
-                <textarea className="form-input" rows="2" placeholder="Enter your Remarks" value={newPayment.remarks} onChange={e => setNewPayment({...newPayment, remarks: e.target.value})}></textarea>
-              </div>
-
-              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.5rem 0' }}>
-                 <input type="checkbox" id="shareEmailOut" checked={newPayment.shareEmail} onChange={e => setNewPayment({...newPayment, shareEmail: e.target.checked})} style={{ width: '18px', height: '18px' }} />
-                 <label htmlFor="shareEmailOut" className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Mail size={16} /> Share via Email
-                 </label>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Attachment</label>
-                <div style={{ border: '2px dashed var(--border-color)', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s' }} className="hover-bg-light">
-                    <Paperclip size={24} style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }} />
-                    <div style={{ fontSize: '0.875rem' }}>Click To Upload [any file]</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Max size: 5MB</div>
-                    <input type="file" style={{ display: 'none' }} />
-                </div>
-              </div>
-
-              <div className="mt-8 flex gap-4">
-                <button type="submit" className="btn btn-primary w-full" style={{ padding: '1rem', fontSize: '1rem' }}>Create Payment Voucher</button>
-                <button type="button" className="btn btn-secondary w-full" onClick={() => setShowAddModal(false)}>Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* ── Print / PDF Modal ── */}
+      {printDoc && (
+        <PrintViewModal 
+          doc={printDoc} 
+          onClose={() => setPrintDoc(null)} 
+        />
       )}
-      <style>{`
-        .hover-bg-light:hover {
-            background-color: #f8fafc;
-            border-color: var(--primary-color) !important;
-        }
-      `}</style>
+
+      {/* ── WhatsApp & Email Communication Modal ── */}
+      {commDoc && (
+        <CommunicationModal
+          isOpen={Boolean(commDoc)}
+          onClose={() => setCommDoc(null)}
+          documentData={commDoc}
+          defaultChannel="whatsapp"
+        />
+      )}
     </div>
   );
 };

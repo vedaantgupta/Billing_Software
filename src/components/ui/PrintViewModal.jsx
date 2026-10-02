@@ -20,7 +20,7 @@ const PrintViewModal = ({ doc, onClose }) => {
   });
 
   const isSalarySlip = doc?.docType === 'Salary Slip';
-  const isPaymentReceipt = doc?.docType === 'Payment In';
+  const isPaymentReceipt = doc?.docType === 'Payment In' || doc?.docType === 'Payment Out';
 
   useEffect(() => {
     if (user?.id) {
@@ -48,7 +48,7 @@ const PrintViewModal = ({ doc, onClose }) => {
   if (activeCopies.length === 0) activeCopies.push('original'); // fallback
 
   const getFileName = () => {
-    const rawNo = doc.invoiceNumber || doc.fullReceiptNo || doc.invoiceDetail?.invoiceNo || doc.offerDetail?.offerNo || 'Document';
+    const rawNo = doc.invoiceNumber || doc.fullReceiptNo || doc.fullVoucherNo || doc.fullPaymentNo || doc.receiptNumber || doc.voucherNumber || doc.paymentNumber || doc.invoiceDetail?.invoiceNo || doc.offerDetail?.offerNo || 'Document';
     const cleanNo = String(rawNo).replace(/[\/\\?%*:|"<>]/g, '-');
     return `${doc.docType || 'Document'}_${cleanNo}.pdf`;
   };
@@ -165,7 +165,7 @@ const PrintViewModal = ({ doc, onClose }) => {
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
-    } catch (e) {}
+    } catch (e) { }
     setIsGeneratingPdf(false);
 
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;

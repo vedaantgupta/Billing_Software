@@ -185,11 +185,11 @@
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
+
   .form-label {
     margin-bottom: 0.25rem;
   }
-  
+
   .create-payment-inner {
     padding: 2rem;
   }
