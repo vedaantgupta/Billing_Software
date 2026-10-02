@@ -1,244 +1,400 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+/* ========================================================
+   BANIYABOOK EXECUTIVE LIGHT THEME — SALARY HISTORY
+   ======================================================== */
 
 .ssh-page {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
-  background: #0d0f1a;
+  background: var(--bg-color, #f8fafc);
   position: relative;
   overflow-x: hidden;
-}
-
-.ssh-page::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: 
-    radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.2) 0%, transparent 40%),
-    radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.1) 0%, transparent 60%),
-    radial-gradient(circle at 30% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
-    linear-gradient(180deg, #0d0f1a 0%, #111827 100%);
-  z-index: 0;
-  pointer-events: none;
+  color: #0f172a;
 }
 
 .ssh-content {
   position: relative;
   z-index: 1;
-  padding: 1.5rem 2rem 3rem;
-  max-width: 1200px;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
+/* Header */
 .ssh-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .ssh-header-left {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .ssh-title {
   margin: 0;
-  font-size: 2.25rem;
-  font-weight: 900;
-  color: white;
-  letter-spacing: -1.5px;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.ssh-subtitle {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .ssh-back-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #334155;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.ssh-back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(99, 102, 241, 0.5);
-  transform: translateX(-5px);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* Dashboard cards */
+.ssh-back-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  transform: translateX(-3px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+/* Dashboard Cards */
 .ssh-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.25rem;
 }
 
 .ssh-stat {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   padding: 1.75rem;
-  backdrop-filter: blur(20px);
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
 }
 
 .ssh-stat:hover {
-  transform: translateY(-8px);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.07);
 }
 
 .ssh-stat::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 4px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
 }
 
-.ssh-stat.total::after { background: linear-gradient(90deg, #8b5cf6, #d946ef); }
-.ssh-stat.avg::after { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
-.ssh-stat.count::after { background: linear-gradient(90deg, #10b981, #34d399); }
+.ssh-stat.total::after {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
 
-.ssh-stat.total .ssh-stat-value { color: #f5f3ff; text-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
-.ssh-stat.avg .ssh-stat-value { color: #eff6ff; text-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
-.ssh-stat.count .ssh-stat-value { color: #ecfdf5; text-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+.ssh-stat.avg::after {
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+}
+
+.ssh-stat.count::after {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+}
 
 .ssh-stat-label {
-  font-size: 0.75rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 1px;
-  margin-bottom: 0.75rem;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .ssh-stat-value {
-  font-size: 2.25rem;
-  font-weight: 950;
-  letter-spacing: -1px;
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.75px;
+  color: #0f172a;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 0.25rem;
 }
 
-/* History Table */
+.ssh-stat.total .ssh-stat-value {
+  color: #059669;
+}
+
+.ssh-stat-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* History Table Card */
 .ssh-table-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 32px;
-  backdrop-filter: blur(20px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+}
+
+.ssh-table-toolbar {
+  padding: 1.25rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ssh-search-input-wrap {
+  position: relative;
+  min-width: 260px;
+}
+
+.ssh-search-input-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.ssh-search-input {
+  width: 100%;
+  padding: 0.55rem 1rem 0.55rem 2.25rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #0f172a;
+  background: #ffffff;
+  transition: all 0.2s;
+}
+
+.ssh-search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.ssh-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  max-height: 520px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.ssh-table-responsive::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ssh-table-responsive::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.ssh-table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
 }
 
 .ssh-table {
   width: 100%;
   border-collapse: collapse;
+  text-align: left;
 }
 
 .ssh-table th {
-  padding: 1.5rem;
-  font-size: 0.7rem;
-  font-weight: 900;
+  padding: 1rem 1.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.03);
-  text-align: left;
-  letter-spacing: 1px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #64748b;
+  letter-spacing: 0.05em;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  box-shadow: 0 1px 0 #e2e8f0;
 }
 
 .ssh-table td {
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  transition: background 0.2s;
+  padding: 1.15rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.875rem;
+  vertical-align: middle;
 }
 
-.ssh-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+.ssh-table tr:hover td {
+  background: #f8fafc;
 }
 
-.ssh-row-month { 
-  font-weight: 800; 
-  color: white; 
-  display: flex; 
-  align-items: center; 
-  gap: 1rem;
-  font-size: 1.05rem;
+.ssh-month-cell {
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
 }
 
-.ssh-icon-box { 
-  width: 38px; 
-  height: 38px; 
-  border-radius: 12px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  background: rgba(255, 255, 255, 0.05); 
-  color: #a78bfa;
-  box-shadow: inset 0 0 10px rgba(167, 139, 250, 0.1);
-}
-
-.ssh-row-date { font-size: 0.85rem; color: rgba(255,255,255,0.5); font-weight: 500; }
-.ssh-row-salary { font-weight: 900; font-size: 1.25rem; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
-
-.ssh-row-status { 
-  display: inline-flex; 
-  align-items: center; 
-  gap: 0.5rem; 
-  font-size: 0.75rem; 
-  font-weight: 900; 
-  padding: 0.4rem 1rem; 
-  border-radius: 20px; 
-  text-transform: uppercase; 
-  letter-spacing: 0.5px;
-}
-
-.ssh-row-status.paid { 
-  background: rgba(52, 211, 153, 0.12); 
-  color: #34d399; 
-  border: 1px solid rgba(52, 211, 153, 0.2); 
-  box-shadow: 0 0 15px rgba(52, 211, 153, 0.1);
-}
-
-.ssh-btn-icon {
-  width: 40px; 
-  height: 40px; 
-  border-radius: 12px; 
-  border: 1px solid rgba(255,255,255,0.1); 
-  background: rgba(255,255,255,0.03); 
-  color: rgba(255,255,255,0.6); 
-  cursor: pointer; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-  display: flex; 
-  align-items: center; 
+.ssh-month-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
   justify-content: center;
-}
-.ssh-btn-icon:hover { 
-  background: rgba(59, 130, 246, 0.15); 
-  border-color: #3b82f6; 
-  color: white; 
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  flex-shrink: 0;
 }
 
+.ssh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ssh-badge.paid {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.ssh-badge.mode {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.ssh-amount {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.ssh-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ssh-action-btn {
+  padding: 0.45rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+}
+
+.ssh-action-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.ssh-action-btn.primary {
+  background: #eef2ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
+}
+
+.ssh-action-btn.primary:hover {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.ssh-action-btn.whatsapp {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.ssh-action-btn.whatsapp:hover {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.ssh-action-btn.delete {
+  color: #dc2626;
+  border-color: #fee2e2;
+  background: #fef2f2;
+}
+
+.ssh-action-btn.delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* Empty State */
 .ssh-empty {
-  padding: 7rem 2rem; 
-  text-align: center; 
-}
-.ssh-empty-icon { 
-  margin-bottom: 2rem; 
-  color: #6366f1;
-  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.3));
-  opacity: 0.5;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #64748b;
 }
 
-/* Scrollbar */
-.ssh-table-card::-webkit-scrollbar { width: 6px; }
-.ssh-table-card::-webkit-scrollbar-track { background: transparent; }
-.ssh-table-card::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+.ssh-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+@media (max-width: 900px) {
+  .ssh-stats {
+    grid-template-columns: 1fr;
+  }
+  .ssh-content {
+    padding: 1.25rem 1rem 3rem;
+  }
+}
