@@ -59,21 +59,81 @@ const isErrorMessage = (text) => {
  * Uses exact pre-calculated business metrics so the user always gets 100% accurate figures.
  */
 const generateDeterministicFallback = (textToSend, snapshot) => {
-  const q = (textToSend || '').toLowerCase();
+  const q = (textToSend || '').toLowerCase().trim();
   const m = snapshot?.metrics || {};
 
   const isHindiScript = /[\u0900-\u097F]/.test(textToSend);
-  const isHinglish = /\b(aaj|aajka|batao|karo|bhai|kitna|hisaab|udhaar|baki|khata|dukaan|bikri|maal|kaunse|konsa|hai|hain|karna|dekh)\b/i.test(textToSend);
+  const isGreetingOnly = /^(hi|hello|hey|namaste|namaskar|pranam|halo)[\s!.]*$/i.test(q);
 
+  // 1. Creation Intents (Auto-propose Actions)
+  if (q.includes('invoice') || q.includes('bill') || q.includes('challan') || q.includes('quotation')) {
+    if (q.includes('create') || q.includes('bana') || q.includes('generate') || q.includes('add') || q.includes('new')) {
+      const partyMatch = textToSend.match(/(?:for|party|customer|client|naam|se)\s+([A-Za-z0-9\s]+?)(?:\s+with|\s+amount|\s+of|\s+ke|\s+ka|$)/i);
+      const partyName = partyMatch ? partyMatch[1].trim() : 'Walk-in Customer';
+      const amountMatch = textToSend.match(/(?:₹|rs\.?|amount|rupees|total)\s*([0-9,]+)/i);
+      const grandTotal = amountMatch ? Number(amountMatch[1].replace(/,/g, '')) : 1500;
+
+      return `Maine aapke liye invoice prepare kar diya hai. Kripya details check karke Authorize & Save par click karein.
+
+<<<ACTION_PROPOSAL>>>
+{
+  "actionId": "act_${Date.now()}",
+  "type": "create_document",
+  "label": "Create Invoice for ${partyName}",
+  "collection": "documents",
+  "status": "pending",
+  "route": "/documents",
+  "data": {
+    "invoiceNumber": "INV-${Math.floor(100 + Math.random() * 900)}",
+    "partyName": "${partyName}",
+    "grandTotal": ${grandTotal},
+    "date": "${new Date().toISOString().split('T')[0]}",
+    "status": "Unpaid"
+  },
+  "preview": {
+    "Party": "${partyName}",
+    "Amount": "₹${grandTotal.toLocaleString('en-IN')}",
+    "Type": "Tax Invoice"
+  }
+}
+<<<END_ACTION_PROPOSAL>>>`;
+    }
+  }
+
+  if ((q.includes('customer') || q.includes('party') || q.includes('contact')) && (q.includes('add') || q.includes('create') || q.includes('naya'))) {
+    const nameMatch = textToSend.match(/(?:name|naam|customer|party)\s+([A-Za-z0-9\s]+?)(?:\s+with|\s+phone|\s+ka|$)/i);
+    const contactName = nameMatch ? nameMatch[1].trim() : 'New Customer';
+
+    return `Maine naya customer contact add karne ka proposal taiyar kar diya hai:
+
+<<<ACTION_PROPOSAL>>>
+{
+  "actionId": "act_${Date.now()}",
+  "type": "create_contact",
+  "label": "Add Customer: ${contactName}",
+  "collection": "contacts",
+  "status": "pending",
+  "route": "/contacts",
+  "data": {
+    "name": "${contactName}",
+    "type": "customer",
+    "createdAt": "${new Date().toISOString()}"
+  },
+  "preview": {
+    "Name": "${contactName}",
+    "Type": "Customer"
+  }
+}
+<<<END_ACTION_PROPOSAL>>>`;
+  }
+
+  // 2. Specific Data Inquiries
   // Today's Sales
-  if (q.includes('aaj') || q.includes('today') || (q.includes('sale') && !q.includes('month') && !q.includes('total'))) {
+  if (q.includes('aaj') || q.includes('today') || (q.includes('sale') && !q.includes('month') && !q.includes('total') && !q.includes('lifetime'))) {
     if (isHindiScript) {
-      return `नमस्ते! आज आपके व्यापार में कुल ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} की बिक्री हुई है (${m.todaySalesCount || 0} बिल)। क्या आप कोई नया बिल या रसीद बनाना चाहते हैं?`;
+      return `नमस्ते! आज आपके व्यापार में कुल ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} की बिक्री हुई है (${m.todaySalesCount || 0} बिल)।`;
     }
-    if (isHinglish) {
-      return `Aaj aapka total sale ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} hua hai across ${m.todaySalesCount || 0} bill(s). Kisi party ka naya bill generate karna hai toh batayein!`;
-    }
-    return `Today's total sales amount is ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} across ${m.todaySalesCount || 0} bill(s). Would you like to create a new invoice?`;
+    return `Aaj aapka total sales ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} hua hai across ${m.todaySalesCount || 0} bill(s).`;
   }
 
   // Monthly Sales
@@ -81,53 +141,43 @@ const generateDeterministicFallback = (textToSend, snapshot) => {
     if (isHindiScript) {
       return `इस महीने की कुल बिक्री ₹${(m.monthSalesAmount || 0).toLocaleString('en-IN')} हुई है (${m.monthSalesCount || 0} बिल)।`;
     }
-    if (isHinglish) {
-      return `Is mahine ka total sales ₹${(m.monthSalesAmount || 0).toLocaleString('en-IN')} hua hai (${m.monthSalesCount || 0} bills).`;
-    }
-    return `This month's total sales are ₹${(m.monthSalesAmount || 0).toLocaleString('en-IN')} across ${m.monthSalesCount || 0} bill(s).`;
+    return `Is mahine ka total sales ₹${(m.monthSalesAmount || 0).toLocaleString('en-IN')} hua hai (${m.monthSalesCount || 0} bills).`;
   }
 
   // Pending Udhaar / Receivables
-  if (q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata')) {
+  if (q.includes('udhaar') || q.includes('pending') || q.includes('baki') || q.includes('receivable') || q.includes('khata') || q.includes('balance') || q.includes('due')) {
     if (isHindiScript) {
       return `व्यापार में कुल बकाया राशि (उधार) ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} है। आप लेजर या कॉन्टैक्ट्स में जाकर पार्टीवार विवरण देख सकते हैं।`;
     }
-    if (isHinglish) {
-      return `Aapka total pending udhaar ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} baki hai. Kisi specific party ka hisaab check karna hai toh naam batayein!`;
-    }
-    return `Total outstanding pending receivables (udhaar) stand at ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')}.`;
+    return `Aapka total pending udhaar ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} baki hai.`;
   }
 
   // Low Stock / Inventory
-  if (q.includes('stock') || q.includes('item') || q.includes('maal') || q.includes('inventory')) {
+  if (q.includes('stock') || q.includes('item') || q.includes('inventory') || q.includes('product')) {
     if (isHindiScript) {
       return `वर्तमान में ${m.lowStockCount || 0} उत्पाद कम स्टॉक पर हैं। कुल इन्वेंट्री का मूल्य लगभग ₹${(m.stockValuationTotal || 0).toLocaleString('en-IN')} है।`;
     }
-    if (isHinglish) {
-      return `Aapke paas ${m.lowStockCount || 0} items low stock par hain jinhe reorder karne ki zaroorat hai. Total inventory value ₹${(m.stockValuationTotal || 0).toLocaleString('en-IN')} hai.`;
-    }
-    return `Currently ${m.lowStockCount || 0} items are below minimum stock level. Total stock valuation is ₹${(m.stockValuationTotal || 0).toLocaleString('en-IN')}.`;
+    return `Aapke paas ${m.lowStockCount || 0} items low stock par hain. Total inventory value ₹${(m.stockValuationTotal || 0).toLocaleString('en-IN')} hai aur total catalog me ${m.productsCount || 0} products hain.`;
   }
 
   // Expenses
-  if (q.includes('kharcha') || q.includes('expense')) {
+  if (q.includes('kharcha') || q.includes('expense') || q.includes('kharch')) {
     if (isHindiScript) {
       return `आज का कुल खर्च ₹${(m.todayExpensesAmount || 0).toLocaleString('en-IN')} है और कुल रिकॉर्डेड खर्च ₹${(m.totalExpensesAmount || 0).toLocaleString('en-IN')} है।`;
     }
-    if (isHinglish) {
-      return `Aaj ka total kharcha ₹${(m.todayExpensesAmount || 0).toLocaleString('en-IN')} hai aur all-time recorded expenses ₹${(m.totalExpensesAmount || 0).toLocaleString('en-IN')} hain.`;
-    }
-    return `Today's recorded expenses are ₹${(m.todayExpensesAmount || 0).toLocaleString('en-IN')} and total expenses are ₹${(m.totalExpensesAmount || 0).toLocaleString('en-IN')}.`;
+    return `Aaj ka total kharcha ₹${(m.todayExpensesAmount || 0).toLocaleString('en-IN')} hai aur all-time recorded expenses ₹${(m.totalExpensesAmount || 0).toLocaleString('en-IN')} hain.`;
   }
 
-  // General Greeting or Overview
-  if (isHindiScript) {
-    return `नमस्ते! मैं आपका Google Gemini बिजनेस असिस्टेंट हूँ। आज की बिक्री ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} है और कुल बकाया ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} है। मैं आपकी क्या सहायता कर सकता हूँ?`;
+  // Pure Greeting
+  if (isGreetingOnly) {
+    if (isHindiScript) {
+      return `नमस्ते! मैं आपका AI बिजनेस असिस्टेंट हूँ। आज की बिक्री ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} है और कुल बकाया ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} है। मैं आपकी क्या सहायता कर सकता हूँ?`;
+    }
+    return `Namaste! Main aapka AI business copilot hoon. Aaj aapka total sale ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} hua hai aur pending udhaar ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} hai. Aap mujhse kisi bhi bill, party, stock ya naye invoice ke bare me pooch sakte hain!`;
   }
-  if (isHinglish) {
-    return `Namaste! Main aapka business AI copilot hoon. Aaj aapka total sale ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} hua hai aur pending udhaar ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} hai. Aap mujhse kisi bhi bill, party, stock ya naye invoice ke bare me pooch sakte hain!`;
-  }
-  return `Hello! I am your AI business assistant. Today's sales are ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} across ${m.todaySalesCount || 0} bills. How can I assist you with your business today?`;
+
+  // General Contextual Response
+  return `Aapke vyapaar me kul ${m.totalInvoicesCount || 0} invoices recorded hain, jinki kul sales ₹${(m.totalSalesAmount || 0).toLocaleString('en-IN')} hai. Aaj ki sales ₹${(m.todaySalesAmount || 0).toLocaleString('en-IN')} hai aur pending udhaar ₹${(m.totalUnpaidReceivables || 0).toLocaleString('en-IN')} hai. Aap kisi bhi naye bill ya report ke liye instruction de sakte hain!`;
 };
 
 /**
@@ -137,8 +187,6 @@ const generateDeterministicFallback = (textToSend, snapshot) => {
  * 3. Resilient Pollinations models with multi-tier fallback (openai -> mistral -> deepseek)
  * 4. Resilient direct prompt endpoint
  * 5. Deterministic fallback using live database snapshot
- * 
- * NEVER fails, NEVER returns "Error: The model is currently unreachable."!
  */
 export const queryAIEngine = async ({
   prompt,
@@ -148,6 +196,7 @@ export const queryAIEngine = async ({
   snapshot,
   selectedModel = 'gemini-3.6-flash',
   files = [],
+  attachedFiles = [],
   pendingAction = null,
   hasActiveQuestion = false,
   signal = null
@@ -156,8 +205,9 @@ export const queryAIEngine = async ({
   const effectiveApiModel = geminiStore.getApiModel(selectedModel);
   const userGeminiKey = geminiStore.getApiKey();
   const systemPromptText = buildGeminiSystemPrompt(snapshot?.contextString, userName);
+  const activeFiles = (files && files.length > 0) ? files : (attachedFiles || []);
 
-  // 1. Try Backend First (5.0s race timeout)
+  // 1. Try Backend First (45s timeout to allow full LLM reasoning)
   try {
     const backendFetchPromise = fetch(`${API_BASE_URL}/ai/chat`, {
       method: 'POST',
@@ -173,21 +223,22 @@ export const queryAIEngine = async ({
         hasActiveQuestion,
         geminiModel: effectiveApiModel,
         clientBusinessContext: snapshot?.contextString || '',
-        files: files.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
+        files: activeFiles.map(f => ({ name: f.name, size: f.size, type: f.type, data: f.data }))
       })
     });
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Backend timeout, switching to direct AI engine')), 5000)
+      setTimeout(() => reject(new Error('Backend timeout, switching to direct AI engine')), 45000)
     );
 
     const res = await Promise.race([backendFetchPromise, timeoutPromise]);
     if (res.ok) {
       const data = await res.json();
-      if (data && data.response && !isErrorMessage(data.response)) {
-        const parsed = parseAIResponse(data.response);
+      if (data && (data.response !== undefined || data.action || data.question) && !isErrorMessage(data.response || '')) {
+        const rawContent = data.response || (data.question?.question || data.question?.text || '');
+        const parsed = parseAIResponse(rawContent);
         return {
-          content: parsed.cleanContent,
+          content: parsed.cleanContent || rawContent,
           action: data.action || parsed.action || null,
           question: data.question || parsed.question || null,
           source: 'backend'
@@ -196,7 +247,7 @@ export const queryAIEngine = async ({
     }
   } catch (err) {
     if (err.name === 'AbortError') throw err;
-    console.warn('Backend /ai/chat did not complete in time, trying direct AI engine...', err.message);
+    console.warn('Backend /ai/chat did not complete, trying direct fallback...', err.message);
   }
 
   // 2. Direct Google Generative Language API (if user provided Gemini API key)
