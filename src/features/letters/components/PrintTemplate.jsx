@@ -918,6 +918,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
   const isQuotation = docType === 'Quotation' || docType === 'Offer';
   const isProforma = docType === 'Proforma Invoice';
   const isJobWork = docType === 'Job Work';
+  const isServiceRequest = docType === 'Service Request';
   const isPurchase = docType === 'Purchase Invoice' || docType === 'Purchase Order' || docType === 'Debit Note';
   const isChallan = docType === 'Delivery Challan';
   const isSaleOrder = docType === 'Sale Order';
@@ -947,6 +948,8 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
       resolvedInvoiceNumber = `DN-${rawDoc.dnDetail.dnNo}`;
     } else if (isJobWork && rawDoc.jwDetail?.jobWorkNo) {
       resolvedInvoiceNumber = `${rawDoc.docPrefix || 'JW-'}${rawDoc.jwDetail.jobWorkNo}`;
+    } else if (isServiceRequest && rawDoc.srDetail?.srNo) {
+      resolvedInvoiceNumber = `${rawDoc.docPrefix || 'SR-'}${rawDoc.srDetail.srNo}${rawDoc.docPostfix || ''}`;
     } else if (rawDoc.invoiceDetail?.invoiceNo) {
       const pfx = docType === 'Purchase Order' ? 'PO-' : docType === 'Purchase Invoice' ? 'PUR-' : 'SINV-';
       resolvedInvoiceNumber = `${pfx}${rawDoc.invoiceDetail.invoiceNo}`;
@@ -958,6 +961,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
   const resolvedDate = isQuotation ? (rawDoc.offerDetail?.date || rawDoc.date)
     : isProforma ? (rawDoc.proDetail?.date || rawDoc.piDetail?.date || rawDoc.date)
       : isJobWork ? (rawDoc.jwDetail?.date || rawDoc.date)
+        : isServiceRequest ? (rawDoc.srDetail?.date || rawDoc.date)
         : isChallan ? (rawDoc.dcDetail?.date || rawDoc.date)
           : isSaleOrder ? (rawDoc.soDetail?.date || rawDoc.date)
             : (rawDoc.invoiceDetail?.date || rawDoc.date || '-');
@@ -1059,6 +1063,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
       case 'Credit Note': return 'CREDIT NOTE';
       case 'Debit Note': return 'DEBIT NOTE';
       case 'Job Work': return 'JOB WORK ORDER';
+      case 'Service Request': return 'SERVICE REQUEST';
       case 'Letter': return 'OFFICIAL LETTER';
       case 'Sale Invoice':
       case 'Invoice':
@@ -1078,6 +1083,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
       case 'Credit Note': return 'Credit Note No.';
       case 'Debit Note': return 'Debit Note No.';
       case 'Job Work': return 'Job Work No.';
+      case 'Service Request': return 'Service Request No.';
       default: return 'Invoice No.';
     }
   };

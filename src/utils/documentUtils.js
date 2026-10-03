@@ -106,6 +106,16 @@ export const DOCUMENT_CONFIGS = {
     parentField: 'jwDetail',
     partyType: 'customer'
   },
+  'Service Request': {
+    code: 'SR',
+    prefix: 'SR-',
+    route: '/documents/service-request',
+    editRoute: '/documents/service-request/edit',
+    newRoute: '/documents/service-request/new',
+    numberField: 'srNo',
+    parentField: 'srDetail',
+    partyType: 'customer'
+  },
   'Letter': {
     code: 'LTR',
     prefix: 'LTR-',
@@ -145,6 +155,7 @@ export const normalizeDocType = (docType) => {
   if (!docType) return 'Sale Invoice';
   if (docType === 'Invoice') return 'Sale Invoice';
   if (docType === 'Offer') return 'Quotation';
+  if (docType === 'Service Request' || docType === 'ServiceRequest' || docType === 'Service Bill' || docType === 'service-request') return 'Service Request';
   return docType;
 };
 
@@ -197,6 +208,8 @@ export const getNextDocumentNumber = (docType, allDocuments = []) => {
         candidate = extractDocumentNumber(doc.dnDetail.dnNo);
       } else if (normType === 'Job Work' && doc.jwDetail?.jobWorkNo) {
         candidate = extractDocumentNumber(doc.jwDetail.jobWorkNo);
+      } else if (normType === 'Service Request' && doc.srDetail?.srNo) {
+        candidate = extractDocumentNumber(doc.srDetail.srNo);
       }
 
       // Also inspect overall invoiceNumber
@@ -266,6 +279,8 @@ export const isDocumentNumberTaken = (docType, rawNumber, currentDocId, allDocum
       existingNum = extractDocumentNumber(doc.dnDetail.dnNo);
     } else if (normType === 'Job Work' && doc.jwDetail?.jobWorkNo) {
       existingNum = extractDocumentNumber(doc.jwDetail.jobWorkNo);
+    } else if (normType === 'Service Request' && doc.srDetail?.srNo) {
+      existingNum = extractDocumentNumber(doc.srDetail.srNo);
     }
 
     if (existingNum === null && doc.invoiceNumber) {
@@ -398,7 +413,12 @@ export const CONVERSION_OPTIONS = {
   ],
   'Job Work': [
     { targetType: 'Delivery Challan', label: 'Delivery Challan', desc: 'Dispatch raw materials to worker' },
-    { targetType: 'Sale Invoice', label: 'Sale Invoice', desc: 'Bill for processing services rendered' }
+    { targetType: 'Sale Invoice', label: 'Sale Invoice', desc: 'Bill for processing services rendered' },
+    { targetType: 'Service Request', label: 'Service Request', desc: 'Raise formal service request' }
+  ],
+  'Service Request': [
+    { targetType: 'Sale Invoice', label: 'Sale Invoice', desc: 'Bill client for services rendered and materials used' },
+    { targetType: 'Delivery Challan', label: 'Delivery Challan', desc: 'Dispatch serviced equipment or return spares' }
   ]
 };
 
@@ -629,6 +649,36 @@ export const createConvertedDocumentDraft = (sourceDoc, targetType, nextNumber) 
       additionalChargeName: 'Additional Charge',
       tcs: { mode: '+', value: '', unit: '%' },
       discount: { mode: '-', value: '', unit: 'Rs' },
+      roundOff: true,
+      grandTotal: sourceDoc.grandTotal || sourceDoc.total || 0,
+    };
+  }
+
+  if (targetType === 'Service Request') {
+    return {
+      docType: 'Service Request',
+      docPrefix: 'SR-',
+      docPostfix: '',
+      customerId: partyId,
+      customerInfo: baseCustomerInfo,
+      srDetail: {
+        type: 'Standard Service',
+        srNo: nextNumber || '1',
+        date: today,
+        deliveryMode: 'Direct Service',
+      },
+      items: validItems.length > 0 ? validItems : [],
+      bank: 'CANARA BANK',
+      terms: [
+        { title: 'Payment', detail: '100% upon completion of service and inspection.' },
+        { title: 'Warranty', detail: '30 days service warranty on replaced parts and workmanship.' },
+        { title: 'Jurisdiction', detail: 'Subject to our home Jurisdiction.' }
+      ],
+      documentNote: `Converted from ${sourceDoc.docType} #${sourceNumber}`,
+      additionalCharge: sourceDoc.additionalCharge || 0,
+      additionalChargeName: sourceDoc.additionalChargeName || 'Additional Charge',
+      tcs: sourceDoc.tcs || { mode: '+', value: '', unit: '%' },
+      discount: sourceDoc.discount || { mode: '-', value: '', unit: 'Rs' },
       roundOff: true,
       grandTotal: sourceDoc.grandTotal || sourceDoc.total || 0,
     };

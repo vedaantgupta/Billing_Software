@@ -30,6 +30,7 @@ import ForgotPassword from '@/features/auth/pages/ForgotPassword';
 import Ledger from '@/pages/Ledger';
 import ContactLedger from '@/features/contacts/pages/ContactLedger';
 import JobWork from '@/features/documents/pages/JobWork';
+import ServiceRequest from '@/features/documents/pages/ServiceRequest';
 import CreditNote from '@/features/documents/pages/CreditNote';
 import DebitNote from '@/features/documents/pages/DebitNote';
 import Letters from '@/features/letters/pages/Letters';
@@ -259,6 +260,33 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <JobWork />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/service-request/new" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ServiceRequest />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/service-request/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ServiceRequest />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/documents/service-request" element={
+              <Navigate to="/documents/service-request/new" replace />
+            } />
+            <Route path="/service-request/new" element={
+              <Navigate to="/documents/service-request/new" replace />
+            } />
+            <Route path="/service-request/edit/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ServiceRequest />
                 </Layout>
               </ProtectedRoute>
             } />

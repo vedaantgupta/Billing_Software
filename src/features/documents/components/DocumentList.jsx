@@ -15,7 +15,7 @@ import {
   createConvertedDocumentDraft 
 } from '@/utils/documentUtils';
 
-const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Word Document', 'Spreadsheet', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note', 'Job Work', 'Letter'];
+const docTypes = ['Sale Invoice', 'Purchase Invoice', 'Service Request', 'Word Document', 'Spreadsheet', 'Quotation', 'Proforma Invoice', 'Delivery Challan', 'Purchase Order', 'Sale Order', 'Credit Note', 'Debit Note', 'Job Work', 'Letter'];
 
 const DocumentList = () => {
   const [documents, setDocuments] = useState([]);
@@ -182,6 +182,8 @@ const DocumentList = () => {
       navigate(`/documents/debit-note/edit/${docId}`);
     } else if (type === 'Job Work') {
       navigate(`/documents/job-work/edit/${docId}`);
+    } else if (type === 'Service Request') {
+      navigate(`/documents/service-request/edit/${docId}`);
     } else if (type === 'Letter' || type === 'Document') {
       navigate(`/documents/letters/edit/${docId}`);
     } else {
@@ -202,6 +204,7 @@ const DocumentList = () => {
     'Credit Note': '/documents/credit-note/new',
     'Debit Note': '/documents/debit-note/new',
     'Job Work': '/documents/job-work/new',
+    'Service Request': '/documents/service-request/new',
     'Letter': '/documents/letters/new'
   };
 

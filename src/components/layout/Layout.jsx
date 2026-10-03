@@ -5,7 +5,8 @@ import {
   Bell, Search, LogOut, CreditCard, ChevronDown, ChevronRight, ChevronLeft, UserCog, Wallet,
   Banknote, Landmark, History, Briefcase, Video, Globe, FileEdit, IdCard, ShoppingBag,
   MessageSquareShare, Menu, X, Plus, ArrowDownLeft, ArrowUpRight, CheckCircle2,
-  FilePlus, ShoppingCart, UserPlus, PackagePlus, Receipt, TrendingUp, Check, Download
+  FilePlus, ShoppingCart, UserPlus, PackagePlus, Receipt, TrendingUp, Check, Download,
+  Wrench
 } from 'lucide-react';
 import '@/components/layout/Layout.css';
 import AIAssistant from '@/features/dashboard/components/AIAssistant';
@@ -713,6 +714,14 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
                       </div>
                     </button>
 
+                    <button className="create-item" onClick={() => { navigate('/documents/service-request/new'); setShowCreateDropdown(false); }}>
+                      <div className="create-icon-badge teal" style={{ background: '#ccfbf1', color: '#0d9488' }}><Wrench size={18} /></div>
+                      <div className="create-item-info">
+                        <strong>Service Request</strong>
+                        <p>Repair, AMC & Maintenance</p>
+                      </div>
+                    </button>
+
                     <button className="create-item" onClick={() => { navigate('/payments/inward'); setShowCreateDropdown(false); }}>
                       <div className="create-icon-badge blue"><ArrowDownLeft size={18} /></div>
                       <div className="create-item-info">
@@ -1047,6 +1056,14 @@ const Layout = ({ children, noWrapper = false, extended = false }) => {
               >
                 <div className="sheet-action-icon"><ShoppingCart size={22} /></div>
                 <span>Purchase Bill</span>
+              </button>
+
+              <button
+                className="sheet-action-item teal"
+                onClick={() => { navigate('/documents/service-request/new'); setShowMobileActionSheet(false); }}
+              >
+                <div className="sheet-action-icon"><Wrench size={22} /></div>
+                <span>Service Request</span>
               </button>
 
               <button

@@ -4,7 +4,7 @@ import {
   FileText, ShoppingCart, FileEdit, Truck, FileCheck,
   ClipboardList, Briefcase, FileMinus, FilePlus,
   ArrowDownCircle, ArrowUpCircle, BadgePercent, Mail,
-  ArrowLeft, ArrowRight
+  ArrowLeft, ArrowRight, Wrench
 } from 'lucide-react';
 import '@/features/documents/styles/DocumentTypeSelection.css';
 
@@ -37,6 +37,7 @@ const categories = [
     color: 'purple',
     badgeColor: '#7c3aed',
     items: [
+      { id: 'service-request', label: 'Service Request', icon: Wrench, color: '#0d9488', desc: 'Customer service tickets, repairs & maintenance' },
       { id: 'job-work', label: 'Job Work', icon: Briefcase, color: '#7c3aed', desc: 'Outsourced production and processing' },
       { id: 'letter', label: 'Letter', icon: Mail, color: '#64748b', desc: 'Formal business letters & notices' },
     ]
@@ -81,6 +82,8 @@ const DocumentTypeSelection = () => {
       navigate('/documents/proforma/new');
     } else if (type.id === 'job-work') {
       navigate('/documents/job-work/new');
+    } else if (type.id === 'service-request') {
+      navigate('/documents/service-request/new');
     } else if (type.id === 'letter') {
       navigate('/documents/letters/new');
     } else if (type.id === 'word-document') {
