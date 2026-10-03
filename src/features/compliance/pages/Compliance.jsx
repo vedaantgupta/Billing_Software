@@ -11,29 +11,59 @@ const Compliance = () => {
   useEffect(() => {
     const loadInvoices = async () => {
       if (user?.id) {
-        const data = await getItems('documents', user.id);
-        setInvoices(data.filter(d => d.docType === 'Invoice' || d.docType === 'Sale Invoice'));
+        try {
+          const [docs, rawInvoices] = await Promise.all([
+            getItems('documents', user.id).catch(() => []),
+            getItems('invoices', user.id).catch(() => [])
+          ]);
+
+          const combined = [...docs];
+          rawInvoices.forEach(inv => {
+            if (!combined.find(d => (d.id && d.id === inv.id) || (d._dbId && d._dbId === inv.id))) {
+              combined.push({ ...inv, docType: inv.docType || 'Sale Invoice' });
+            }
+          });
+
+          const filtered = combined.filter(d => 
+            d.docType === 'Invoice' || 
+            d.docType === 'Sale Invoice' || 
+            d.type === 'Invoice'
+          );
+          
+          setInvoices(filtered);
+        } catch (err) {
+          console.error('Failed to load compliance invoices:', err);
+        }
       }
     };
     loadInvoices();
   }, [user?.id]);
 
   const handleExportTally = () => {
-    // Mock CSV generation
     let csvStr = "Date,Invoice Number,Customer,Taxable Amount,CGST,SGST,IGST,Total Value\n";
     invoices.forEach(inv => {
-      let cgst = inv.isInterState ? 0 : inv.totalTax / 2;
-      let sgst = inv.isInterState ? 0 : inv.totalTax / 2;
-      let igst = inv.isInterState ? inv.totalTax : 0;
-      csvStr += `${inv.date},${inv.invoiceNumber},${inv.customerName},${inv.subTotal},${cgst},${sgst},${igst},${inv.total}\n`;
+      const invNum = inv.invoiceNumber || inv.invoiceDetail?.invoiceNo || '';
+      const date = inv.date || inv.invoiceDetail?.date || '';
+      const customer = inv.customerName || inv.customerInfo?.ms || 'Walk-in Customer';
+      const totalTax = Number(inv.totalTax || inv.taxAmount || 0);
+      const subTotal = Number(inv.subTotal || inv.taxable || inv.totalTaxable || 0);
+      const total = Number(inv.total ?? inv.grandTotal ?? inv.amount ?? 0);
+      const isInterState = Boolean(inv.isInterState);
+
+      const cgst = isInterState ? 0 : totalTax / 2;
+      const sgst = isInterState ? 0 : totalTax / 2;
+      const igst = isInterState ? totalTax : 0;
+
+      csvStr += `"${date}","${invNum}","${customer.replace(/"/g, '""')}",${subTotal.toFixed(2)},${cgst.toFixed(2)},${sgst.toFixed(2)},${igst.toFixed(2)},${total.toFixed(2)}\n`;
     });
     
-    const blob = new Blob([csvStr], { type: 'text/csv' });
+    const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `Tally_Export_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -76,22 +106,37 @@ const Compliance = () => {
                 </tr>
               </thead>
               <tbody>
-                {invoices.map(inv => (
-                  <tr key={inv.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '1rem', fontWeight: 600 }}>{inv.invoiceNumber}</td>
-                    <td style={{ padding: '1rem' }}>{inv.date}</td>
-                    <td style={{ padding: '1rem' }}>{inv.customerName}</td>
-                    <td style={{ padding: '1rem' }}>₹{inv.total.toFixed(2)}</td>
-                    <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
-                      <a href="https://ewaybillgst.gov.in/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', textDecoration: 'none' }}>
-                        Generate E-Way Bill
-                      </a>
-                      <a href="https://einvoice1.gst.gov.in/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', textDecoration: 'none' }}>
-                        E-Invoice
-                      </a>
+                {invoices.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      No invoices found.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  invoices.map((inv, idx) => {
+                    const invoiceNum = inv.invoiceNumber || inv.invoiceDetail?.invoiceNo || `INV-${idx + 1}`;
+                    const invoiceDate = inv.date || inv.invoiceDetail?.date || '—';
+                    const customerName = inv.customerName || inv.customerInfo?.ms || 'Walk-in Customer';
+                    const totalVal = Number(inv.total ?? inv.grandTotal ?? inv.amount ?? 0);
+
+                    return (
+                      <tr key={inv.id || inv._dbId || inv._id || idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '1rem', fontWeight: 600 }}>{invoiceNum}</td>
+                        <td style={{ padding: '1rem' }}>{invoiceDate}</td>
+                        <td style={{ padding: '1rem' }}>{customerName}</td>
+                        <td style={{ padding: '1rem' }}>₹{totalVal.toFixed(2)}</td>
+                        <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem' }}>
+                          <a href="https://ewaybillgst.gov.in/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', textDecoration: 'none' }}>
+                            Generate E-Way Bill
+                          </a>
+                          <a href="https://einvoice1.gst.gov.in/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', textDecoration: 'none' }}>
+                            E-Invoice
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -99,7 +144,7 @@ const Compliance = () => {
 
         {activeTab === 'gstr' && (
           <div>
-             <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4">
               <FileDigit size={24} color="var(--primary-color)" />
               <h2 style={{ margin: 0 }}>GST Returns (Ready-to-File)</h2>
             </div>
