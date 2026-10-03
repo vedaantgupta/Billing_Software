@@ -418,16 +418,26 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
     );
   }
 
-  // ── Official Standard Payment In (Receipt) & Payment Out (Voucher) Print Template ──
+  // ── Official Standard Payment In / Out & Expense / Income Voucher Print Template ──
   if (
     rawDoc.docType === 'Payment In' || rawType === 'Payment In' ||
-    rawDoc.docType === 'Payment Out' || rawType === 'Payment Out'
+    rawDoc.docType === 'Payment Out' || rawType === 'Payment Out' ||
+    rawDoc.docType === 'Daily Expense' || rawType === 'Daily Expense' ||
+    rawDoc.docType === 'Expense Voucher' || rawType === 'Expense Voucher' ||
+    rawDoc.docType === 'Other Income' || rawType === 'Other Income' ||
+    rawDoc.docType === 'Income Voucher' || rawType === 'Income Voucher'
   ) {
     const p = rawDoc;
-    const isOutward = rawDoc.docType === 'Payment Out' || rawType === 'Payment Out';
-    const amount = Number(p.amount) || 0;
-    const docNo = p.fullReceiptNo || p.receiptNumber || p.fullVoucherNo || p.voucherNumber || p.fullPaymentNo || p.paymentNumber || '-';
-    const partyName = isOutward ? (p.vendorName || p.companyName || '-') : (p.customerName || p.companyName || '-');
+    const isOutward = rawDoc.docType === 'Payment Out' || rawType === 'Payment Out' ||
+      rawDoc.docType === 'Daily Expense' || rawType === 'Daily Expense' ||
+      rawDoc.docType === 'Expense Voucher' || rawType === 'Expense Voucher';
+    const amount = Number(p.grandTotal || p.total || p.amount || 0);
+    const docNo = p.invoiceNumber || p.expenseNo ? `EXP-${p.expenseNo}` : (p.incomeNo ? `INC-${p.incomeNo}` : (p.fullReceiptNo || p.receiptNumber || p.fullVoucherNo || p.voucherNumber || p.fullPaymentNo || p.paymentNumber || '-'));
+    const partyName = isOutward 
+      ? (p.vendorName || p.title || p.msName || p.vendorInfo?.ms || '-') 
+      : (p.customerName || p.title || p.msName || p.customerInfo?.ms || '-');
+    const voucherTitle = isOutward ? 'EXPENSE PAYMENT VOUCHER' : 'OFFICIAL INCOME RECEIPT';
+    const hasItems = Array.isArray(p.items) && p.items.length > 0 && (p.items[0]?.name || p.items[0]?.description);
 
     return (
       <div className="print-container single-page">
@@ -458,7 +468,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
           {/* 2. Title Bar */}
           <div className="pt-title-bar">
             <div className="pt-title-gstin"><strong>GSTIN :</strong> {company?.gstin || '-'}</div>
-            <div className="pt-title-text">{isOutward ? 'PAYMENT VOUCHER' : 'RECEIPT VOUCHER'}</div>
+            <div className="pt-title-text">{voucherTitle}</div>
             <div className="pt-title-original">{copyType || 'ORIGINAL'}</div>
           </div>
 
@@ -469,10 +479,10 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
               <table className="pt-details-table">
                 <tbody>
                   <tr><th>M/S</th><td>: <strong>{partyName}</strong></td></tr>
-                  <tr><th style={{ verticalAlign: 'top' }}>Address</th><td style={{ whiteSpace: 'pre-wrap' }}>: {p.address || '-'}</td></tr>
-                  <tr><th>Phone</th><td>: {p.phone || '-'}</td></tr>
-                  <tr><th>GSTIN</th><td>: {p.gstinPan || '-'}</td></tr>
-                  <tr><th>State</th><td>: {p.state || company?.state || 'Madhya Pradesh (23)'}</td></tr>
+                  <tr><th style={{ verticalAlign: 'top' }}>Address</th><td style={{ whiteSpace: 'pre-wrap' }}>: {p.address || p.vendorInfo?.address || p.customerInfo?.address || '-'}</td></tr>
+                  <tr><th>Phone</th><td>: {p.phone || p.vendorInfo?.phoneNo || p.customerInfo?.phoneNo || '-'}</td></tr>
+                  <tr><th>GSTIN</th><td>: {p.gstinPan || p.vendorInfo?.gstinPan || p.customerInfo?.gstinPan || '-'}</td></tr>
+                  <tr><th>State</th><td>: {p.state || p.vendorInfo?.placeOfSupply || company?.state || 'Madhya Pradesh (23)'}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -489,15 +499,15 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                   </tr>
                   <tr>
                     <th>Payment Mode</th>
-                    <td>: <strong>{p.paymentType || 'Bank Transfer'}</strong></td>
+                    <td>: <strong>{p.paymentType || 'CASH'}</strong></td>
                   </tr>
-                  {p.invoiceList && (
+                  {(p.invoiceList || p.refNo || p.expenseDetail?.refNo || p.incomeDetail?.refNo) && (
                     <tr>
                       <th>Reference / Bill</th>
-                      <td>: {p.invoiceList}</td>
+                      <td>: {p.invoiceList || p.refNo || p.expenseDetail?.refNo || p.incomeDetail?.refNo}</td>
                     </tr>
                   )}
-                  {isOutward && p.category && (
+                  {p.category && (
                     <tr>
                       <th>Category</th>
                       <td>: {p.category}</td>
@@ -505,7 +515,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                   )}
                   <tr>
                     <th>Status</th>
-                    <td>: <span style={{ color: isOutward ? '#e11d48' : '#059669', fontWeight: 700 }}>{p.status || (isOutward ? 'Paid' : 'Received')}</span></td>
+                    <td>: <span style={{ color: isOutward ? '#e11d48' : '#059669', fontWeight: 700 }}>{p.status || (isOutward ? 'Disbursed / Paid' : 'Received')}</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -518,31 +528,55 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
               <thead>
                 <tr>
                   <th className="th-sr" style={{ width: '45px' }}>Sr.<br />No.</th>
-                  <th className="th-product">Particulars / Account Description</th>
-                  <th className="th-hsn" style={{ width: '140px' }}>Payment Mode</th>
-                  <th className="th-qty" style={{ width: '140px' }}>Reference / Bill</th>
-                  <th className="th-total" style={{ width: '160px' }}>Amount (₹)</th>
+                  <th className="th-product">Particulars / Description</th>
+                  <th className="th-hsn" style={{ width: '100px' }}>Qty / Unit</th>
+                  <th className="th-qty" style={{ width: '120px' }}>Rate (₹)</th>
+                  <th className="th-total" style={{ width: '150px' }}>Amount (₹)</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="pt-item-row">
-                  <td className="td-center">1</td>
-                  <td className="td-left">
-                    <div style={{ fontWeight: 700, fontSize: '12px' }}>
-                      {isOutward ? `Payment disbursed to ${partyName}` : `Payment received from ${partyName}`}
-                    </div>
-                    {p.remarks && (
-                      <div style={{ fontSize: '11px', color: '#475569', marginTop: '6px' }}>
-                        <strong>Remarks:</strong> {p.remarks}
+                {hasItems ? (
+                  p.items.map((item, idx) => {
+                    const itemAmt = Number(item.total || item.amount || (Number(item.rate || 0) * Number(item.quantity || 1)));
+                    return (
+                      <tr key={idx} className="pt-item-row">
+                        <td className="td-center">{idx + 1}</td>
+                        <td className="td-left">
+                          <div style={{ fontWeight: 700, fontSize: '12px' }}>{item.name || item.description || 'Expense Item'}</div>
+                          {item.note && (
+                            <div style={{ fontSize: '11px', color: '#475569', marginTop: '3px' }}>
+                              Note: {item.note}
+                            </div>
+                          )}
+                        </td>
+                        <td className="td-center">{item.quantity || item.qty || 1} {item.unit || item.uom || 'NOS'}</td>
+                        <td className="td-right">₹{Number(item.rate || item.price || 0).toFixed(2)}</td>
+                        <td className="td-right" style={{ fontSize: '12px', fontWeight: 700 }}>
+                          ₹{itemAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr className="pt-item-row">
+                    <td className="td-center">1</td>
+                    <td className="td-left">
+                      <div style={{ fontWeight: 700, fontSize: '12px' }}>
+                        {isOutward ? `Payment disbursed to ${partyName}` : `Payment received from ${partyName}`}
                       </div>
-                    )}
-                  </td>
-                  <td className="td-center" style={{ fontWeight: 600 }}>{p.paymentType || 'Bank Transfer'}</td>
-                  <td className="td-center">{p.invoiceList || '-'}</td>
-                  <td className="td-right" style={{ fontSize: '13px', fontWeight: 800 }}>
-                    {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                </tr>
+                      {(p.remarks || p.notes || p.documentNote) && (
+                        <div style={{ fontSize: '11px', color: '#475569', marginTop: '6px' }}>
+                          <strong>Remarks:</strong> {p.remarks || p.notes || p.documentNote}
+                        </div>
+                      )}
+                    </td>
+                    <td className="td-center">1 VOUCHER</td>
+                    <td className="td-right">₹{amount.toFixed(2)}</td>
+                    <td className="td-right" style={{ fontSize: '13px', fontWeight: 800 }}>
+                      ₹{amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                )}
 
                 {/* Empty spacer row for standard full-height print balance */}
                 <tr className="pt-empty-row">
@@ -551,7 +585,7 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
               </tbody>
               <tfoot>
                 <tr className="pt-totals-row">
-                  <td colSpan="4" className="td-right"><strong>Total Amount</strong></td>
+                  <td colSpan="4" className="td-right"><strong>Grand Total Amount</strong></td>
                   <td className="td-right" style={{ fontSize: '13px', fontWeight: 900 }}>
                     ₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
@@ -597,6 +631,257 @@ const PrintTemplate = ({ doc: rawDoc, company, products = [], type: rawType, cop
                 <tbody>
                   <tr className="pt-grand-total">
                     <th>{isOutward ? 'Total Amount Paid' : 'Total Amount Received'}</th>
+                    <td>₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                  <tr><td colSpan="2" className="pt-eoe">(E & O.E.)</td></tr>
+                </tbody>
+              </table>
+
+              <div className="pt-signature-box">
+                <div className="pt-certify-text">Certified that the particulars given above are true and correct.</div>
+                <div className="pt-sig-company">For {company?.name || 'Company'}</div>
+                {company?.signature ? (
+                  <div style={{ textAlign: 'center', padding: '5px 0' }}>
+                    <img src={company.signature} alt="Signature" style={{ maxHeight: '60px', mixBlendMode: 'multiply' }} />
+                  </div>
+                ) : (
+                  <div style={{ height: '40px' }}></div>
+                )}
+                <div className="pt-sig-label">Authorised Signatory</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Page indicator */}
+          <div style={{ textAlign: 'center', padding: '4px', fontSize: '9px', fontWeight: 600, borderTop: '1px dashed #eee' }}>
+            Page 1 of 1
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ── Official Daily Expense (Payment Voucher) & Other Income (Receipt Voucher) Print Template ──
+  if (
+    rawDoc.docType === 'Daily Expense' || rawType === 'Daily Expense' ||
+    rawDoc.docType === 'Expense Voucher' || rawType === 'Expense Voucher' ||
+    rawDoc.docType === 'Other Income' || rawType === 'Other Income' ||
+    rawDoc.docType === 'Income Voucher' || rawType === 'Income Voucher'
+  ) {
+    const isExpense = rawDoc.docType === 'Daily Expense' || rawDoc.docType === 'Expense Voucher' || rawType === 'Daily Expense' || rawType === 'Expense Voucher';
+    const amount = Number(rawDoc.grandTotal || rawDoc.total || rawDoc.amount || 0);
+    const voucherNo = isExpense 
+      ? (rawDoc.expenseNo ? `EXP-${rawDoc.expenseNo}` : (rawDoc.invoiceNumber || 'EXP-VOUCHER'))
+      : (rawDoc.incomeNo ? `INC-${rawDoc.incomeNo}` : (rawDoc.invoiceNumber || 'INC-RECEIPT'));
+    const partyName = isExpense 
+      ? (rawDoc.title || rawDoc.msName || rawDoc.payee || 'Expense Account') 
+      : (rawDoc.msName || rawDoc.title || rawDoc.payer || 'Income Source');
+    const paymentMode = rawDoc.paymentType || 'CASH';
+    const docDate = rawDoc.date || rawDoc.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0];
+    const items = Array.isArray(rawDoc.items) && rawDoc.items.length > 0 ? rawDoc.items : null;
+
+    return (
+      <div className="print-container single-page">
+        <div className="print-page-border">
+
+          {/* 1. Header Block */}
+          <div className="pt-header">
+            <div className="pt-header-left">
+              {company?.logo ? (
+                <img src={company.logo} alt={company.name} style={{ maxHeight: '80px', maxWidth: '280px', objectFit: 'contain', marginBottom: '8px' }} />
+              ) : (
+                <h1>{company?.name || 'Company Name'}</h1>
+              )}
+              <p>{company?.address || 'Company Address'}</p>
+            </div>
+            <div className="pt-header-right">
+              <table>
+                <tbody>
+                  <tr><td>Name</td><td>: {company?.ownerName || '-'}</td></tr>
+                  <tr><td>Phone</td><td>: {company?.phone || '-'}</td></tr>
+                  <tr><td>Email</td><td>: {company?.email || '-'}</td></tr>
+                  <tr><td>PAN</td><td>: {company?.pan || '-'}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 2. Title Bar */}
+          <div className="pt-title-bar">
+            <div className="pt-title-gstin"><strong>GSTIN :</strong> {company?.gstin || '-'}</div>
+            <div className="pt-title-text" style={{ color: isExpense ? '#e11d48' : '#059669' }}>
+              {isExpense ? 'PAYMENT / EXPENSE VOUCHER' : 'MISCELLANEOUS INCOME RECEIPT'}
+            </div>
+            <div className="pt-title-original">{copyType || 'ORIGINAL'}</div>
+          </div>
+
+          {/* 3. Details Container */}
+          <div className="pt-details-container">
+            <div className="pt-customer-details">
+              <div className="pt-section-title">{isExpense ? 'Paid To / Beneficiary Account' : 'Received From / Payer Account'}</div>
+              <table className="pt-details-table">
+                <tbody>
+                  <tr><th>Name / Particulars</th><td>: <strong>{partyName}</strong></td></tr>
+                  {rawDoc.phone && <tr><th>Contact Phone</th><td>: {rawDoc.phone}</td></tr>}
+                  <tr><th>Category</th><td>: <span style={{ fontWeight: 600, color: '#334155' }}>{rawDoc.category || 'General'}</span></td></tr>
+                  <tr><th>Payment Mode</th><td>: <strong>{paymentMode}</strong></td></tr>
+                  {rawDoc.refNo && <tr><th>Reference / Txn ID</th><td>: {rawDoc.refNo}</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <div className="pt-invoice-details">
+              <table className="pt-details-table" style={{ marginTop: '10px' }}>
+                <tbody>
+                  <tr>
+                    <th style={{ width: '130px' }}>{isExpense ? 'Voucher No.' : 'Receipt No.'}</th>
+                    <td style={{ fontSize: '13px' }}>: <strong>{voucherNo}</strong></td>
+                  </tr>
+                  <tr>
+                    <th>Date</th>
+                    <td>: {docDate}</td>
+                  </tr>
+                  <tr>
+                    <th>Payment Status</th>
+                    <td>: <span style={{ color: isExpense ? '#0284c7' : '#059669', fontWeight: 700 }}>Settled / Cleared</span></td>
+                  </tr>
+                  {rawDoc.isGstEnabled && (
+                    <tr>
+                      <th>GST Treatment</th>
+                      <td>: <span style={{ color: '#6366f1', fontWeight: 600 }}>GST Registered Expense</span></td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 4. Main Particulars Table */}
+          <div className="pt-table-container">
+            <table className="pt-main-table">
+              <thead>
+                <tr>
+                  <th className="th-sr" style={{ width: '45px' }}>Sr.<br />No.</th>
+                  <th className="th-product">Particulars / Account Description</th>
+                  {isExpense && rawDoc.isGstEnabled && <th style={{ width: '70px', textAlign: 'center' }}>GST Rate</th>}
+                  <th style={{ width: '110px', textAlign: 'center' }}>Payment Mode</th>
+                  <th className="th-total" style={{ width: '150px' }}>Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items ? (
+                  items.map((item, idx) => (
+                    <tr key={item.id || idx} className="pt-item-row">
+                      <td className="td-center">{idx + 1}</td>
+                      <td className="td-left">
+                        <div style={{ fontWeight: 700, fontSize: '12px' }}>{item.name || partyName}</div>
+                        {item.note && (
+                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>{item.note}</div>
+                        )}
+                        {item.qty > 0 && (
+                          <div style={{ fontSize: '10px', color: '#475569', marginTop: '2px' }}>
+                            Qty: {item.qty} {item.uom || ''} @ ₹{Number(item.price || 0).toFixed(2)}
+                            {item.discount > 0 && ` (Disc: ₹${item.discount})`}
+                          </div>
+                        )}
+                      </td>
+                      {isExpense && rawDoc.isGstEnabled && (
+                        <td className="td-center">{item.tax ? `${item.tax}%` : '0%'}</td>
+                      )}
+                      <td className="td-center" style={{ fontWeight: 600 }}>{paymentMode}</td>
+                      <td className="td-right" style={{ fontSize: '12px', fontWeight: 700 }}>
+                        {Number(item.total || item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr className="pt-item-row">
+                    <td className="td-center">1</td>
+                    <td className="td-left">
+                      <div style={{ fontWeight: 700, fontSize: '12px' }}>
+                        {isExpense ? `Expense settlement towards: ${partyName}` : `Income receipt from: ${partyName}`}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#475569', marginTop: '4px' }}>
+                        Category: {rawDoc.category || 'General'}
+                      </div>
+                    </td>
+                    {isExpense && rawDoc.isGstEnabled && <td className="td-center">-</td>}
+                    <td className="td-center" style={{ fontWeight: 600 }}>{paymentMode}</td>
+                    <td className="td-right" style={{ fontSize: '13px', fontWeight: 800 }}>
+                      {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                )}
+
+                {/* Empty spacer row for standard full-height print balance */}
+                <tr className="pt-empty-row">
+                  <td colSpan={isExpense && rawDoc.isGstEnabled ? 5 : 4} style={{ height: '100%' }}></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                {isExpense && rawDoc.totalTax > 0 && (
+                  <>
+                    <tr style={{ borderTop: '1px solid #cbd5e1', fontSize: '11px' }}>
+                      <td colSpan={rawDoc.isGstEnabled ? 4 : 3} className="td-right">Taxable Amount:</td>
+                      <td className="td-right">₹ {Number(rawDoc.totalTaxable || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr style={{ fontSize: '11px' }}>
+                      <td colSpan={rawDoc.isGstEnabled ? 4 : 3} className="td-right">GST Tax Amount:</td>
+                      <td className="td-right">₹ {Number(rawDoc.totalTax || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  </>
+                )}
+                <tr className="pt-totals-row">
+                  <td colSpan={isExpense && rawDoc.isGstEnabled ? 4 : 3} className="td-right">
+                    <strong>{isExpense ? 'Total Net Expense Paid' : 'Total Net Income Received'}</strong>
+                  </td>
+                  <td className="td-right" style={{ fontSize: '13px', fontWeight: 900 }}>
+                    ₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          {/* 5. Footer Area */}
+          <div className="pt-footer-container">
+            <div className="pt-footer-left">
+              <div className="pt-footer-box" style={{ minHeight: '40px' }}>
+                <div className="pt-section-title-small">Total in words</div>
+                <div className="pt-words-text">{toWords(Math.round(amount))}</div>
+              </div>
+
+              <div className="pt-footer-box pt-terms-box" style={{ borderBottom: 'none' }}>
+                <div className="pt-section-title-small">Auditing Narration / Notes</div>
+                <div className="pt-terms-text" style={{ whiteSpace: 'pre-line' }}>
+                  {rawDoc.notes || rawDoc.remarks || (
+                    isExpense
+                      ? '1. Official business expenditure disbursed in accordance with accounting policies.\n2. Preserved for statutory internal and tax audits.'
+                      : '1. Official receipt voucher for miscellaneous income / non-operating revenue.\n2. Computer-generated official voucher.'
+                  )}
+                </div>
+              </div>
+
+              {/* QR Code Verification */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderTop: '1px solid #cbd5e1' }}>
+                <QRCodeCanvas 
+                  value={JSON.stringify({ voucher: voucherNo, amount, date: docDate, company: company?.name })}
+                  size={50}
+                  level="M"
+                />
+                <div style={{ fontSize: '9px', color: '#64748b', lineHeight: '1.4' }}>
+                  <strong>Digital Voucher Verification</strong><br />
+                  Voucher #{voucherNo} | Auth: System Verified<br />
+                  Date: {docDate}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-footer-right">
+              <table className="pt-summary-table">
+                <tbody>
+                  <tr className="pt-grand-total">
+                    <th>{isExpense ? 'Total Paid' : 'Total Received'}</th>
                     <td>₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                   <tr><td colSpan="2" className="pt-eoe">(E & O.E.)</td></tr>

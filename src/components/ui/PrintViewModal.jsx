@@ -20,7 +20,13 @@ const PrintViewModal = ({ doc, onClose }) => {
   });
 
   const isSalarySlip = doc?.docType === 'Salary Slip';
-  const isPaymentReceipt = doc?.docType === 'Payment In' || doc?.docType === 'Payment Out';
+  const isPaymentReceipt = 
+    doc?.docType === 'Payment In' || 
+    doc?.docType === 'Payment Out' ||
+    doc?.docType === 'Daily Expense' ||
+    doc?.docType === 'Expense Voucher' ||
+    doc?.docType === 'Other Income' ||
+    doc?.docType === 'Income Voucher';
 
   useEffect(() => {
     if (user?.id) {
@@ -48,7 +54,7 @@ const PrintViewModal = ({ doc, onClose }) => {
   if (activeCopies.length === 0) activeCopies.push('original'); // fallback
 
   const getFileName = () => {
-    const rawNo = doc.invoiceNumber || doc.fullReceiptNo || doc.fullVoucherNo || doc.fullPaymentNo || doc.receiptNumber || doc.voucherNumber || doc.paymentNumber || doc.invoiceDetail?.invoiceNo || doc.offerDetail?.offerNo || 'Document';
+    const rawNo = doc.invoiceNumber || doc.expenseNo || doc.incomeNo || doc.fullReceiptNo || doc.fullVoucherNo || doc.fullPaymentNo || doc.receiptNumber || doc.voucherNumber || doc.paymentNumber || doc.invoiceDetail?.invoiceNo || doc.offerDetail?.offerNo || 'Document';
     const cleanNo = String(rawNo).replace(/[\/\\?%*:|"<>]/g, '-');
     return `${doc.docType || 'Document'}_${cleanNo}.pdf`;
   };
@@ -84,16 +90,20 @@ const PrintViewModal = ({ doc, onClose }) => {
 
   // WhatsApp Send (with Web Share API file attachment or auto-download fallback)
   const handleWhatsApp = async () => {
-    const phone = doc.customerPhone || doc.vendorPhone || doc.customerInfo?.phoneNo || doc.vendorInfo?.phoneNo || "";
+    const phone = doc.customerPhone || doc.vendorPhone || doc.phone || doc.customerInfo?.phoneNo || doc.vendorInfo?.phoneNo || "";
     const cleanPhone = phone.replace(/\D/g, '');
     const fileName = getFileName();
-    const docNumber = doc.invoiceNumber || doc.fullReceiptNo || doc.offerDetail?.offerNo || 'Document';
-    const partyName = doc.customerName || doc.vendorName || doc.customerInfo?.ms || doc.vendorInfo?.ms || 'Valued Party';
+    const docNumber = doc.invoiceNumber || (doc.expenseNo ? `EXP-${doc.expenseNo}` : (doc.incomeNo ? `INC-${doc.incomeNo}` : doc.fullReceiptNo || doc.offerDetail?.offerNo || 'Document'));
+    const partyName = doc.customerName || doc.vendorName || doc.title || doc.msName || doc.customerInfo?.ms || doc.vendorInfo?.ms || 'Valued Party';
     const totalAmt = Number(doc.total || doc.grandTotal || doc.amount || 0).toFixed(2);
 
     const messageText = isSalarySlip
       ? `Hello ${doc.staffName || 'Employee'},\n\nSharing your Payslip for ${doc.month} ${doc.year}.\nTotal Salary: ₹${Number(doc.calculatedSalary || 0).toFixed(2)}\n\nThank you!`
-      : `Hello ${partyName},\n\nSharing your ${doc.docType || 'Invoice'} #${docNumber} for ₹${totalAmt}.\n\nThank you!`;
+      : (doc.docType === 'Daily Expense' || doc.docType === 'Expense Voucher')
+        ? `Hello ${partyName},\n\nSharing Expense Payment Voucher #${docNumber} for ₹${totalAmt}.\n\nThank you!`
+        : (doc.docType === 'Other Income' || doc.docType === 'Income Voucher')
+          ? `Hello ${partyName},\n\nSharing Income Receipt Voucher #${docNumber} for ₹${totalAmt}.\n\nThank you!`
+          : `Hello ${partyName},\n\nSharing your ${doc.docType || 'Invoice'} #${docNumber} for ₹${totalAmt}.\n\nThank you!`;
 
     setIsGeneratingPdf(true);
     setStatusMessage('Preparing document...');

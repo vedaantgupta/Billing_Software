@@ -1,12 +1,487 @@
-/* Reusing styles from DailyExpenses where applicable or providing income-specific ones */
-.incomes-page {
-  animation: fadeIn 0.5s ease-out;
+/* ==========================================================================
+   Other Income Page Styling (Exact Match with Document Management Table)
+   ========================================================================== */
+
+.incomes-doc-page {
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: fadeInDoc 0.25s ease-out;
 }
 
-.income-title {
+@keyframes fadeInDoc {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Page Header */
+.incomes-doc-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.page-badge-row {
+  margin-bottom: 0.35rem;
+}
+
+.page-badge.income-badge {
+  display: inline-block;
+  font-size: 0.685rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #ecfdf5;
+  color: #059669;
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid #a7f3d0;
+}
+
+.incomes-doc-page .page-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+
+.incomes-doc-page .page-subtitle {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 0.35rem;
   font-weight: 500;
 }
 
-.payment-badge.cash { color: #16a34a; }
-.payment-badge.cheque { color: #2563eb; }
-.payment-badge.online { color: #7c3aed; }
+.incomes-doc-page .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.incomes-doc-page .income-primary-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+}
+
+.incomes-doc-page .income-primary-btn:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35) !important;
+}
+
+/* Search Bar & Controls */
+.incomes-doc-page .table-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 300px;
+  flex-wrap: wrap;
+}
+
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.incomes-doc-page .search-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.52rem 0.85rem;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.incomes-doc-page .search-box:focus-within {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.incomes-doc-page .search-box input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+}
+
+.incomes-doc-page .search-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.filter-dropdown-wrapper {
+  position: relative;
+}
+
+.filter-select {
+  appearance: none;
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.52rem 2.2rem 0.52rem 0.85rem;
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  transition: all 0.2s ease;
+}
+
+.filter-select:hover {
+  border-color: #94a3b8;
+}
+
+.filter-select:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+/* Compact live summary pill */
+.table-summary-pill.income-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 0.45rem 0.95rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #166534;
+}
+
+.summary-count {
+  font-weight: 600;
+}
+
+.summary-divider {
+  color: #86efac;
+}
+
+.summary-amount {
+  font-weight: 800;
+  color: #047857;
+}
+
+.incomes-doc-page .clear-search-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.incomes-doc-page .clear-search-btn:hover {
+  color: #0f172a;
+}
+
+.incomes-doc-page .bulk-actions-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Table Card */
+.incomes-doc-page .glass.table-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  overflow-x: auto;
+}
+
+.incomes-doc-page .doc-style-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.incomes-doc-page .doc-style-table th {
+  padding: 1rem 1.25rem;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.incomes-doc-page .doc-style-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.15s ease;
+}
+
+.incomes-doc-page .doc-style-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.incomes-doc-page .doc-style-table tbody tr.row-selected {
+  background-color: #f0fdf4;
+}
+
+.incomes-doc-page .doc-style-table td {
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.incomes-doc-page .date-col {
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.voucher-no-badge.income-no-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #047857;
+  letter-spacing: 0.02em;
+}
+
+.party-cell-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.party-avatar.income-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #059669;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #a7f3d0;
+  flex-shrink: 0;
+}
+
+.incomes-doc-page .party-text {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.incomes-doc-page .party-subnote {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Emerald Green Amount */
+.incomes-doc-page .amount-col.income-amt {
+  font-weight: 800;
+  color: #059669 !important;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.incomes-doc-page .category-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.incomes-doc-page .payment-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.payment-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.incomes-doc-page .payment-tag.cash { color: #16a34a; }
+.incomes-doc-page .payment-tag.online, .incomes-doc-page .payment-tag.online---upi { color: #7c3aed; }
+.incomes-doc-page .payment-tag.cheque { color: #d97706; }
+.incomes-doc-page .payment-tag.bank, .incomes-doc-page .payment-tag.bank-transfer { color: #0284c7; }
+
+/* Action Buttons (Direct match to input_file_0.png) */
+.incomes-doc-page .actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.incomes-doc-page .doc-style-table .action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.incomes-doc-page .doc-style-table .action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.incomes-doc-page .doc-style-table .action-btn:hover svg {
+  transform: scale(1.05);
+}
+
+.incomes-doc-page .doc-style-table .action-btn[title*="Print"]:hover {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #bfdbfe;
+}
+
+.incomes-doc-page .doc-style-table .action-btn[title*="Send"]:hover {
+  background: #ecfdf5 !important;
+  color: #10b981 !important;
+  border-color: #a7f3d0;
+}
+
+.incomes-doc-page .doc-style-table .action-btn[title*="Edit"]:hover {
+  background: #f5f3ff !important;
+  color: #7c3aed !important;
+  border-color: #ddd6fe;
+}
+
+.incomes-doc-page .doc-style-table .action-btn[title*="Duplicate"]:hover {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border-color: #fde68a;
+}
+
+.incomes-doc-page .doc-style-table .action-btn.btn-danger {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+.incomes-doc-page .doc-style-table .action-btn.btn-danger:hover {
+  background: #fecdd3 !important;
+  color: #b91c1c !important;
+  border-color: #f87171 !important;
+}
+
+/* Empty State */
+.incomes-doc-page .empty-loading-cell {
+  text-align: center;
+  padding: 3.5rem 1rem !important;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.incomes-doc-page .empty-state-row td {
+  padding: 4.5rem 2rem !important;
+  text-align: center;
+}
+
+.incomes-doc-page .empty-state-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.incomes-doc-page .empty-icon {
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.incomes-doc-page .empty-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.35rem 0;
+}
+
+.incomes-doc-page .empty-desc {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .incomes-doc-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .incomes-doc-page .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .incomes-doc-page .table-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .incomes-doc-page .search-box {
+    max-width: 100%;
+  }
+
+  .incomes-doc-page .doc-style-table {
+    min-width: 720px;
+  }
+}

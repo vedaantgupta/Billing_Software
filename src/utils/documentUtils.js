@@ -115,6 +115,26 @@ export const DOCUMENT_CONFIGS = {
     numberField: 'letterNo',
     parentField: null,
     partyType: 'customer'
+  },
+  'Daily Expense': {
+    code: 'EXP',
+    prefix: 'EXP-',
+    route: '/expenses/daily',
+    editRoute: '/expenses/daily/edit',
+    newRoute: '/expenses/daily/new',
+    numberField: 'expenseNo',
+    parentField: null,
+    partyType: 'vendor'
+  },
+  'Other Income': {
+    code: 'INC',
+    prefix: 'INC-',
+    route: '/income/other',
+    editRoute: '/income/other/edit',
+    newRoute: '/income/other/new',
+    numberField: 'incomeNo',
+    parentField: null,
+    partyType: 'customer'
   }
 };
 
